@@ -1,3 +1,5 @@
+/* Os hooks usam o prefixo português "usar" por padrão de nomenclatura do projeto. */
+/* eslint-disable react-hooks/rules-of-hooks, react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type AnchorHTMLAttributes, type MouseEvent, type ReactNode } from 'react'
 
 interface ContextoLocalizacao { pathname:string; search:string; navigate:(to:string,options?:{replace?:boolean})=>void }

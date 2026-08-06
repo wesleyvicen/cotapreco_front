@@ -1,3 +1,5 @@
+/* Os hooks usam o prefixo português "usar" por padrão de nomenclatura do projeto. */
+/* eslint-disable react-hooks/rules-of-hooks, react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api } from './api'
 import { Redirecionar } from './roteamento'

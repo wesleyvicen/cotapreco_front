@@ -1,0 +1,10 @@
+{
+  "name": "CotaPreço",
+  "short_name": "CotaPreço",
+  "description": "Cotações e compras inteligentes para farmácias.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f6",
+  "theme_color": "#0e4d3b",
+  "icons": [{"src":"/cotapreco-icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
+}
