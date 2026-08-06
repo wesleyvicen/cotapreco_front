@@ -5,8 +5,11 @@ export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; e
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
 export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number }
-export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
+export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
+export interface ColunaArquivo { index:number; name:string }
+export interface MapeamentoColunas { ean:number|null; productName:number|null; quantity:number|null; laboratory:number|null }
+export interface AnaliseArquivoImportacao { sheetName:string; totalRows:number; columns:ColunaArquivo[]; suggestedMapping:MapeamentoColunas; sampleRows:string[][] }
 export interface OfertaDistribuidor { responseId:number; supplierName:string; unitPrice:number; availableQuantity:number; offeredTotal:number; bestPrice:boolean; position:number; manuallySelected:boolean }
 export interface ComparacaoProduto { quotationItemId:number; ean:string|null; productName:string; requestedQuantity:number; desiredQuantity:number; offers:OfertaDistribuidor[]; winningSupplier:string|null; bestUnitPrice:number|null; coveredQuantity:number; missingQuantity:number; selectedResponseId?:number|null; manualSelection?:boolean; invalidManualSelection?:boolean; championQuantity:number|null; championAvailableQuantity:number|null; stockOverrideNote:string|null }
 export interface TotalDistribuidor { responseId:number; supplierName:string; quotedItems:number; total:number }
