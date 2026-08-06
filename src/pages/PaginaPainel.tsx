@@ -1,0 +1,14 @@
+import { ArrowRight, ClipboardCheck, ClipboardList, CircleDollarSign, PiggyBank, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { api, date, money } from '../api'
+import { usarAutenticacao } from '../autenticacao'
+import { EstadoVazio, AvisoErro, Carregando, EtiquetaStatus } from '../components/ComponentesUI'
+import type { Painel } from '../types'
+import { LinkInterno } from '../roteamento'
+
+export default function PaginaPainel(){
+  const {user}=usarAutenticacao(); const [data,setData]=useState<Painel|null>(null); const [error,setError]=useState('')
+  useEffect(()=>{api<Painel>('/dashboard').then(setData).catch(e=>setError(e.message))},[])
+  return <div className="page"><div className="page-header"><div><span className="eyebrow green">Visão geral</span><h1>Olá, {user?.name.split(' ')[0]}!</h1><p>Acompanhe suas cotações e oportunidades de economia.</p></div><LinkInterno className="button button-primary" to="/cotacoes/nova"><Plus/>Nova cotação</LinkInterno></div>{error&&<AvisoErro message={error}/>} {!data?<Carregando/>:<><div className="stats-grid"><Stat icon={<ClipboardList/>} label="Cotações abertas" value={String(data.openQuotations)} tone="green"/><Stat icon={<ClipboardCheck/>} label="Cotações finalizadas" value={String(data.finishedQuotations)} tone="blue"/><Stat icon={<CircleDollarSign/>} label="Respostas no mês" value={String(data.responsesThisMonth)} tone="amber"/><Stat icon={<PiggyBank/>} label="Economia estimada" value={money(data.estimatedSavings)} tone="purple"/></div><section className="card"><div className="card-header"><div><h2>Últimas cotações</h2><p>Atividade recente da sua farmácia</p></div><LinkInterno className="text-link" to="/cotacoes">Ver todas <ArrowRight/></LinkInterno></div>{data.latestQuotations.length===0?<EstadoVazio title="Sua primeira cotação começa aqui" description="Importe uma lista e compartilhe o link com seus distribuidores." action={<LinkInterno className="button button-primary" to="/cotacoes/nova">Criar cotação</LinkInterno>}/>:<div className="table-wrap"><table><thead><tr><th>Cotação</th><th>Data</th><th>Produtos</th><th>Respostas</th><th>StatusCotacao</th><th/></tr></thead><tbody>{data.latestQuotations.map(q=><tr key={q.id}><td><strong>{q.name}</strong></td><td>{date(q.createdAt)}</td><td>{q.productCount}</td><td><strong className="green-text">{q.submittedResponses} recebida{q.submittedResponses!==1?'s':''}</strong></td><td><EtiquetaStatus status={q.status}/></td><td><LinkInterno className="row-link" to={`/cotacoes/${q.id}`}><ArrowRight/></LinkInterno></td></tr>)}</tbody></table></div>}</section></>}</div>
+}
+function Stat({icon,label,value,tone}:{icon:React.ReactNode;label:string;value:string;tone:string}){return <div className="stat-card"><div className={`stat-icon ${tone}`}>{icon}</div><div><span>{label}</span><strong>{value}</strong></div></div>}
