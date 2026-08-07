@@ -3,9 +3,9 @@ export type StatusResposta = 'IN_PROGRESS' | 'SUBMITTED'
 export interface Usuario { id:number; name:string; email:string; role:string; companyId:number; companyName:string }
 export interface UsuarioAdministracao { id:number; name:string; email:string; role:'ADMIN'|'BUYER'|'VIEWER'; active:boolean; createdAt:string }
 export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number }
-export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number }
+export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
-export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number }
+export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number; active:boolean }
 export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
 export interface ColunaArquivo { index:number; name:string }
