@@ -9,11 +9,13 @@ import { LinkInterno, usarParametros } from '../roteamento'
 type Aba='products'|'responses'|'comparison'|'purchase'
 type EdicaoPlano={quotationItemId:number;desiredQuantity:number;selectedResponseId:number|null;championQuantity:number|null;stockOverrideNote:string;manualSelection:boolean}
 type FormatoPedido='pdf'|'image'
+const tituloAba:Record<Aba,string>={products:'Produtos',responses:'Respostas',comparison:'Inteligência de compra',purchase:'Compra sugerida'}
 
 export default function PaginaDetalheCotacao(){
   const finalizando=useRef(false)
   const{id}=usarParametros();const{user}=usarAutenticacao();const[cotacao,setCotacao]=useState<Cotacao|null>(null);const[respostas,setRespostas]=useState<RespostaCotacao[]>([]);const[comparacao,setComparacao]=useState<ComparacaoCotacao|null>(null);const[pedidos,setPedidos]=useState<PedidoCompra[]>([])
   const[aba,setAba]=useState<Aba>('products');const[carregando,setCarregando]=useState(true);const[ocupado,setOcupado]=useState(false);const[erro,setErro]=useState('');const[mensagem,setMensagem]=useState('');const[copiado,setCopiado]=useState('');const[expandidas,setExpandidas]=useState<Set<string>>(new Set());const[produtoTroca,setProdutoTroca]=useState<ComparacaoProduto|null>(null);const[produtoPlano,setProdutoPlano]=useState<number|null>(null);const[edicoes,setEdicoes]=useState<EdicaoPlano[]|null>(null);const[errosPlano,setErrosPlano]=useState<Record<string,string>>({})
+  useEffect(()=>{document.title=`${cotacao?`${cotacao.name} — ${tituloAba[aba]}`:'Cotação'} | CotaPreço`},[cotacao,aba])
   const carregar=useCallback(async()=>{if(!id)return;setCarregando(true);setErro('');try{const[q,r,c,o]=await Promise.all([api<Cotacao>(`/quotations/${id}`),api<RespostaCotacao[]>(`/quotations/${id}/responses`),api<ComparacaoCotacao>(`/quotations/${id}/comparison`),api<PedidoCompra[]>(`/quotations/${id}/orders`)]);setCotacao(q);setRespostas(r);setComparacao(c);setPedidos(o)}catch(e){setErro(e instanceof ErroApi?e.message:'Falha ao carregar a cotação.')}finally{setCarregando(false)}},[id]);useEffect(()=>{void carregar()},[carregar])
   const atualizarCompra=async()=>{if(!id)return;const[c,o]=await Promise.all([api<ComparacaoCotacao>(`/quotations/${id}/comparison`),api<PedidoCompra[]>(`/quotations/${id}/orders`)]);setComparacao(c);setPedidos(o)}
   const acao=async(tipo:'open'|'close')=>{setOcupado(true);try{await api(`/quotations/${id}/${tipo}`,{method:'POST'});await carregar()}catch(e){setErro(mensagemErro(e,'Operação não concluída.'))}finally{setOcupado(false)}}

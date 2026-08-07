@@ -1,5 +1,5 @@
 import { RotaProtegida } from './autenticacao'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import LayoutSistema from './components/LayoutSistema'
 import PaginaPainel from './pages/PaginaPainel'
 import PaginaLogin from './pages/PaginaLogin'
@@ -20,6 +20,24 @@ import { Redirecionar, ProvedorParametros, usarLocalizacao } from './roteamento'
 
 export default function App(){
   const{pathname}=usarLocalizacao()
+  useEffect(()=>{
+    const titulo={
+      '/':'Painel',
+      '/login':'Entrar',
+      '/cadastro':'Cadastrar farmácia',
+      '/esqueci-senha':'Recuperar senha',
+      '/redefinir-senha':'Redefinir senha',
+      '/representante/redefinir-senha':'Redefinir senha',
+      '/representante/alterar-senha':'Minha conta',
+      '/cotacoes':'Cotações',
+      '/cotacoes/nova':'Nova cotação',
+      '/produtos':'Produtos',
+      '/dados-farmacia':'Dados da farmácia',
+      '/usuarios':'Usuários',
+      '/alterar-senha':'Alterar senha',
+    }[pathname] ?? (pathname.startsWith('/cotacao/responder/') ? 'Responder cotação' : pathname.startsWith('/cotacoes/') ? 'Cotação' : 'CotaPreço')
+    document.title=`${titulo} | CotaPreço`
+  },[pathname])
   if(pathname==='/login')return <PaginaLogin/>
   if(pathname==='/esqueci-senha')return <PaginaEsqueciSenha/>
   if(pathname==='/redefinir-senha')return <PaginaRedefinirSenha/>

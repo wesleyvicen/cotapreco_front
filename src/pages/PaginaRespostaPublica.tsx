@@ -92,6 +92,10 @@ export default function PaginaRespostaPublica() {
   const alteracaoDuranteSalvamento = useRef(false);
 
   useEffect(() => {
+    document.title = `${cotacao?.nomeCotacao ?? "Responder cotação"} | CotaPreço`;
+  }, [cotacao]);
+
+  useEffect(() => {
     let ativo = true;
     const carregar = async () => {
       try {
