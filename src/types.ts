@@ -21,10 +21,10 @@ export interface Painel { openQuotations:number; finishedQuotations:number; resp
 export interface Produto { id:number; ean:string|null; name:string; laboratory:string|null; presentation:string|null; category:string|null; active:boolean; createdAt:string; updatedAt:string }
 export interface Representante { id:number; nome:string; telefone:string; email:string }
 export interface RespostaAutenticacaoRepresentante { token:string; tipoToken:string; expiraEmSegundos:number; representante:Representante }
-export interface ItemCotacaoPublica { ean:string|null; nomeProduto:string; quantidadeSolicitada:number }
+export interface ItemCotacaoPublica { ean:string|null; nomeProduto:string; laboratorio:string|null; quantidadeSolicitada:number }
 export interface CotacaoPublica { nomeEmpresa:string; nomeCotacao:string; expiraEm:string|null; totalProdutos:number; aceitaRespostas:boolean; itens:ItemCotacaoPublica[] }
 export interface ResumoRespostaPublica { id:number; nomeDistribuidora:string; documentoDistribuidora:string|null; status:StatusResposta; enviadoEm:string|null; atualizadoEm:string; totalItensCotados:number; valorTotal:number }
-export interface ItemRespostaPublica { id:number; ean:string|null; nomeProduto:string; quantidadeSolicitada:number; precoUnitario:number|null; quantidadeDisponivel:number|null; disponivel:boolean; observacao:string|null }
+export interface ItemRespostaPublica { id:number; ean:string|null; nomeProduto:string; laboratorio:string|null; quantidadeSolicitada:number; precoUnitario:number|null; quantidadeDisponivel:number|null; disponivel:boolean; observacao:string|null }
 export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:string; nomeRepresentante:string; nomeDistribuidora:string; documentoDistribuidora:string|null; status:StatusResposta; expiraEm:string|null; podeCorrigir:boolean; itens:ItemRespostaPublica[] }
 export interface Empresa { id:number; nome:string; cnpj:string|null }
 export type StatusPedido='GERADO'|'COMPARTILHADO'|'DESATUALIZADO'|'CANCELADO'

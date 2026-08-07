@@ -705,7 +705,7 @@ function Editor({
   const itensVisiveis = !termo
     ? resposta.itens
     : resposta.itens.filter((item) =>
-        `${item.nomeProduto} ${item.ean ?? ""}`
+        `${item.nomeProduto} ${item.laboratorio ?? ""} ${item.ean ?? ""}`
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
           .toLowerCase()
@@ -860,6 +860,11 @@ function Editor({
                     <span>{indice}</span>
                     <div>
                       <h3>{item.nomeProduto}</h3>
+                      {item.laboratorio && (
+                        <p className="product-laboratory">
+                          Laboratório solicitado: {item.laboratorio}
+                        </p>
+                      )}
                       <p>
                         {item.ean ? `EAN ${item.ean}` : "EAN não informado"}
                       </p>
