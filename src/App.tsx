@@ -3,11 +3,14 @@ import type { ReactNode } from 'react'
 import LayoutSistema from './components/LayoutSistema'
 import PaginaPainel from './pages/PaginaPainel'
 import PaginaLogin from './pages/PaginaLogin'
+import PaginaEsqueciSenha from './pages/PaginaEsqueciSenha'
 import PaginaCadastroFarmacia from './pages/PaginaCadastroFarmacia'
 import PaginaNovaCotacao from './pages/PaginaNovaCotacao'
 import PaginaProdutos from './pages/PaginaProdutos'
 import PaginaRespostaPublica from './pages/PaginaRespostaPublica'
 import PaginaRedefinirSenhaRepresentante from './pages/PaginaRedefinirSenhaRepresentante'
+import PaginaRedefinirSenha from './pages/PaginaRedefinirSenha'
+import PaginaAlterarSenhaRepresentante from './pages/PaginaAlterarSenhaRepresentante'
 import PaginaDetalheCotacao from './pages/PaginaDetalheCotacao'
 import PaginaCotacoes from './pages/PaginaCotacoes'
 import PaginaConfiguracoes from './pages/PaginaConfiguracoes'
@@ -18,6 +21,9 @@ import { Redirecionar, ProvedorParametros, usarLocalizacao } from './roteamento'
 export default function App(){
   const{pathname}=usarLocalizacao()
   if(pathname==='/login')return <PaginaLogin/>
+  if(pathname==='/esqueci-senha')return <PaginaEsqueciSenha/>
+  if(pathname==='/redefinir-senha')return <PaginaRedefinirSenha/>
+  if(pathname==='/representante/alterar-senha')return <PaginaAlterarSenhaRepresentante/>
   if(pathname==='/cadastro')return <PaginaCadastroFarmacia/>
   if(pathname==='/representante/redefinir-senha')return <PaginaRedefinirSenhaRepresentante/>
   const publicMatch=pathname.match(/^\/cotacao\/responder\/([^/]+)$/)
