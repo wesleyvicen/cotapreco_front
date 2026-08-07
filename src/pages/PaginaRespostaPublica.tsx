@@ -56,6 +56,7 @@ const dadosCadastro = {
 const dadosDistribuidora = {
   nomeDistribuidora: "",
   documentoDistribuidora: "",
+  valorMinimoPedido: null as number | null,
 };
 
 const notaQuantidadeMinima = (quantidade: number) =>
@@ -297,6 +298,7 @@ export default function PaginaRespostaPublica() {
   ) => ({
     nomeDistribuidora: fonte?.nomeDistribuidora,
     documentoDistribuidora: fonte?.documentoDistribuidora,
+    valorMinimoPedido: fonte?.valorMinimoPedido,
     itens: fonte?.itens.map((item) => ({
       id: item.id,
       precoUnitario: item.disponivel ? item.precoUnitario : null,
@@ -325,6 +327,7 @@ export default function PaginaRespostaPublica() {
             body: JSON.stringify({
               nomeDistribuidora: atual.nomeDistribuidora,
               documentoDistribuidora: atual.documentoDistribuidora,
+              valorMinimoPedido: atual.valorMinimoPedido,
               itens: atual.itens.map((item) => ({
                 id: item.id,
                 precoUnitario: item.disponivel ? item.precoUnitario : null,
@@ -619,6 +622,18 @@ export default function PaginaRespostaPublica() {
                 }
               />
             </label>
+            <label>
+              Valor mínimo do pedido (R$) <small>Opcional</small>
+              <CampoValorMinimo
+                valor={distribuidora.valorMinimoPedido}
+                aoAlterar={(valorMinimoPedido) =>
+                  setDistribuidora({ ...distribuidora, valorMinimoPedido })
+                }
+              />
+              <span className="minimum-order-help">
+                Pedidos abaixo deste valor podem ser recusados.
+              </span>
+            </label>
             <div className="form-actions">
               <button
                 type="button"
@@ -780,7 +795,28 @@ function Editor({
                 }
               />
             </label>
+            <label>
+              Valor mínimo do pedido (R$) <small>Opcional</small>
+              <CampoValorMinimo
+                disabled={!resposta.podeCorrigir}
+                valor={resposta.valorMinimoPedido}
+                aoAlterar={(valorMinimoPedido) =>
+                  aoAlterarResposta({ ...resposta, valorMinimoPedido })
+                }
+              />
+              <span className="minimum-order-help">
+                Em branco significa que não há valor mínimo.
+              </span>
+            </label>
           </div>
+          {resposta.valorMinimoPedido != null &&
+            total < resposta.valorMinimoPedido && (
+              <div className="alert alert-warning minimum-order-public-warning">
+                A cotação atual soma {money(total)}, abaixo do mínimo de{" "}
+                {money(resposta.valorMinimoPedido)}. Você pode enviar mesmo
+                assim; a farmácia será avisada e poderá ajustar a compra.
+              </div>
+            )}
           <div className="progress-line">
             <div
               style={{
@@ -1141,7 +1177,22 @@ function Revisao({
               <span>Valor total</span>
               <strong>{money(total)}</strong>
             </div>
+            <div>
+              <span>Pedido mínimo</span>
+              <strong>
+                {resposta.valorMinimoPedido == null
+                  ? "Sem mínimo"
+                  : money(resposta.valorMinimoPedido)}
+              </strong>
+            </div>
           </div>
+          {resposta.valorMinimoPedido != null &&
+            total < resposta.valorMinimoPedido && (
+              <div className="alert alert-warning minimum-order-public-warning">
+                O total está abaixo do mínimo informado. A proposta será
+                enviada, mas a farmácia precisará confirmar ou ajustar o plano.
+              </div>
+            )}
           <div className="review-products">
             {itensCotados.map((item) => (
               <div key={item.id}>
@@ -1524,6 +1575,11 @@ function ListaPropostas({
                 <p>
                   {r.totalItensCotados} produtos cotados · {money(r.valorTotal)}
                 </p>
+                <small>
+                  {r.valorMinimoPedido == null
+                    ? "Sem valor mínimo"
+                    : `Pedido mínimo: ${money(r.valorMinimoPedido)}`}
+                </small>
               </div>
               <button
                 className="button button-secondary"
@@ -1630,6 +1686,49 @@ function CampoPreco({
       type="text"
       inputMode="numeric"
       placeholder="0,00"
+      value={formatarPrecoDigitado(digitos)}
+      onKeyDown={(event) => {
+        if (/^\d$/.test(event.key)) {
+          event.preventDefault();
+          atualizar(digitos + event.key);
+        } else if (event.key === "Backspace" || event.key === "Delete") {
+          event.preventDefault();
+          atualizar(digitos.slice(0, -1));
+        }
+      }}
+      onPaste={(event) => {
+        event.preventDefault();
+        atualizar(digitos + event.clipboardData.getData("text"));
+      }}
+      onChange={() => undefined}
+    />
+  );
+}
+
+function CampoValorMinimo({
+  valor,
+  disabled = false,
+  aoAlterar,
+}: {
+  valor: number | null;
+  disabled?: boolean;
+  aoAlterar: (valor: number | null) => void;
+}) {
+  const [digitos, setDigitos] = useState(() =>
+    valor == null ? "" : String(Math.round(valor * 100)),
+  );
+  const atualizar = (proximo: string) => {
+    const somenteNumeros = proximo.replace(/\D/g, "").slice(0, 11);
+    setDigitos(somenteNumeros);
+    aoAlterar(interpretarPreco(somenteNumeros));
+  };
+  return (
+    <input
+      aria-label="Valor mínimo do pedido"
+      disabled={disabled}
+      type="text"
+      inputMode="numeric"
+      placeholder="Sem valor mínimo"
       value={formatarPrecoDigitado(digitos)}
       onKeyDown={(event) => {
         if (/^\d$/.test(event.key)) {
