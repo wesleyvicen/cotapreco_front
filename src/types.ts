@@ -36,3 +36,8 @@ export type TipoAjustePedidoMinimo='REALOCACAO'|'UNIDADES_EXTRAS'|'REPASSE'
 export interface AjustePedidoMinimo { quotationItemId:number; productName:string; type:TipoAjustePedidoMinimo; currentQuantity:number; projectedQuantity:number; extraQuantity:number; unitPrice:number; destinationSupplier:string|null }
 export interface OpcaoPedidoMinimo { feasible:boolean; projectedSupplierTotal:number; projectedPurchaseTotal:number; purchaseIncrease:number; extraUnits:number; uncoveredUnits:number; adjustments:AjustePedidoMinimo[] }
 export interface OpcoesPedidoMinimo { responseId:number; supplierName:string; currentTotal:number; minimumOrderValue:number; shortfall:number; reachMinimum:OpcaoPedidoMinimo; reallocateOrder:OpcaoPedidoMinimo }
+export type AcaoHistoricoPlano='ESTADO_INICIAL'|'ATINGIR_MINIMO'|'REPASSAR_PEDIDO'|'REINCLUIR_DISTRIBUIDORA'|'TROCAR_DISTRIBUIDORA'|'VOLTAR_AO_AUTOMATICO'|'AJUSTAR_PLANO'|'RESTAURAR_VERSAO'
+export interface VersaoPlano { id:number; number:number; action:AcaoHistoricoPlano; description:string; createdBy:string; createdAt:string; total:number; current:boolean; restorable:boolean; blockedReason:string|null }
+export interface HistoricoPlano { currentVersionId:number; canUndo:boolean; versions:VersaoPlano[] }
+export interface ResultadoRestauracaoPlano { message:string; comparison:ComparacaoCotacao; history:HistoricoPlano }
+export interface PreviaManualPedidoMinimo { comparison:ComparacaoCotacao; responseId:number; supplierTotal:number; minimumOrderValue:number; shortfall:number; minimumOrderStatus:StatusPedidoMinimo; purchaseIncrease:number; extraUnits:number; uncoveredUnits:number; baseVersionId:number }
