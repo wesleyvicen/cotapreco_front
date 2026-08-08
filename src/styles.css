@@ -572,6 +572,48 @@ tbody tr:hover {
   padding: 7px 30px 7px 16px;
   background: #fff;
 }
+.quotations-toolbar select { min-width: 150px; }
+.quotations-table input[type="checkbox"] { accent-color: var(--green); width: 16px; height: 16px; cursor: pointer; }
+.quotations-table input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .42; }
+.selected-row { background: #f3faf6; }
+.purchase-ready { display: inline-flex; align-items: center; gap: 5px; color: var(--green); font-weight: 700; white-space: nowrap; }
+.purchase-ready svg { width: 16px; height: 16px; }
+.comparison-selection { position: sticky; z-index: 5; bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid #bfded0; border-radius: 14px; padding: 13px 15px; background: #f4fbf7; box-shadow: 0 10px 28px rgba(18,99,74,.14); }
+.comparison-selection > div { display: flex; align-items: center; gap: 10px; }
+.comparison-selection > div > svg { color: var(--green); }
+.comparison-selection span { display: flex; flex-direction: column; gap: 2px; }
+.comparison-selection small { color: var(--muted); font-size: 12px; }
+.comparison-selection-actions { flex-wrap: wrap; justify-content: flex-end; }
+.comparison-header { display: flex; flex-direction: column; gap: 18px; }
+.comparison-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.comparison-chips span { border-radius: 999px; background: var(--green-soft); color: var(--green); padding: 6px 10px; font-size: 11px; font-weight: 800; }
+.comparison-stats .stat-card small { color: var(--muted); font-size: 10px; line-height: 1.35; margin-top: 3px; }
+.comparison-filters { display: grid; grid-template-columns: minmax(185px,1.1fr) minmax(190px,1.3fr) repeat(3,minmax(150px,.8fr)); align-items: center; gap: 10px; padding: 14px; }
+.comparison-filter-title { display: flex; align-items: center; gap: 9px; }
+.comparison-filter-title svg { color: var(--green); width: 21px; }
+.comparison-filter-title div { display: flex; flex-direction: column; }
+.comparison-filter-title span { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.comparison-filters .search { border: 1px solid var(--line); border-radius: 9px; padding: 0 9px; min-height: 39px; }
+.comparison-filters select,.chart-card select { border: 1px solid var(--line); border-radius: 9px; color: #536861; background: #fff; padding: 9px 10px; outline-color: var(--green); }
+.comparison-charts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.chart-card { min-width: 0; }
+.chart-card .card-header { gap: 14px; }
+.chart-area { padding: 13px 14px 8px; }
+.comparison-detail .card-header { align-items: flex-start; }
+.comparison-detail table { min-width: 1080px; }
+.comparison-detail td { vertical-align: top; min-width: 145px; }
+.product-meta,.price-cell small,.price-cell span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+.price-cell span { color: #6c8179; }
+.variation-up,.variation-down { white-space: nowrap; }
+.variation-up { color: #b46a28; }
+.variation-down { color: var(--green); }
+.variation-up svg,.variation-down svg { width: 15px; vertical-align: -3px; margin-right: 3px; }
+.variation-up small,.variation-down small { display: block; margin-top: 3px; color: inherit; }
+.comparison-status { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 8px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.comparison-status svg { width: 14px; height: 14px; }
+.comparison-status-melhor_preco { color: #147454; background: #e4f5ee; }
+.comparison-status-acima_do_melhor_preco { color: #9c611d; background: #fff2dc; }
+.comparison-status-referencia_incompleta { color: #9d4836; background: #fff0eb; }
 .badge,
 .mini-tag {
   display: inline-flex;
@@ -1894,6 +1936,15 @@ label small {
     border-left: 0;
     border-top: 1px solid var(--line);
   }
+  .quotations-toolbar select { min-width: 0; }
+  .comparison-selection { align-items: stretch; flex-direction: column; bottom: 10px; }
+  .comparison-selection-actions { width: 100%; }
+  .comparison-selection-actions .button { flex: 1; }
+  .comparison-chips { justify-content: flex-start; }
+  .comparison-filters { grid-template-columns: 1fr; }
+  .comparison-charts { grid-template-columns: 1fr; }
+  .chart-card .card-header { align-items: stretch; flex-direction: column; }
+  .chart-card .card-header select { width: 100%; }
   .stepper {
     padding: 14px;
   }

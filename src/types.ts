@@ -2,9 +2,9 @@ export type StatusCotacao = 'DRAFT' | 'OPEN' | 'CLOSED' | 'COMPLETED' | 'CANCELL
 export type StatusResposta = 'IN_PROGRESS' | 'SUBMITTED'
 export interface Usuario { id:number; name:string; email:string; role:string; companyId:number; companyName:string }
 export interface UsuarioAdministracao { id:number; name:string; email:string; role:'ADMIN'|'BUYER'|'VIEWER'; active:boolean; createdAt:string }
-export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number }
+export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null }
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
-export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
+export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'|'purchaseComparisonEligible'|'purchasedItemCount'|'lastPurchaseAt'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
 export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number; minimumOrderValue:number|null; includedInSuggestedPurchase:boolean; active:boolean }
 export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
@@ -41,3 +41,8 @@ export interface VersaoPlano { id:number; number:number; action:AcaoHistoricoPla
 export interface HistoricoPlano { currentVersionId:number; canUndo:boolean; versions:VersaoPlano[] }
 export interface ResultadoRestauracaoPlano { message:string; comparison:ComparacaoCotacao; history:HistoricoPlano }
 export interface PreviaManualPedidoMinimo { comparison:ComparacaoCotacao; responseId:number; supplierTotal:number; minimumOrderValue:number; shortfall:number; minimumOrderStatus:StatusPedidoMinimo; purchaseIncrease:number; extraUnits:number; uncoveredUnits:number; baseVersionId:number }
+export type SituacaoPrecoCompra='MELHOR_PRECO'|'ACIMA_DO_MELHOR_PRECO'|'REFERENCIA_INCOMPLETA'
+export interface PontoHistoricoCompra { quotationId:number; quotationName:string; purchasedAt:string; quantity:number; actualUnitPrice:number; actualTotal:number; bestAvailableUnitPrice:number|null; bestAvailableTotal:number|null; supplierName:string; priceSituation:SituacaoPrecoCompra }
+export interface ProdutoHistoricoCompra { key:string; ean:string|null; productName:string; laboratory:string|null; points:PontoHistoricoCompra[]; firstUnitPrice:number; lastUnitPrice:number; priceVariation:number; priceVariationPercent:number|null; financialDifference:number; latestPriceSituation:SituacaoPrecoCompra }
+export interface ResumoComparativoCompra { commonProducts:number; evaluatedPurchases:number; bestPricePurchases:number; actualTotal:number; amountAboveBestScenario:number; averagePriceVariationPercent:number }
+export interface ComparativoCompra { products:ProdutoHistoricoCompra[]; summary:ResumoComparativoCompra }
