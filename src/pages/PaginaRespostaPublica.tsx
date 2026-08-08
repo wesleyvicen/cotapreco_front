@@ -23,9 +23,9 @@ import {
   apiPublica,
   apiRepresentante,
   date,
+  encerrarSessaoRepresentante,
   ErroApi,
   money,
-  removerTokenRepresentante,
   salvarTokenRepresentante,
 } from "../api";
 import {
@@ -105,21 +105,19 @@ export default function PaginaRespostaPublica() {
         );
         if (!ativo) return;
         setCotacao(visao);
-        if (localStorage.getItem("cotapreco_token_representante")) {
-          try {
-            const conta = await apiRepresentante<Representante>(
-              "/publico/representantes/eu",
-            );
-            if (!ativo) return;
-            setRepresentante(conta);
-            setRespostas(
-              await apiRepresentante<ResumoRespostaPublica[]>(
-                `/publico/cotacoes/${token}/minhas-respostas`,
-              ),
-            );
-          } catch {
-            if (ativo) setRepresentante(null);
-          }
+        try {
+          const conta = await apiRepresentante<Representante>(
+            "/publico/representantes/eu",
+          );
+          if (!ativo) return;
+          setRepresentante(conta);
+          setRespostas(
+            await apiRepresentante<ResumoRespostaPublica[]>(
+              `/publico/cotacoes/${token}/minhas-respostas`,
+            ),
+          );
+        } catch {
+          if (ativo) setRepresentante(null);
         }
       } catch (e) {
         if (ativo) setErro(mensagemErro(e, "Cotação não encontrada."));
@@ -208,8 +206,8 @@ export default function PaginaRespostaPublica() {
       setOcupado(false);
     }
   };
-  const sair = () => {
-    removerTokenRepresentante();
+  const sair = async () => {
+    await encerrarSessaoRepresentante();
     setRepresentante(null);
     setRespostas([]);
     setResposta(null);
