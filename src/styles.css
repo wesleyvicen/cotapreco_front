@@ -3788,6 +3788,34 @@ label small {
 .password-field button svg {
   width: 18px;
 }
+.password-strength {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+}
+.password-strength-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5ece9;
+}
+.password-strength-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 180ms ease, background-color 180ms ease;
+}
+.password-strength-fill.starting { background: #8ca29a; }
+.password-strength-fill.medium { background: #d99a27; }
+.password-strength-fill.strong { background: #25966f; }
+.password-strength small,
+.field-success {
+  display: block;
+  color: #277359;
+  font-size: 10px;
+  font-weight: 600;
+}
 
 .brand-mark {
   overflow: hidden;

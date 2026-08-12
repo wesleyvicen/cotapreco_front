@@ -34,6 +34,7 @@ import {
   EtiquetaStatus,
   EstadoVazio,
 } from "../components/ComponentesUI";
+import { IndicadorForcaSenha } from "../components/IndicadorForcaSenha";
 import type {
   CotacaoPublica,
   ItemRespostaPublica,
@@ -45,7 +46,8 @@ import type {
 import { LinkInterno, usarParametros } from "../roteamento";
 
 type AbaAutenticacao = "entrar" | "cadastro" | "esqueci";
-const dadosLogin = { telefone: "", senha: "" };
+type CampoCadastro = keyof typeof dadosCadastro;
+const dadosLogin = { identificador: "", senha: "" };
 const dadosCadastro = {
   nome: "",
   telefone: "",
@@ -148,7 +150,13 @@ export default function PaginaRespostaPublica() {
     try {
       const resultado = await apiPublica<RespostaAutenticacaoRepresentante>(
         "/publico/representantes/login",
-        { method: "POST", body: JSON.stringify(login) },
+        {
+          method: "POST",
+          body: JSON.stringify({
+            telefone: login.identificador,
+            senha: login.senha,
+          }),
+        },
       );
       salvarTokenRepresentante(resultado.token);
       setRepresentante(resultado.representante);
@@ -581,7 +589,7 @@ export default function PaginaRespostaPublica() {
             ocupado={ocupado}
             erro={erro}
             mensagem={mensagem}
-            cadastroLiberado={cotacao.aceitaRespostas}
+            cotacaoAberta={cotacao.aceitaRespostas}
           />
         ) : criando ? (
           <form className="public-card" onSubmit={criarResposta}>
@@ -1288,7 +1296,7 @@ function Autenticacao({
   ocupado,
   erro,
   mensagem,
-  cadastroLiberado,
+  cotacaoAberta,
 }: {
   aba: AbaAutenticacao;
   setAba: (v: AbaAutenticacao) => void;
@@ -1304,8 +1312,19 @@ function Autenticacao({
   ocupado: boolean;
   erro: string;
   mensagem: string;
-  cadastroLiberado: boolean;
+  cotacaoAberta: boolean;
 }) {
+  const [camposTocados, setCamposTocados] = useState<
+    Partial<Record<CampoCadastro, boolean>>
+  >({});
+  const errosCadastro = validarCadastroRepresentante(cadastro);
+  const cadastroValido = Object.keys(errosCadastro).length === 0;
+  const sugestoesEmail = obterSugestoesEmail(cadastro.email);
+  const tocarCampo = (campo: CampoCadastro) =>
+    setCamposTocados((atual) => ({ ...atual, [campo]: true }));
+  const erroCampo = (campo: CampoCadastro) =>
+    camposTocados[campo] ? errosCadastro[campo] : undefined;
+
   if (aba === "esqueci")
     return (
       <form className="public-card" onSubmit={aoRecuperar}>
@@ -1364,17 +1383,20 @@ function Autenticacao({
           <div>
             <UserRound />
             <h2>Entre para responder</h2>
-            <p>Use seu telefone e senha para acessar suas propostas.</p>
+            <p>Use seu e-mail ou telefone e sua senha para acessar as propostas.</p>
           </div>
           {erro && <AvisoErro message={erro} />}
           <label>
-            Telefone
+            E-mail ou telefone
             <input
               required
-              inputMode="tel"
-              autoComplete="tel"
-              value={login.telefone}
-              onChange={(e) => setLogin({ ...login, telefone: e.target.value })}
+              inputMode="text"
+              autoComplete="username"
+              placeholder="nome@empresa.com ou (00) 00000-0000"
+              value={login.identificador}
+              onChange={(e) =>
+                setLogin({ ...login, identificador: e.target.value })
+              }
             />
           </label>
           <label>
@@ -1406,8 +1428,14 @@ function Autenticacao({
             <h2>Crie sua conta</h2>
             <p>Uma única conta permite responder por várias distribuidoras.</p>
           </div>
+          {!cotacaoAberta && (
+            <div className="alert alert-warning">
+              Esta proposta já expirou ou foi encerrada. Você ainda pode criar
+              sua conta e usá-la para responder outras propostas.
+            </div>
+          )}
           {erro && <AvisoErro message={erro} />}
-          <label>
+          <label className={erroCampo("nome") ? "field-invalid" : ""}>
             Seu nome
             <input
               required
@@ -1416,54 +1444,124 @@ function Autenticacao({
               onChange={(e) =>
                 setCadastro({ ...cadastro, nome: e.target.value })
               }
+              onBlur={() => tocarCampo("nome")}
+              aria-invalid={Boolean(erroCampo("nome"))}
+              aria-describedby={erroCampo("nome") ? "erro-cadastro-nome" : undefined}
             />
+            {erroCampo("nome") && (
+              <small id="erro-cadastro-nome" className="field-error">
+                {erroCampo("nome")}
+              </small>
+            )}
           </label>
-          <label>
+          <label className={erroCampo("telefone") ? "field-invalid" : ""}>
             Telefone
             <input
               required
               inputMode="tel"
+              autoComplete="tel"
+              maxLength={15}
+              placeholder="(00) 00000-0000"
               value={cadastro.telefone}
               onChange={(e) =>
-                setCadastro({ ...cadastro, telefone: e.target.value })
+                setCadastro({
+                  ...cadastro,
+                  telefone: formatarTelefone(e.target.value),
+                })
+              }
+              onBlur={() => tocarCampo("telefone")}
+              aria-invalid={Boolean(erroCampo("telefone"))}
+              aria-describedby={
+                erroCampo("telefone") ? "erro-cadastro-telefone" : undefined
               }
             />
+            {erroCampo("telefone") && (
+              <small id="erro-cadastro-telefone" className="field-error">
+                {erroCampo("telefone")}
+              </small>
+            )}
           </label>
-          <label>
+          <label className={erroCampo("email") ? "field-invalid" : ""}>
             E-mail
             <input
               required
               type="email"
+              autoComplete="email"
+              maxLength={180}
+              list="sugestoes-email-representante"
               value={cadastro.email}
               onChange={(e) =>
                 setCadastro({ ...cadastro, email: e.target.value })
               }
+              onBlur={() => tocarCampo("email")}
+              aria-invalid={Boolean(erroCampo("email"))}
+              aria-describedby={erroCampo("email") ? "erro-cadastro-email" : undefined}
             />
+            {erroCampo("email") && (
+              <small id="erro-cadastro-email" className="field-error">
+                {erroCampo("email")}
+              </small>
+            )}
           </label>
+          <datalist id="sugestoes-email-representante">
+            {sugestoesEmail.map((sugestao) => (
+              <option key={sugestao} value={sugestao} />
+            ))}
+          </datalist>
           <div className="public-form-row">
-            <label>
+            <label className={erroCampo("senha") ? "field-invalid" : ""}>
               Senha
               <CampoSenha
                 value={cadastro.senha}
-                aoAlterar={(senha) => setCadastro({ ...cadastro, senha })}
+                aoAlterar={(senha) => {
+                  setCadastro({ ...cadastro, senha });
+                  tocarCampo("senha");
+                }}
                 autoComplete="new-password"
+                ariaInvalid={Boolean(erroCampo("senha"))}
+                ariaDescribedBy={
+                  erroCampo("senha") ? "erro-cadastro-senha" : undefined
+                }
               />
+              {erroCampo("senha") && (
+                <small id="erro-cadastro-senha" className="field-error">
+                  {erroCampo("senha")}
+                </small>
+              )}
+              <IndicadorForcaSenha senha={cadastro.senha} />
             </label>
-            <label>
+            <label
+              className={erroCampo("confirmacao") ? "field-invalid" : ""}
+            >
               Confirmar senha
               <CampoSenha
                 value={cadastro.confirmacao}
-                aoAlterar={(confirmacao) =>
-                  setCadastro({ ...cadastro, confirmacao })
-                }
+                aoAlterar={(confirmacao) => {
+                  setCadastro({ ...cadastro, confirmacao });
+                  tocarCampo("confirmacao");
+                }}
                 autoComplete="new-password"
+                ariaInvalid={Boolean(erroCampo("confirmacao"))}
+                ariaDescribedBy={
+                  erroCampo("confirmacao")
+                    ? "erro-cadastro-confirmacao"
+                    : undefined
+                }
               />
+              {erroCampo("confirmacao") && (
+                <small id="erro-cadastro-confirmacao" className="field-error">
+                  {erroCampo("confirmacao")}
+                </small>
+              )}
+              {cadastro.confirmacao && !errosCadastro.confirmacao && (
+                <small className="field-success">As senhas coincidem.</small>
+              )}
             </label>
           </div>
-          <small>Use uma senha fácil de lembrar.</small>
+          <small>Use uma senha fácil de lembrar, com até 72 caracteres.</small>
           <button
             className="button button-primary button-large full-button"
-            disabled={ocupado || !cadastroLiberado}
+            disabled={ocupado || !cadastroValido}
           >
             {ocupado ? "Criando conta..." : "Criar conta e continuar"}
           </button>
@@ -1477,10 +1575,14 @@ function CampoSenha({
   value,
   aoAlterar,
   autoComplete,
+  ariaInvalid,
+  ariaDescribedBy,
 }: {
   value: string;
   aoAlterar: (valor: string) => void;
   autoComplete: string;
+  ariaInvalid?: boolean;
+  ariaDescribedBy?: string;
 }) {
   const [visivel, setVisivel] = useState(false);
   return (
@@ -1493,6 +1595,8 @@ function CampoSenha({
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => aoAlterar(e.target.value)}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
       />
       <button
         type="button"
@@ -1504,6 +1608,7 @@ function CampoSenha({
     </div>
   );
 }
+
 function ListaPropostas({
   respostas,
   cotacaoAberta,
@@ -1755,6 +1860,43 @@ function formatarCnpj(valor: string) {
   if (numeros.length <= 12)
     return `${numeros.slice(0, 2)}.${numeros.slice(2, 5)}.${numeros.slice(5, 8)}/${numeros.slice(8)}`;
   return `${numeros.slice(0, 2)}.${numeros.slice(2, 5)}.${numeros.slice(5, 8)}/${numeros.slice(8, 12)}-${numeros.slice(12)}`;
+}
+
+function formatarTelefone(valor: string) {
+  const numeros = valor.replace(/\D/g, "").slice(0, 11);
+  if (!numeros) return "";
+  if (numeros.length <= 2) return `(${numeros}`;
+  if (numeros.length <= 6)
+    return `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
+  if (numeros.length <= 10)
+    return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 6)}-${numeros.slice(6)}`;
+  return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+}
+
+function validarCadastroRepresentante(cadastro: typeof dadosCadastro) {
+  const erros: Partial<Record<CampoCadastro, string>> = {};
+  const telefone = cadastro.telefone.replace(/\D/g, "");
+  if (!cadastro.nome.trim()) erros.nome = "Informe seu nome.";
+  if (telefone.length !== 10 && telefone.length !== 11)
+    erros.telefone = "Informe um telefone brasileiro com DDD.";
+  if (!cadastro.email.trim()) erros.email = "Informe seu e-mail.";
+  else if (!/^[^\s@]+@[^\s@]+$/.test(cadastro.email.trim()))
+    erros.email = "Informe um e-mail válido.";
+  if (!cadastro.senha) erros.senha = "Informe uma senha.";
+  else if (cadastro.senha.length > 72)
+    erros.senha = "A senha deve ter no máximo 72 caracteres.";
+  if (!cadastro.confirmacao) erros.confirmacao = "Confirme sua senha.";
+  else if (cadastro.senha !== cadastro.confirmacao)
+    erros.confirmacao = "As senhas não coincidem.";
+  return erros;
+}
+
+function obterSugestoesEmail(email: string) {
+  const [usuario, dominio = ""] = email.trim().toLowerCase().split("@");
+  if (!usuario) return [];
+  return ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com.br", "icloud.com"]
+    .filter((opcao) => opcao.startsWith(dominio))
+    .map((opcao) => `${usuario}@${opcao}`);
 }
 
 function interpretarPreco(digitos: string) {
