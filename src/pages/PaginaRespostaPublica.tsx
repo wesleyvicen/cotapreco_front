@@ -636,9 +636,6 @@ export default function PaginaRespostaPublica() {
                   setDistribuidora({ ...distribuidora, valorMinimoPedido })
                 }
               />
-              <span className="minimum-order-help">
-                Pedidos abaixo deste valor podem ser recusados.
-              </span>
             </label>
             <div className="form-actions">
               <button
