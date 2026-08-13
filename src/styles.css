@@ -5216,6 +5216,90 @@ label small {
     height: 100dvh;
     max-height: 100dvh;
   }
+  .receipt-check-modal .modal-header {
+    min-height: 42px;
+    margin-bottom: 8px;
+  }
+  .receipt-check-modal .modal-header .eyebrow,
+  .receipt-check-modal .modal-header p {
+    display: none;
+  }
+  .receipt-check-modal .modal-header h2 {
+    margin: 0;
+    font-size: 21px;
+  }
+  .receipt-check-modal .receipt-check-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    margin: 0 0 8px;
+    padding: 5px;
+    border-radius: 11px;
+  }
+  .receipt-check-modal .receipt-check-summary > div {
+    gap: 1px;
+    padding: 3px 5px;
+  }
+  .receipt-check-modal .receipt-check-summary span {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+  .receipt-check-modal .receipt-check-summary strong {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .receipt-check-modal .receipt-check-summary .receipt-mark-all {
+    grid-column: 1 / -1;
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+  .receipt-check-modal .receipt-check-summary .receipt-mark-all svg {
+    width: 17px;
+    height: 17px;
+  }
+  .receipt-check-modal .receipt-global-search {
+    margin-bottom: 8px;
+    padding: 0 10px;
+  }
+  .receipt-check-modal .receipt-global-search input {
+    min-height: 38px;
+  }
+  .receipt-check-modal .receipt-global-search > span {
+    display: none;
+  }
+  .receipt-check-modal > .receipt-check-orders {
+    gap: 8px;
+    padding: 0 1px;
+  }
+  .receipt-check-modal .receipt-order-toggle {
+    padding: 11px 12px;
+  }
+  .receipt-check-modal .receipt-order-toggle > div:first-child span {
+    font-size: 12px;
+  }
+  .receipt-check-modal .receipt-pending,
+  .receipt-check-modal .receipt-ok,
+  .receipt-check-modal .receipt-different {
+    padding: 3px 7px;
+    font-size: 11px;
+  }
+  .receipt-check-modal .modal-actions {
+    flex-direction: row;
+    gap: 8px;
+    padding-top: 9px;
+  }
+  .receipt-check-modal .modal-actions .button {
+    width: auto;
+    min-height: 42px;
+  }
+  .receipt-check-modal .modal-actions .button:first-child {
+    flex: 0 0 auto;
+  }
+  .receipt-check-modal .modal-actions .button-primary {
+    flex: 1 1 auto;
+    padding-inline: 10px;
+    font-size: 13px;
+  }
 }
 
 /* O Safari no iPhone amplia a página quando o campo focado tem fonte menor que 16px. */
