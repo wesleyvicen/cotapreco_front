@@ -2538,6 +2538,20 @@ label small {
   align-items: center;
   gap: 9px;
 }
+.proposal-progress-modal { width:min(560px,100%); }
+.proposal-progress-modal .modal-header { grid-template-columns:46px 1fr; margin-bottom:16px; }
+.proposal-progress-modal .eyebrow { display:block; margin-bottom:3px; }
+.proposal-progress-list { display:flex; flex-direction:column; gap:9px; max-height:45vh; overflow-y:auto; padding-right:3px; }
+.proposal-progress-summary { display:flex; align-items:center; gap:12px; padding:14px; border:1px solid #cbe3da; border-radius:13px; background:#f2faf6; color:#17694f; }
+.proposal-progress-summary > svg { width:22px; height:22px; flex:0 0 auto; }
+.proposal-progress-summary > div { display:flex; min-width:0; flex:1; flex-direction:column; gap:2px; }
+.proposal-progress-summary span:not(.proposal-progress-count) { font-size:11px; color:#638078; }
+.proposal-progress-summary strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#173d31; }
+.proposal-progress-count { flex:0 0 auto; padding:5px 8px; border-radius:999px; background:#dff4e9; color:#0d6548; font-size:11px; font-weight:800; white-space:nowrap; }
+.proposal-progress-continue { flex:0 0 auto; min-height:34px; padding:6px 10px; font-size:12px; }
+.proposal-progress-continue svg { width:15px; height:15px; }
+.proposal-progress-actions { display:flex; flex-wrap:wrap; margin-top:18px; }
+@media (max-width: 600px) { .proposal-progress-summary { align-items:flex-start; flex-wrap:wrap; }.proposal-progress-count { margin-left:34px; }.proposal-progress-continue { width:100%; margin-left:34px; }.proposal-progress-actions { flex-direction:column; }.proposal-progress-actions .button { width:100%; } }
 .proposal-company-fields {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

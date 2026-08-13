@@ -1621,6 +1621,18 @@ function ListaPropostas({
   ocupado: boolean;
   erro: string;
 }) {
+  const [mostrarPropostasEmAndamento, setMostrarPropostasEmAndamento] =
+    useState(false);
+  const propostasEmAndamento = respostas.filter(
+    (resposta) => resposta.status === "IN_PROGRESS",
+  );
+  const solicitarNovaProposta = () => {
+    if (propostasEmAndamento.length > 0) {
+      setMostrarPropostasEmAndamento(true);
+      return;
+    }
+    aoCriar();
+  };
   return (
     <section className="proposals-panel">
       <div className="proposals-heading">
@@ -1636,7 +1648,7 @@ function ListaPropostas({
           </LinkInterno>
         </div>
         {cotacaoAberta && (
-          <button className="button button-primary" onClick={aoCriar}>
+          <button className="button button-primary" onClick={solicitarNovaProposta}>
             <Plus />
             Nova proposta
           </button>
@@ -1699,6 +1711,35 @@ function ListaPropostas({
               </button>
             </article>
           ))}
+        </div>
+      )}
+      {mostrarPropostasEmAndamento && (
+        <div className="modal-backdrop">
+          <section className="modal proposal-progress-modal" role="dialog" aria-modal="true" aria-labelledby="proposta-em-andamento-titulo">
+            <div className="modal-header">
+              <div className="modal-icon"><Clock3 /></div>
+              <div>
+                <span className="eyebrow green">Propostas em andamento</span>
+                <h2 id="proposta-em-andamento-titulo">Você já começou {propostasEmAndamento.length === 1 ? "uma proposta" : `${propostasEmAndamento.length} propostas`}</h2>
+                <p>Retome uma delas ou confirme se deseja iniciar outra distribuidora.</p>
+              </div>
+            </div>
+            <div className="proposal-progress-list">
+              {propostasEmAndamento.map((proposta) => <div className="proposal-progress-summary" key={proposta.id}>
+                <Building2 />
+                <div>
+                  <span>Distribuidora</span>
+                  <strong>{proposta.nomeDistribuidora}</strong>
+                </div>
+                <span className="proposal-progress-count">{proposta.totalItensCotados} {proposta.totalItensCotados === 1 ? "item respondido" : "itens respondidos"}</span>
+                <button className="button button-primary proposal-progress-continue" disabled={ocupado} onClick={() => { setMostrarPropostasEmAndamento(false); aoAbrir(proposta.id); }}><Edit3 />Continuar</button>
+              </div>)}
+            </div>
+            <div className="modal-actions proposal-progress-actions">
+              <button className="button button-ghost" onClick={() => setMostrarPropostasEmAndamento(false)}>Cancelar</button>
+              <button className="button button-secondary" disabled={ocupado} onClick={() => { setMostrarPropostasEmAndamento(false); aoCriar(); }}><Plus />Criar outra proposta</button>
+            </div>
+          </section>
         </div>
       )}
     </section>
