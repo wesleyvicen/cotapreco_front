@@ -6,6 +6,8 @@ export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; e
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'|'purchaseComparisonEligible'|'purchasedItemCount'|'lastPurchaseAt'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
 export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number; minimumOrderValue:number|null; includedInSuggestedPurchase:boolean; active:boolean }
+export interface ItemPreviaResposta { quotationItemId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; available:boolean; unitPrice:number|null; availableQuantity:number|null; note:string|null }
+export interface PreviaResposta { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; quotedItems:number; total:number; minimumOrderValue:number|null; items:ItemPreviaResposta[] }
 export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
 export interface ColunaArquivo { index:number; name:string }
