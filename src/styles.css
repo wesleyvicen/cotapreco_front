@@ -5023,6 +5023,7 @@ label small {
 .minimum-manual-entry{justify-content:space-between;margin-top:20px;padding:18px;border:1px dashed #9bcfbb;border-radius:16px;background:#f5fbf8}.minimum-manual-entry svg{color:#177456}.minimum-manual-entry span{display:flex;flex-direction:column;color:#637a72}.minimum-manual-entry strong{color:#173d31}
 .receipt-check-modal{width:min(1120px,calc(100vw - 32px));height:min(92dvh,920px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden}.receipt-check-modal>.modal-header,.receipt-check-modal>.receipt-check-summary,.receipt-check-modal>.modal-actions{flex:0 0 auto}.receipt-check-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;margin:4px 0 16px;padding:14px;border:1px solid #dce8e3;border-radius:15px;background:#f4f8f6}.receipt-check-summary>div{display:flex;flex-direction:column;gap:4px;padding:6px 9px}.receipt-check-summary span{font-size:12px;color:#71857e}.receipt-check-summary strong{font-size:17px;color:#173d31}.receipt-check-summary .warning strong{color:#a45b12}.receipt-check-summary .complete strong{color:#177456}.receipt-check-orders{display:flex;flex:1 1 auto;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 3px}.receipt-check-orders article{border:1px solid #dce8e3;border-radius:15px;overflow:hidden}.receipt-check-orders article>header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;background:#f6f9f8}.receipt-check-orders article>header>div{display:flex;flex-direction:column;gap:3px}.receipt-check-orders article>header span{font-size:13px;color:#71857e}.receipt-ok,.receipt-different{padding:4px 9px;border-radius:999px;font-size:12px;white-space:nowrap}.receipt-ok{color:#0d6548;background:#dff4e9}.receipt-different{color:#9b5712;background:#fff1d7}.receipt-check-item{display:grid;grid-template-columns:minmax(180px,1.4fr) 120px 140px 100px;gap:12px;align-items:end;padding:14px 16px;border-top:1px solid #e3ebe8}.receipt-check-item.different{background:#fffaf1}.receipt-product{display:flex;flex-direction:column;gap:4px;align-self:center}.receipt-product span{font-size:12px;color:#71857e}.receipt-check-item label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#49645b}.receipt-check-item input{width:100%;min-height:40px;padding:0 10px;border:1px solid #cdded7;border-radius:9px;background:#fff;color:#173d31}.receipt-check-item input:disabled{background:#edf2f0;color:#8a9a94}.receipt-subtotal{padding:11px 0;text-align:right;white-space:nowrap}.receipt-note{grid-column:1/-1}.receipt-note input{min-height:38px}
 .receipt-line-ok,.receipt-line-different,.received-order-total{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:12px}.receipt-line-ok{color:#177456}.receipt-line-different{color:#a45b12}.received-order-total{padding:11px 13px;border-radius:10px;background:#edf9f4;color:#14533f}.received-order-total svg{width:17px;height:17px}
+.supplier-purchase-card:has(.received-order-total) .order-actions .button.button-secondary{display:none}
 .partial-coverage-modal{width:min(560px,calc(100vw - 32px))}.partial-coverage-note{display:flex;align-items:flex-start;gap:11px;margin:8px 0 22px;padding:14px;border:1px solid #f0d59a;border-radius:12px;background:#fff9ed;color:#855d08}.partial-coverage-note svg{width:21px;flex:0 0 auto}
 .receipt-pending{padding:4px 9px;border-radius:999px;background:#e9efed;color:#526a62;font-size:12px;white-space:nowrap}
 .receipt-order-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border:0;background:#f6f9f8;color:#173d31;text-align:left;cursor:pointer}.receipt-order-toggle:hover{background:#edf5f2}.receipt-order-toggle>div{display:flex;align-items:center;gap:12px}.receipt-order-toggle>div:first-child{min-width:0;align-items:flex-start;flex-direction:column;gap:4px}.receipt-order-toggle>div:first-child span{font-size:13px;color:#71857e}.receipt-order-toggle svg{width:20px;transition:transform .18s ease}.receipt-check-orders article.expanded .receipt-order-toggle{border-bottom:1px solid #e3ebe8}.receipt-check-orders article.expanded .receipt-order-toggle svg{transform:rotate(180deg)}.receipt-order-items{padding:2px 0 10px}.receipt-order-items .receipt-check-item{padding:16px 18px}
@@ -5207,6 +5208,34 @@ label small {
 .receipt-check-modal > .modal-actions {
   padding-bottom: env(safe-area-inset-bottom);
 }
+.receipt-saved { border-color: #b7dfce !important; }
+.receipt-saved .receipt-order-toggle { background: #f2faf6; }
+.receipt-saved-note,.receipt-order-save { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:12px 18px 4px; padding:11px 13px; border-radius:10px; font-size:12px; }
+.receipt-saved-note { background:#edf9f4; color:#14533f; }
+.receipt-saved-note svg { width:17px; height:17px; flex:0 0 auto; }
+.receipt-order-save { background:#f6f9f8; color:#526a62; }
+.receipt-reorder { grid-column:1/-1; flex-direction:row !important; align-items:center; gap:8px !important; padding:9px 11px; border-radius:9px; background:#fff5df; color:#7d5816 !important; }
+.receipt-reorder input { width:17px !important; min-height:17px !important; padding:0 !important; accent-color:#177456; }
+@media (min-width: 601px) {
+  .modal-backdrop:has(.receipt-check-modal) { padding:16px; }
+  .receipt-check-modal { width:min(1120px,calc(100vw - 32px)); height:min(92dvh,920px); max-height:calc(100dvh - 32px); }
+  .receipt-check-modal .modal-header { min-height:42px; margin-bottom:5px; }
+  .receipt-check-modal .modal-header .eyebrow,
+  .receipt-check-modal .modal-header p { display:none; }
+  .receipt-check-modal .modal-header h2 { margin:0; font-size:24px; }
+  .receipt-check-modal .receipt-check-summary { gap:4px; margin:0 0 7px; padding:5px 8px; border-radius:11px; }
+  .receipt-check-modal .receipt-check-summary > div { gap:0; padding:2px 6px; }
+  .receipt-check-modal .receipt-check-summary span { font-size:11px; }
+  .receipt-check-modal .receipt-check-summary strong { font-size:15px; }
+  .receipt-check-modal .receipt-check-summary .receipt-mark-all { min-height:34px; padding:5px 11px; font-size:13px; }
+  .receipt-check-modal .receipt-global-search { margin-bottom:7px; }
+  .receipt-check-modal .receipt-global-search input { min-height:34px; }
+  .receipt-check-modal > .receipt-check-orders { gap:8px; }
+  .receipt-check-modal .receipt-order-toggle { padding:10px 14px; }
+  .receipt-check-modal .receipt-order-items .receipt-check-item { padding:12px 14px; }
+  .receipt-check-modal .modal-actions { padding-top:7px; }
+  .receipt-check-modal .modal-actions .button { min-height:38px; padding-block:7px; }
+}
 @media (max-width: 600px) {
   .modal-backdrop:has(.receipt-check-modal) {
     padding: 0;
@@ -5277,6 +5306,8 @@ label small {
   .receipt-check-modal .receipt-order-toggle > div:first-child span {
     font-size: 12px;
   }
+  .receipt-saved-note,.receipt-order-save { align-items:stretch; flex-direction:column; margin:10px 12px 2px; }
+  .receipt-order-save .button { width:100%; }
   .receipt-check-modal .receipt-pending,
   .receipt-check-modal .receipt-ok,
   .receipt-check-modal .receipt-different {
