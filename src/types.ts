@@ -29,8 +29,8 @@ export interface ItemRespostaPublica { id:number; ean:string|null; nomeProduto:s
 export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:string; nomeRepresentante:string; nomeDistribuidora:string; documentoDistribuidora:string|null; valorMinimoPedido:number|null; status:StatusResposta; expiraEm:string|null; podeCorrigir:boolean; itens:ItemRespostaPublica[] }
 export interface Empresa { id:number; nome:string; cnpj:string|null }
 export type StatusPedido='GERADO'|'COMPARTILHADO'|'DESATUALIZADO'|'CANCELADO'
-export interface ItemPedido { quotationItemId:number; ean:string|null; productName:string; quantity:number; unitPrice:number; subtotal:number; stockOverrideNote:string|null }
-export interface PedidoCompra { id:number; responseId:number; number:string; status:StatusPedido; supplierName:string; supplierDocument:string|null; total:number; minimumOrderValue:number|null; belowMinimum:boolean; belowMinimumConfirmed:boolean; generatedAt:string; sharedAt:string|null; pdfAvailable:boolean; items:ItemPedido[] }
+export interface ItemPedido { quotationItemId:number; ean:string|null; productName:string; quantity:number; unitPrice:number; subtotal:number; stockOverrideNote:string|null; receivedQuantity:number|null; receivedUnitPrice:number|null; receivedSubtotal:number|null; receiptNote:string|null }
+export interface PedidoCompra { id:number; responseId:number; number:string; status:StatusPedido; supplierName:string; supplierDocument:string|null; total:number; minimumOrderValue:number|null; belowMinimum:boolean; belowMinimumConfirmed:boolean; generatedAt:string; sharedAt:string|null; checkedAt:string|null; receivedTotal:number|null; pdfAvailable:boolean; items:ItemPedido[] }
 export type EstrategiaPedidoMinimo='ATINGIR_MINIMO'|'REPASSAR_PEDIDO'
 export type TipoAjustePedidoMinimo='REALOCACAO'|'UNIDADES_EXTRAS'|'REPASSE'
 export interface AjustePedidoMinimo { quotationItemId:number; productName:string; type:TipoAjustePedidoMinimo; currentQuantity:number; projectedQuantity:number; extraQuantity:number; unitPrice:number; destinationSupplier:string|null }
