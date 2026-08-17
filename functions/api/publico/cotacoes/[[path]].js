@@ -1,4 +1,4 @@
-const BACKEND_PADRAO = 'https://cotaapi.drogariacenter.com.br'
+const BACKEND_PADRAO = 'https://api.cotapreco.com.br'
 
 export async function onRequestGet(context) {
   const segmentos = Array.isArray(context.params.path)
