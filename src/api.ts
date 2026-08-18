@@ -1,15 +1,17 @@
+import { CHAVE_TOKEN_FARMACIA, limparSessaoFarmaciaLocal } from './cache/persistenciaSessao'
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
 export class ErroApi extends Error { fields: Record<string,string>; constructor(message:string, fields:Record<string,string>={}) { super(message); this.fields=fields } }
 
 type Sessao='farmacia'|'representante'
 type RespostaToken={token:string}
-const chaves:Record<Sessao,string>={farmacia:'cotapreco_token',representante:'cotapreco_token_representante'}
+const chaves:Record<Sessao,string>={farmacia:CHAVE_TOKEN_FARMACIA,representante:'cotapreco_token_representante'}
 const rotasRefresh:Record<Sessao,string>={farmacia:'/auth/refresh',representante:'/publico/representantes/refresh'}
 let renovacaoFarmacia:Promise<void>|null=null
 let renovacaoRepresentante:Promise<void>|null=null
 
-const limparSessao=(sessao:Sessao)=>localStorage.removeItem(chaves[sessao])
+const limparSessao=(sessao:Sessao)=>sessao==='farmacia'?limparSessaoFarmaciaLocal():localStorage.removeItem(chaves[sessao])
 const podeRenovar=(path:string,sessao:Sessao)=>sessao==='farmacia'
   ? !['/auth/login','/auth/register','/auth/refresh','/auth/logout','/auth/esqueci-senha','/auth/redefinir-senha'].includes(path)
   : !['/publico/representantes/refresh','/publico/representantes/logout'].includes(path)
