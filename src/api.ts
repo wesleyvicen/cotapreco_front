@@ -1,4 +1,5 @@
 import { CHAVE_TOKEN_FARMACIA, limparSessaoFarmaciaLocal } from './cache/persistenciaSessao'
+import { invalidarCachePainel, limparCachePainel } from './cache/cachePainel'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
@@ -11,7 +12,15 @@ const rotasRefresh:Record<Sessao,string>={farmacia:'/auth/refresh',representante
 let renovacaoFarmacia:Promise<void>|null=null
 let renovacaoRepresentante:Promise<void>|null=null
 
-const limparSessao=(sessao:Sessao)=>sessao==='farmacia'?limparSessaoFarmaciaLocal():localStorage.removeItem(chaves[sessao])
+const limparSessao=(sessao:Sessao)=>{
+  if(sessao==='farmacia'){
+    limparSessaoFarmaciaLocal()
+    limparCachePainel()
+    return
+  }
+  localStorage.removeItem(chaves[sessao])
+}
+const alteraDados=(options:RequestInit)=>!['GET','HEAD','OPTIONS'].includes((options.method??'GET').toUpperCase())
 const podeRenovar=(path:string,sessao:Sessao)=>sessao==='farmacia'
   ? !['/auth/login','/auth/register','/auth/refresh','/auth/logout','/auth/esqueci-senha','/auth/redefinir-senha'].includes(path)
   : !['/publico/representantes/refresh','/publico/representantes/logout'].includes(path)
@@ -52,7 +61,9 @@ async function requisicao<T>(path:string,options:RequestInit,sessao:Sessao|null,
 }
 
 export async function api<T>(path:string,options:RequestInit={}):Promise<T>{
-  return requisicao<T>(path,options,'farmacia',()=>{limparSessao('farmacia');window.location.href='/login'})
+  const resultado=await requisicao<T>(path,options,'farmacia',()=>{limparSessao('farmacia');window.location.href='/login'})
+  if(alteraDados(options))invalidarCachePainel()
+  return resultado
 }
 
 export async function apiArquivo(path:string):Promise<Blob>{
