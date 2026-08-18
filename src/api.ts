@@ -83,6 +83,7 @@ export async function encerrarSessaoRepresentante(){
   try{await fetch(`${API_URL}/publico/representantes/logout`,{method:'POST',credentials:'include',headers:{'X-Requested-With':'XMLHttpRequest'}})}finally{limparSessao('representante')}
 }
 export const salvarTokenRepresentante=(token:string)=>localStorage.setItem(chaves.representante,token)
+export const possuiTokenRepresentante=()=>{try{return Boolean(localStorage.getItem(chaves.representante))}catch{return false}}
 export const removerTokenRepresentante=()=>limparSessao('representante')
 export const money=(value:number|null|undefined)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value??0)
 export const date=(value:string|null|undefined)=>value?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(value)):'Sem prazo'

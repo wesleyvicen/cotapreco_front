@@ -26,11 +26,11 @@ import {
   encerrarSessaoRepresentante,
   ErroApi,
   money,
+  possuiTokenRepresentante,
   salvarTokenRepresentante,
 } from "../api";
 import {
   AvisoErro,
-  Carregando,
   EtiquetaStatus,
   EstadoVazio,
 } from "../components/ComponentesUI";
@@ -77,7 +77,8 @@ export default function PaginaRespostaPublica() {
   const [cadastro, setCadastro] = useState(dadosCadastro);
   const [emailRecuperacao, setEmailRecuperacao] = useState("");
   const [distribuidora, setDistribuidora] = useState(dadosDistribuidora);
-  const [carregando, setCarregando] = useState(true);
+  const [carregandoCotacao, setCarregandoCotacao] = useState(true);
+  const [carregandoSessao, setCarregandoSessao] = useState(possuiTokenRepresentante);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -100,34 +101,51 @@ export default function PaginaRespostaPublica() {
 
   useEffect(() => {
     let ativo = true;
-    const carregar = async () => {
+    setCarregandoCotacao(true);
+    setErro("");
+    const carregarCotacao = async () => {
       try {
         const visao = await apiPublica<CotacaoPublica>(
           `/publico/cotacoes/${token}`,
         );
         if (!ativo) return;
         setCotacao(visao);
-        try {
-          const conta = await apiRepresentante<Representante>(
-            "/publico/representantes/eu",
-          );
-          if (!ativo) return;
-          setRepresentante(conta);
-          setRespostas(
-            await apiRepresentante<ResumoRespostaPublica[]>(
-              `/publico/cotacoes/${token}/minhas-respostas`,
-            ),
-          );
-        } catch {
-          if (ativo) setRepresentante(null);
-        }
       } catch (e) {
         if (ativo) setErro(mensagemErro(e, "Cotação não encontrada."));
       } finally {
-        if (ativo) setCarregando(false);
+        if (ativo) setCarregandoCotacao(false);
       }
     };
-    void carregar();
+    const restaurarSessao = possuiTokenRepresentante();
+    setCarregandoSessao(restaurarSessao);
+    const carregarSessao = async () => {
+      if (!restaurarSessao) return;
+      try {
+        const conta = await apiRepresentante<Representante>(
+          "/publico/representantes/eu",
+        );
+        if (!ativo) return;
+        setRepresentante(conta);
+        try {
+          const propostas = await apiRepresentante<ResumoRespostaPublica[]>(
+            `/publico/cotacoes/${token}/minhas-respostas`,
+          );
+          if (ativo) setRespostas(propostas);
+        } catch (e) {
+          if (!ativo) return;
+          if (!possuiTokenRepresentante()) {
+            setRepresentante(null);
+            setRespostas([]);
+          } else setErro(mensagemErro(e, "Não foi possível carregar suas propostas."));
+        }
+      } catch {
+        if (ativo) setRepresentante(null);
+      } finally {
+        if (ativo) setCarregandoSessao(false);
+      }
+    };
+    void carregarCotacao();
+    void carregarSessao();
     return () => {
       ativo = false;
     };
@@ -478,12 +496,7 @@ export default function PaginaRespostaPublica() {
     }
   };
 
-  if (carregando)
-    return (
-      <div className="public-page">
-        <Carregando />
-      </div>
-    );
+  if (carregandoCotacao)return <EsqueletoCotacaoPublica/>;
   if (!cotacao)
     return (
       <div className="public-page public-center">
@@ -566,11 +579,13 @@ export default function PaginaRespostaPublica() {
     );
 
   return (
-    <div className="public-page">
+    <div className="public-page" aria-busy={carregandoSessao}>
       <Cabecalho representante={representante} aoSair={sair} />
       <main className="public-container">
         <Introducao cotacao={cotacao} />
-        {!representante ? (
+        {carregandoSessao ? (
+          <><span className="sr-only" role="status">Restaurando sua sessão e propostas.</span><EsqueletoSessaoRepresentante /></>
+        ) : !representante ? (
           <Autenticacao
             aba={aba}
             setAba={(valor) => {
@@ -673,6 +688,14 @@ export default function PaginaRespostaPublica() {
       <Rodape />
     </div>
   );
+}
+
+function EsqueletoCotacaoPublica(){
+  return <div className="public-page" aria-busy="true"><Cabecalho representante={null} aoSair={()=>{}}/><span className="sr-only" role="status">Carregando informações da cotação.</span><main className="public-container"><section className="public-intro public-intro-skeleton" aria-hidden="true"><span className="skeleton-block public-skeleton-eyebrow"/><span className="skeleton-block public-skeleton-title"/><span className="skeleton-block public-skeleton-company"/><div className="public-meta"><span className="skeleton-block public-skeleton-meta"/><span className="skeleton-block public-skeleton-meta"/></div></section><EsqueletoSessaoRepresentante/></main><Rodape/></div>
+}
+
+function EsqueletoSessaoRepresentante(){
+  return <section className="public-card public-session-skeleton" aria-hidden="true"><span className="skeleton-block public-skeleton-tabs"/><span className="skeleton-block public-skeleton-card-title"/><span className="skeleton-block public-skeleton-line wide"/><span className="skeleton-block public-skeleton-input"/><span className="skeleton-block public-skeleton-input"/><span className="skeleton-block public-skeleton-button"/></section>
 }
 
 function Editor({
