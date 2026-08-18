@@ -606,6 +606,50 @@ tbody tr:hover {
 @media (prefers-reduced-motion: reduce) {
   .skeleton-block::after { animation: none; }
 }
+.route-skeleton-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+#root > .route-skeleton {
+  width: min(100%, 1580px);
+  margin: 0 auto;
+  padding: 36px 42px 60px;
+}
+.route-skeleton-eyebrow {
+  width: 92px;
+  height: 12px;
+}
+.route-skeleton-title {
+  width: min(320px, 70%);
+  height: 38px;
+}
+.route-skeleton-description {
+  width: min(480px, 90%);
+  height: 15px;
+}
+.route-skeleton-card {
+  display: flex;
+  min-height: 230px;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+}
+.route-skeleton-card-title {
+  width: min(240px, 55%);
+  height: 22px;
+  margin-bottom: 12px;
+}
+.route-skeleton-line {
+  width: 68%;
+  height: 14px;
+}
+.route-skeleton-line.wide { width: 92%; }
+.route-skeleton-line.short { width: 43%; }
+@media (max-width: 700px) {
+  #root > .route-skeleton { padding: 24px 18px 40px; }
+}
 .toolbar {
   display: flex;
   gap: 12px;
