@@ -64,6 +64,16 @@ const dadosDistribuidora = {
 const notaQuantidadeMinima = (quantidade: number) =>
   `Preço válido a partir de ${quantidade} un.`;
 
+function ordenarItensPorProduto<T extends { nomeProduto: string }>(
+  itens: readonly T[],
+) {
+  return [...itens].sort((primeiro, segundo) =>
+    primeiro.nomeProduto.localeCompare(segundo.nomeProduto, "pt-BR", {
+      sensitivity: "base",
+    }),
+  );
+}
+
 export default function PaginaRespostaPublica() {
   const { token = "" } = usarParametros();
   const [cotacao, setCotacao] = useState<CotacaoPublica | null>(null);
@@ -504,7 +514,9 @@ export default function PaginaRespostaPublica() {
         <AvisoErro message={erro} />
       </div>
     );
-  const itensCotados = resposta?.itens.filter((item) => item.disponivel) ?? [];
+  const itensCotados = ordenarItensPorProduto(
+    resposta?.itens.filter((item) => item.disponivel) ?? [],
+  );
   const total = itensCotados.reduce(
     (soma, item) =>
       soma +
@@ -743,9 +755,10 @@ function Editor({
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase();
+  const itensOrdenados = ordenarItensPorProduto(resposta.itens);
   const itensVisiveis = !termo
-    ? resposta.itens
-    : resposta.itens.filter((item) =>
+    ? itensOrdenados
+    : itensOrdenados.filter((item) =>
         `${item.nomeProduto} ${item.laboratorio ?? ""} ${item.ean ?? ""}`
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "")
@@ -885,7 +898,7 @@ function Editor({
           ) : (
             itensVisiveis.map((item) => {
               const indice =
-                resposta.itens.findIndex(
+                itensOrdenados.findIndex(
                   (original) => original.id === item.id,
                 ) + 1;
               const invalido = Object.keys(errosCampos).some((c) =>
