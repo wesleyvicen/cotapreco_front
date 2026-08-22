@@ -1,5 +1,5 @@
 import {
-  ArrowDownToLine, Check, CircleAlert, CircleCheck, Columns3, ListChecks, PenLine,
+  ArrowDownToLine, Check, CircleAlert, CircleCheck, Columns3, Info, ListChecks, LoaderCircle, PenLine,
   RotateCcw, ScanSearch, Search, ShieldCheck, TableProperties, Trash2, Upload, X,
 } from 'lucide-react'
 import {
@@ -155,16 +155,16 @@ async function canvasesParaPdfBlob(canvases:HTMLCanvasElement[]):Promise<Blob> {
   return new Blob([header, ...objects.map((object) => object.value), xref] as BlobPart[], { type: 'application/pdf' })
 }
 
-function Status({ type, children }:{ type:TipoStatus; children:ReactNode }) { return <span className={`ol-status ${type}`}>{children}</span> }
+function Status({ type, title, children }:{ type:TipoStatus; title?:string; children:ReactNode }) { return <span className={`ol-status ${type}`} title={title}>{children}</span> }
 
 function StatusCompra({ item }:{ item:ItemResultadoCompra }) {
-  if (item.status === 'naoEncontrado') return <Status type="danger">Não encontrado</Status>
-  if (item.status === 'revisarCorrespondencia') return <Status type="warning">Revisar correspondência</Status>
-  if (item.status === 'ajusteInvalido') return <Status type="danger">Revisar ajuste</Status>
-  if (item.status === 'removidoManual') return <Status type="neutral">Removido</Status>
-  if (item.status === 'ajusteManual') return <Status type="warning">Ajuste manual</Status>
-  if (item.status === 'alternativaPreferida') return <Status type="warning">Preferido</Status>
-  return <Status type="success">Melhor preço</Status>
+  if (item.status === 'naoEncontrado') return <Status type="danger" title="Nenhum fornecedor importado tem um produto com o mesmo EAN, DCB ou nome equivalente a este item. Importe a tabela do fornecedor que vende este produto, ou use o botão Revisar para procurar manualmente.">Não encontrado</Status>
+  if (item.status === 'revisarCorrespondencia') return <Status type="warning" title="Encontramos produtos parecidos, mas não parecidos o suficiente para vincular sozinhos. Clique em Revisar e confirme se é o mesmo produto.">Revisar correspondência</Status>
+  if (item.status === 'ajusteInvalido') return <Status type="danger" title="Você escolheu manualmente um fornecedor ou uma oferta para este item que não existe mais nas tabelas importadas (provavelmente porque a tabela desse fornecedor foi removida ou atualizada). Clique em Editar para escolher outra opção.">Revisar ajuste</Status>
+  if (item.status === 'removidoManual') return <Status type="neutral" title="Você ajustou a quantidade deste item para zero. Ele não entra no total nem na exportação da melhor compra.">Removido</Status>
+  if (item.status === 'ajusteManual') return <Status type="warning" title="O fornecedor, a oferta ou a quantidade deste item foram escolhidos manualmente, em vez do cálculo automático de menor preço.">Ajuste manual</Status>
+  if (item.status === 'alternativaPreferida') return <Status type="warning" title="Este item foi comprado do fornecedor preferido informado na importação do pedido, mesmo não sendo o de menor preço disponível.">Preferido</Status>
+  return <Status type="success" title="Este é o fornecedor com o menor preço disponível para este item, escolhido automaticamente.">Melhor preço</Status>
 }
 
 function rotuloMetodo(method:MetodoCorrespondencia|null):string {
@@ -176,14 +176,23 @@ function rotuloMetodo(method:MetodoCorrespondencia|null):string {
   return 'Sem correspondência'
 }
 
+function explicacaoMetodo(method:MetodoCorrespondencia|null):string {
+  if (method === 'ean') return 'O código de barras (EAN) da oferta é idêntico ao do pedido — a correspondência mais confiável que existe.'
+  if (method === 'dcb') return 'A oferta tem o mesmo princípio ativo (DCB) do item pedido, mesmo com EAN ou nome diferentes. Vem da base de equivalência DCB.'
+  if (method === 'automatic-name') return 'O nome do produto da oferta bateu com o do pedido (mesmo princípio ativo, dose, forma e embalagem), mesmo com EANs diferentes.'
+  if (method === 'auto-reviewed-name') return 'A correspondência por nome ficou próxima o suficiente que o sistema aceitou sozinho, porque a opção "Aceitar automaticamente equivalências seguras" está ativada.'
+  if (method === 'confirmed-name') return 'Você revisou manualmente e confirmou que esta oferta é o mesmo produto do pedido.'
+  return 'Nenhum fornecedor importado tem uma oferta parecida com este item.'
+}
+
 function metodoAceitoAutomaticamente(method:MetodoCorrespondencia|null):boolean {
   return method === 'auto-reviewed-name' || method === 'dcb'
 }
 
 function BadgeCorrespondencia({ item }:{ item:ItemResultadoCompra }) {
-  if (item.status === 'revisarCorrespondencia') return <Status type="warning">Revisar sugestões</Status>
-  if (!item.matchMethod) return <Status type="danger">Não encontrado</Status>
-  return <div className="ol-match-badge"><Status type={item.matchMethod === 'ean' || item.matchMethod === 'dcb' ? 'success' : 'warning'}>{rotuloMetodo(item.matchMethod)}</Status>{item.dcb && <small title={item.dcb}>{item.dcb}</small>}</div>
+  if (item.status === 'revisarCorrespondencia') return <Status type="warning" title="Encontramos produtos parecidos, mas eles precisam da sua confirmação antes de entrar na comparação.">Revisar sugestões</Status>
+  if (!item.matchMethod) return <Status type="danger" title={explicacaoMetodo(null)}>Não encontrado</Status>
+  return <div className="ol-match-badge"><Status type={item.matchMethod === 'ean' || item.matchMethod === 'dcb' ? 'success' : 'warning'} title={explicacaoMetodo(item.matchMethod)}>{rotuloMetodo(item.matchMethod)}</Status>{item.dcb && <small title={`DCB identificado para este item: ${item.dcb}`}>{item.dcb}</small>}</div>
 }
 
 function categoriaHistorico(item:ItemResultadoCompra, history:MapaHistoricoPrecos, dcbCatalog:CatalogoDcb):string {
@@ -210,6 +219,8 @@ export default function PaginaCotacaoOL() {
   const [dcbCatalog, setDcbCatalog] = useState<CatalogoDcb>(saved.dcbCatalog || {})
   const [dcbInfo, setDcbInfo] = useState<DcbInfo|null>(saved.dcbInfo || null)
   const [dcbPadraoDispensada, setDcbPadraoDispensada] = useState(Boolean(saved.dcbPadraoDispensada))
+  const [carregandoDcbPadrao, setCarregandoDcbPadrao] = useState(false)
+  const [dcbErro, setDcbErro] = useState(false)
   const [historicoPrecos, setHistoricoPrecos] = useState<MapaHistoricoPrecos>(saved.historicoPrecos || {})
   const [historicoInfo, setHistoricoInfo] = useState<HistoricoInfo|null>(saved.historicoInfo || null)
   const [activeTab, setActiveTab] = useState('')
@@ -261,24 +272,29 @@ export default function PaginaCotacaoOL() {
   useEffect(() => {
     if (Object.keys(dcbCatalog).length || dcbInfo || dcbPadraoDispensada) return
     let cancelado = false
+    setCarregandoDcbPadrao(true)
+    setDcbErro(false)
     void (async () => {
       try {
         const resposta = await fetch(`${import.meta.env.BASE_URL}${ARQUIVO_DCB_PADRAO}`)
-        if (!resposta.ok) return
+        if (!resposta.ok) throw new Error('resposta invalida')
         const arquivo = new File([await resposta.blob()], ARQUIVO_DCB_PADRAO)
         const matrix = await readSpreadsheet(arquivo, 'dcb')
-        if (cancelado || !matrix.length) return
+        if (cancelado) return
+        if (!matrix.length) throw new Error('planilha vazia')
         const headerIndex = detectHeaderRow(matrix)
         const headers = (matrix[headerIndex] || []).map((header) => String(header || '').trim())
         const rows = matrix.slice(headerIndex + 1).filter((row) => row.some((cell) => String(cell || '').trim()))
         const auto = autoMapColumns(headers, rows)
-        if (auto.ean === undefined || auto.dcb === undefined) return
+        if (auto.ean === undefined || auto.dcb === undefined) throw new Error('colunas nao identificadas')
         const { catalog } = parseDcbCatalog(rows, { eanIndex: auto.ean, dcbIndex: auto.dcb })
         const total = Object.keys(catalog).length
-        if (!total || cancelado) return
+        if (!total) throw new Error('catalogo vazio')
+        if (cancelado) return
         setDcbCatalog(catalog)
         setDcbInfo({ fileName: NOME_EXIBICAO_DCB_PADRAO, importedAt: new Date().toISOString(), total, orderMatched: 0, quotationMatched: 0, origem: 'padrao' })
-      } catch { /* Sem o arquivo padrão ou sem conexão: a tela segue funcionando normalmente sem DCB. */ }
+      } catch { if (!cancelado) setDcbErro(true) /* Sem o arquivo padrão ou sem conexão: a tela segue funcionando normalmente sem DCB. */ }
+      finally { if (!cancelado) setCarregandoDcbPadrao(false) }
     })()
     return () => { cancelado = true }
   }, [dcbCatalog, dcbInfo, dcbPadraoDispensada])
@@ -634,13 +650,30 @@ export default function PaginaCotacaoOL() {
     {notice && <div className="alert alert-success" role="status">{notice}<button type="button" className="ol-alert-close" onClick={() => setNotice('')}><X size={15}/></button></div>}
     {warnings.map((warning) => <div className="alert alert-warning" key={warning}>{warning}</div>)}
     <div className="ol-actions">
-      <label className="button button-primary"><Upload size={18}/>{loading === 'cotacao' ? 'Lendo planilha...' : 'Importar fornecedor'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('cotacao', event.target.files?.[0])}/></label>
-      <label className="button button-secondary"><Upload size={18}/>{loading === 'pedido' ? 'Lendo planilha...' : 'Importar pedido'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('pedido', event.target.files?.[0])}/></label>
-      <button type="button" className="button button-ghost" disabled={!exportRows.length} onClick={() => baixarCsv(exportRows, 'cotacao_para_ol.csv')}><ArrowDownToLine size={18}/>Exportar aba</button>
-      <button type="button" className="button button-danger-soft" onClick={() => setClearOpen(true)}><Trash2 size={18}/>Limpar dados</button>
+      <label className="button button-primary" title="Envie a tabela de preços de UM fornecedor (com EAN, descrição e preço unitário). Pode importar quantos fornecedores quiser, um arquivo de cada vez — cada um aparece depois como uma aba separada."><Upload size={18}/>{loading === 'cotacao' ? 'Lendo planilha...' : 'Importar fornecedor'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('cotacao', event.target.files?.[0])}/></label>
+      <label className="button button-secondary" title="Envie a lista de produtos que você quer comprar, com a quantidade de cada um. É contra essa lista que o sistema compara os preços de todos os fornecedores já importados."><Upload size={18}/>{loading === 'pedido' ? 'Lendo planilha...' : 'Importar pedido'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('pedido', event.target.files?.[0])}/></label>
+      <button type="button" className="button button-ghost" disabled={!exportRows.length} title="Baixa em CSV os dados exibidos na aba e no filtro atuais." onClick={() => baixarCsv(exportRows, 'cotacao_para_ol.csv')}><ArrowDownToLine size={18}/>Exportar aba</button>
+      <button type="button" className="button button-danger-soft" title="Apaga as tabelas de fornecedores, o pedido e os ajustes salvos neste dispositivo. Não afeta outros computadores." onClick={() => setClearOpen(true)}><Trash2 size={18}/>Limpar dados</button>
     </div>
     <div className="card ol-panel">
-      <div><span className="eyebrow green">Base de equivalência DCB</span><b>{dcbInfo ? `${dcbInfo.total} EANs prontos para comparar por princípio ativo` : 'Importe a tabela EAN → DCB'}</b><small>{dcbInfo ? `${dcbInfo.fileName}${dcbInfo.origem === 'padrao' ? ' · base padrão carregada automaticamente' : ''} · produtos com o mesmo DCB disputarão automaticamente o menor preço` : 'A base é opcional. Sem ela, o sistema continua usando EAN e descrição.'}</small></div>
+      <div>
+        <span className="eyebrow green">Base de equivalência DCB</span>
+        <b>{carregandoDcbPadrao
+          ? <><LoaderCircle size={15} className="spin"/> Carregando a base padrão de DCB…</>
+          : dcbInfo
+            ? `${dcbInfo.total} EANs prontos para comparar por princípio ativo`
+            : dcbErro
+              ? 'Não foi possível carregar a base padrão'
+              : 'Nenhuma base de DCB carregada'}</b>
+        <small className="ol-dcb-explainer"><Info size={13}/> DCB é o nome padronizado do princípio ativo (ex.: dipirona, paracetamol). Com essa base, o sistema reconhece que produtos de fornecedores diferentes são o mesmo remédio — mesmo com nomes e marcas diferentes — e escolhe sozinho a oferta mais barata entre eles.</small>
+        <small>{carregandoDcbPadrao
+          ? 'Baixando e organizando os dados por princípio ativo. Isso só acontece uma vez, na primeira vez que você abre esta tela.'
+          : dcbInfo
+            ? `${dcbInfo.fileName}${dcbInfo.origem === 'padrao' ? ' · carregada automaticamente' : ''} · produtos com o mesmo DCB disputam o menor preço entre si automaticamente`
+            : dcbErro
+              ? 'Não consegui baixar a base padrão agora. Você pode tentar de novo mais tarde ou importar sua própria planilha EAN → DCB.'
+              : 'A base é opcional. Sem ela, o sistema compara os produtos só por EAN e nome.'}</small>
+      </div>
       <div><label className="button button-secondary">{loading === 'dcb' ? 'Lendo base...' : dcbInfo ? 'Atualizar DCB' : 'Importar DCB'}<input type="file" accept=".xls,.xlsx" onChange={(event) => { void iniciarImportacao('dcb', event.target.files?.[0]); event.target.value = '' }}/></label>{dcbInfo && <button type="button" className="button button-ghost" onClick={limparBaseDcb}>Remover base</button>}</div>
     </div>
     {cheaperNameOpportunityCount > 0 && <div className="ol-opportunity" role="alert">
@@ -658,23 +691,23 @@ export default function PaginaCotacaoOL() {
       <div className="toolbar ol-toolbar">
         <label className="search"><Search size={18}/><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome ou código..."/></label>
         {activeTab === 'pedido' && <>
-          <label className="ol-check"><input type="checkbox" checked={onlyMissing} onChange={(event) => setOnlyMissing(event.target.checked)}/> Apenas não encontrados</label>
-          {autoAcceptedCount > 0 && <label className="ol-check ol-check-accent"><input type="checkbox" checked={onlyAutoAccepted} onChange={(event) => { setOnlyAutoAccepted(event.target.checked); if (event.target.checked) setOnlyMissing(false) }}/> Aceitas automaticamente ({autoAcceptedCount})</label>}
+          <label className="ol-check" title="Mostra só os itens do pedido em que nenhum fornecedor importado tem uma oferta parecida."><input type="checkbox" checked={onlyMissing} onChange={(event) => setOnlyMissing(event.target.checked)}/> Apenas não encontrados</label>
+          {autoAcceptedCount > 0 && <label className="ol-check ol-check-accent" title="Mostra só os itens cuja correspondência por nome foi aceita sozinha pelo sistema (sem você revisar), porque 'Aceitar automaticamente equivalências seguras' está ativada."><input type="checkbox" checked={onlyAutoAccepted} onChange={(event) => { setOnlyAutoAccepted(event.target.checked); if (event.target.checked) setOnlyMissing(false) }}/> Aceitas automaticamente ({autoAcceptedCount})</label>}
           {reviewPendingCount > 0 && <button type="button" className="button button-secondary" onClick={() => { const first = resultado.find((item) => item.sugestoesCorrespondencia.length); setReviewingLineId(first?.id || ''); setMatchSearch('') }}><ScanSearch size={16}/>Revisar correspondências ({reviewPendingCount})</button>}
           {savedLinkCount > 0 && <button type="button" className="button button-ghost" onClick={() => setClearLinksOpen(true)}>Limpar vínculos ({savedLinkCount})</button>}
         </>}
         {activeTab === 'resultado' && <>
           <select value={supplierFilter} onChange={(event) => setSupplierFilter(event.target.value)}><option value="todos">Todos os fornecedores</option>{supplierList.map((supplier) => <option key={supplier}>{supplier}</option>)}</select>
-          {autoAcceptedCount > 0 && <label className="ol-check ol-check-accent"><input type="checkbox" checked={onlyAutoAccepted} onChange={(event) => setOnlyAutoAccepted(event.target.checked)}/> Aceitas automaticamente ({autoAcceptedCount})</label>}
-          <label className="ol-check"><input type="checkbox" checked={onlyAdjusted} onChange={(event) => setOnlyAdjusted(event.target.checked)}/> Apenas ajustados</label>
-          {cheaperNameOpportunityCount > 0 && <label className="ol-check ol-check-warning"><input type="checkbox" checked={onlyCheaperName} onChange={(event) => setOnlyCheaperName(event.target.checked)}/> EAN diferente mais barato ({cheaperNameOpportunityCount})</label>}
+          {autoAcceptedCount > 0 && <label className="ol-check ol-check-accent" title="Mostra só os itens cuja correspondência por nome foi aceita sozinha pelo sistema, sem revisão manual."><input type="checkbox" checked={onlyAutoAccepted} onChange={(event) => setOnlyAutoAccepted(event.target.checked)}/> Aceitas automaticamente ({autoAcceptedCount})</label>}
+          <label className="ol-check" title="Mostra só os itens em que você trocou manualmente o fornecedor, a oferta ou a quantidade escolhida pelo sistema."><input type="checkbox" checked={onlyAdjusted} onChange={(event) => setOnlyAdjusted(event.target.checked)}/> Apenas ajustados</label>
+          {cheaperNameOpportunityCount > 0 && <label className="ol-check ol-check-warning" title="Mostra só os itens em que existe uma oferta mais barata com EAN diferente do pedido (mesmo produto, código diferente). Vale conferir antes de fechar a compra."><input type="checkbox" checked={onlyCheaperName} onChange={(event) => setOnlyCheaperName(event.target.checked)}/> EAN diferente mais barato ({cheaperNameOpportunityCount})</label>}
           {historyCount > 0 && <>
-            <select value={historyFilter} onChange={(event) => setHistoryFilter(event.target.value)} aria-label="Filtrar oportunidade de preço"><option value="all">Todos os itens ({baseResultRows.length})</option><option value="good">Comprando mais barato ({historyStats.good})</option><option value="stable">Mesmo preço ({historyStats.stable})</option><option value="high">Comprando mais caro ({historyStats.high})</option><option value="missing">Sem histórico ({historyStats.missing})</option></select>
-            <select value={historySort} onChange={(event) => setHistorySort(event.target.value)} aria-label="Ordenar oportunidade de preço"><option value="default">Ordem do pedido</option><option value="worst">Pior → melhor oportunidade</option><option value="best">Melhor → pior oportunidade</option></select>
+            <select value={historyFilter} onChange={(event) => setHistoryFilter(event.target.value)} aria-label="Filtrar oportunidade de preço" title="Compara o preço desta compra com o último custo pago (planilha de histórico importada). Não muda o total nem a exportação, só o que aparece na tela."><option value="all">Todos os itens ({baseResultRows.length})</option><option value="good">Comprando mais barato ({historyStats.good})</option><option value="stable">Mesmo preço ({historyStats.stable})</option><option value="high">Comprando mais caro ({historyStats.high})</option><option value="missing">Sem histórico ({historyStats.missing})</option></select>
+            <select value={historySort} onChange={(event) => setHistorySort(event.target.value)} aria-label="Ordenar oportunidade de preço" title="Ordena a lista pela diferença entre o preço desta compra e o último custo pago."><option value="default">Ordem do pedido</option><option value="worst">Pior → melhor oportunidade</option><option value="best">Melhor → pior oportunidade</option></select>
           </>}
-          {adjustedCount > 0 && <button type="button" className="button button-ghost" onClick={() => setResetAdjustmentsOpen(true)}><RotateCcw size={16}/>Restaurar cálculo</button>}
+          {adjustedCount > 0 && <button type="button" className="button button-ghost" title="Desfaz todos os ajustes manuais de uma vez: fornecedor, oferta e quantidade voltam ao cálculo automático de menor preço em todos os itens." onClick={() => setResetAdjustmentsOpen(true)}><RotateCcw size={16}/>Restaurar cálculo</button>}
         </>}
-        {activeSupplier && <div className="header-actions"><button type="button" className="button button-secondary" onClick={() => abrirRenomeioFornecedor(activeSupplier)}><PenLine size={16}/>Renomear</button><button type="button" className="button button-danger-soft" onClick={() => setSupplierToRemove(activeSupplier)}><Trash2 size={16}/>Excluir</button></div>}
+        {activeSupplier && <div className="header-actions"><button type="button" className="button button-secondary" title="Muda o nome deste fornecedor em todas as ofertas e preferências já importadas." onClick={() => abrirRenomeioFornecedor(activeSupplier)}><PenLine size={16}/>Renomear</button><button type="button" className="button button-danger-soft" title="Remove a tabela deste fornecedor da comparação. O pedido continua salvo." onClick={() => setSupplierToRemove(activeSupplier)}><Trash2 size={16}/>Excluir</button></div>}
       </div>
 
       {activeTab === 'pedido' && <>
@@ -867,13 +900,19 @@ function DialogoMapeamento({ mapping, onChange, onCancel, onConfirm }:{
   mapping:EstadoMapeamento; onChange:(key:string, value:string) => void; onCancel:() => void; onConfirm:() => void
 }) {
   const title = mapping.kind === 'cotacao' ? 'Tabela do fornecedor' : mapping.kind === 'historico' ? 'Histórico de preço de custo' : mapping.kind === 'dcb' ? 'Base de equivalência DCB' : 'Tabela de pedido'
-  const description = mapping.kind === 'historico' ? 'Confirme as colunas que identificam o EAN e o último valor pago.' : mapping.kind === 'dcb' ? 'Confirme as colunas que ligam cada código de barras ao seu princípio ativo e apresentação DCB.' : 'Confirme o mapeamento antes de importar.'
+  const description = mapping.kind === 'historico' ? 'Confirme as colunas que identificam o EAN e o último valor pago. Essa tabela só serve para comparar preços — não altera fornecedores nem quantidades.' : mapping.kind === 'dcb' ? 'Confirme as colunas que ligam cada código de barras ao seu princípio ativo (DCB). Essa base é opcional e substitui a que já estiver carregada.' : mapping.kind === 'cotacao' ? `Confirme quais colunas da planilha correspondem ao EAN, à descrição e ao preço. Se já existir uma tabela de "${mapping.values.nomeFornecedor || 'este fornecedor'}", ela será substituída por esta.` : 'Confirme quais colunas da planilha correspondem ao produto e à quantidade pedida. Esta lista substitui o pedido atual, se houver um.'
+  const camposObrigatoriosFaltando = mapping.fields.filter((field) => field.required && field.type === 'text' ? !String(mapping.values[field.key] ?? '').trim() : field.required && (mapping.values[field.key] === undefined || mapping.values[field.key] === ''))
+  const colunasEscolhidas = mapping.fields.filter((field) => field.type !== 'text').map((field) => mapping.values[field.key]).filter((value) => value !== undefined && value !== '')
+  const colunasRepetidas = new Set(colunasEscolhidas).size !== colunasEscolhidas.length
+  const podeImportar = !colunasRepetidas && !camposObrigatoriosFaltando.length
   return <div className="modal-backdrop"><section className="modal ol-mapping">
     <div className="modal-header"><div className="modal-icon"><Columns3/></div><div><h2>{title}</h2><p>Encontramos {mapping.rows.length} linhas em <b>{mapping.fileName}</b>. {description}</p></div><button type="button" className="icon-button" aria-label="Fechar" onClick={onCancel}><X/></button></div>
     <div className="source-preview"><div className="section-caption"><TableProperties/><div><strong>Prévia do arquivo</strong><span>As colunas não escolhidas serão ignoradas.</span></div></div><div className="table-wrap"><table><thead><tr>{mapping.headers.map((header, index) => <th key={index}>{header || `Col. ${index + 1}`}</th>)}</tr></thead><tbody>{mapping.rows.slice(0, 4).map((row, index) => <tr key={index}>{mapping.headers.map((_, column) => <td key={column}>{String(row[column] ?? '')}</td>)}</tr>)}</tbody></table></div></div>
-    <div className="mapping-panel"><div className="section-caption"><Columns3/><div><strong>Confirme as colunas</strong><span>Ajuste o mapeamento sugerido antes de importar.</span></div></div>
-      <div className="mapping-grid">{mapping.fields.map((field) => <label key={field.key}>{field.label} <small>{field.required ? 'Obrigatório' : 'Opcional'}</small>{field.type === 'text' ? <input value={mapping.values[field.key] ?? ''} onChange={(event) => onChange(field.key, event.target.value)}/> : <select value={mapping.values[field.key] ?? ''} onChange={(event) => onChange(field.key, event.target.value)}><option value="">Não usar</option>{mapping.headers.map((header, index) => <option value={index} key={index}>{header || `Coluna ${index + 1}`}</option>)}</select>}</label>)}</div>
+    <div className="mapping-panel"><div className="section-caption"><Columns3/><div><strong>Confirme as colunas</strong><span>Ajuste o mapeamento sugerido antes de importar. Campos obrigatórios precisam de uma coluna cada um.</span></div></div>
+      <div className="mapping-grid">{mapping.fields.map((field) => <label key={field.key}>{field.label} <small>{field.required ? 'Obrigatório' : 'Opcional'}</small>{field.type === 'text' ? <input value={mapping.values[field.key] ?? ''} onChange={(event) => onChange(field.key, event.target.value)} placeholder="Digite o nome"/> : <select value={mapping.values[field.key] ?? ''} onChange={(event) => onChange(field.key, event.target.value)}><option value="">Não usar</option>{mapping.headers.map((header, index) => <option value={index} key={index}>{header || `Coluna ${index + 1}`}</option>)}</select>}</label>)}</div>
+      {colunasRepetidas && <small className="mapping-error">A mesma coluna da planilha não pode ser usada em dois campos diferentes. Escolha uma coluna distinta para cada um.</small>}
+      {!colunasRepetidas && camposObrigatoriosFaltando.length > 0 && <small className="mapping-error">Preencha os campos obrigatórios: {camposObrigatoriosFaltando.map((field) => field.label).join(', ')}.</small>}
     </div>
-    <div className="modal-actions"><button type="button" className="button button-ghost" onClick={onCancel}>Cancelar</button><button type="button" className="button button-primary" onClick={onConfirm}>Importar</button></div>
+    <div className="modal-actions"><button type="button" className="button button-ghost" onClick={onCancel}>Cancelar</button><button type="button" className="button button-primary" disabled={!podeImportar} title={!podeImportar ? 'Corrija o mapeamento das colunas antes de importar.' : undefined} onClick={onConfirm}>Importar</button></div>
   </section></div>
 }
