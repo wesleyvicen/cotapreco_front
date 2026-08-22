@@ -302,6 +302,29 @@ function historyRecords(history:MapaHistoricoPrecos):RegistroHistorico[] {
   return records
 }
 
+const historyTokenIndexCache = new WeakMap<MapaHistoricoPrecos, Map<string, RegistroHistorico[]>>()
+
+/*
+ * A busca por descrição equivalente exige similaridade de princípio ativo de pelo menos
+ * 0,85, então só faz sentido comparar referências que dividam algum princípio ativo com o
+ * item. O índice evita varrer o histórico inteiro a cada produto.
+ */
+function historyRecordsByToken(history:MapaHistoricoPrecos):Map<string, RegistroHistorico[]> {
+  const cached = historyTokenIndexCache.get(history)
+  if (cached) return cached
+  const indice = new Map<string, RegistroHistorico[]>()
+  historyRecords(history).forEach((reference) => {
+    if (!reference.nome) return
+    reference.signature.ingredientTokens.forEach((token) => {
+      const grupo = indice.get(token)
+      if (grupo) grupo.push(reference)
+      else indice.set(token, [reference])
+    })
+  })
+  historyTokenIndexCache.set(history, indice)
+  return indice
+}
+
 function historyNameMatch(item:{ nomeOferta?:string|null; fornecedorSelecionado?:string|null; nome?:string; laboratorio?:string|null }, history:MapaHistoricoPrecos):ReferenciaHistoricoResolvida|null {
   const sources = [
     { name: item?.nomeOferta, laboratory: item?.fornecedorSelecionado, priority: 2 },
@@ -310,8 +333,14 @@ function historyNameMatch(item:{ nomeOferta?:string|null; fornecedorSelecionado?
   interface MelhorReferencia { ean:string; nome:string; laboratorio:string; precoCusto:number; referenceMethod:'equivalent-name'|'converted-pack'; precoCustoOriginal:number; referencePack:number|null; targetPack:number|null; packRatio:number; score:number }
   let best:MelhorReferencia|null = null
 
+  const porToken = historyRecordsByToken(history)
+  const candidatas = new Set<RegistroHistorico>()
+  sources.forEach((source) => buildProductSignature(source.name).ingredientTokens
+    .forEach((token) => porToken.get(token)?.forEach((reference) => candidatas.add(reference))))
+
+  // Percorrer o histórico na ordem original preserva o desempate entre referências de mesma nota.
   for (const reference of historyRecords(history)) {
-    if (!reference.nome) continue
+    if (!reference.nome || !candidatas.has(reference)) continue
     for (const source of sources) {
       const target = buildProductSignature(source.name)
       const candidate = reference.signature
@@ -358,7 +387,29 @@ function historyNameMatch(item:{ nomeOferta?:string|null; fornecedorSelecionado?
   }
 }
 
-export function findPriceHistoryReference(item:{ ean?:string; eanOferta?:string|null; nomeOferta?:string|null; nome?:string; fornecedorSelecionado?:string|null; laboratorio?:string|null }, history:MapaHistoricoPrecos = {}, dcbCatalog:CatalogoDcb = {}):ReferenciaHistoricoResolvida|null {
+type ItemReferenciaHistorico = { ean?:string; eanOferta?:string|null; nomeOferta?:string|null; nome?:string; fornecedorSelecionado?:string|null; laboratorio?:string|null }
+
+let cacheReferenciaHistorico:{ history:MapaHistoricoPrecos|null; dcbCatalog:CatalogoDcb|null; entradas:Map<string, ReferenciaHistoricoResolvida|null> } = { history: null, dcbCatalog: null, entradas: new Map() }
+
+/*
+ * A tela consulta a referência de custo várias vezes por item (indicadores, filtro,
+ * ordenação e a própria linha da tabela) e a busca por descrição equivalente varre todo o
+ * histórico. O cache guarda o resultado por item enquanto o histórico e o DCB não mudarem.
+ */
+export function findPriceHistoryReference(item:ItemReferenciaHistorico, history:MapaHistoricoPrecos = {}, dcbCatalog:CatalogoDcb = {}):ReferenciaHistoricoResolvida|null {
+  if (cacheReferenciaHistorico.history !== history || cacheReferenciaHistorico.dcbCatalog !== dcbCatalog) {
+    cacheReferenciaHistorico = { history, dcbCatalog, entradas: new Map() }
+  }
+  const partes = [item?.ean, item?.eanOferta, item?.nomeOferta, item?.nome, item?.fornecedorSelecionado, item?.laboratorio]
+  const chave = partes.map((parte) => `${String(parte ?? '').length}:${parte ?? ''}`).join('|')
+  const cache = cacheReferenciaHistorico.entradas
+  if (cache.has(chave)) return cache.get(chave) ?? null
+  const referencia = calcularReferenciaHistorico(item, history, dcbCatalog)
+  cache.set(chave, referencia)
+  return referencia
+}
+
+function calcularReferenciaHistorico(item:ItemReferenciaHistorico, history:MapaHistoricoPrecos, dcbCatalog:CatalogoDcb):ReferenciaHistoricoResolvida|null {
   const orderEan = normalizeEan(item?.ean)
   const offerEan = normalizeEan(item?.eanOferta)
   if (orderEan && history[orderEan]) return { ...history[orderEan], referenceMethod: 'order-ean' }
@@ -492,7 +543,26 @@ export function normalizeProductName(value:unknown):string {
     .trim()
 }
 
+const signatureCache = new Map<string, AssinaturaProduto>()
+
+/*
+ * A assinatura depende só do nome e do fornecedor, e o mesmo par se repete milhares de
+ * vezes ao comparar o pedido inteiro contra todas as tabelas. O cache evita refazer as
+ * dezenas de expressões regulares a cada comparação. A assinatura é somente leitura.
+ */
 export function buildProductSignature(name:unknown, supplier:unknown = ''):AssinaturaProduto {
+  const nomeTexto = String(name ?? '')
+  // O tamanho do nome abre a chave para que nome e fornecedor nunca se confundam.
+  const cacheKey = `${nomeTexto.length}:${nomeTexto}:${String(supplier ?? '')}`
+  const cached = signatureCache.get(cacheKey)
+  if (cached) return cached
+  const signature = computeProductSignature(name, supplier)
+  if (signatureCache.size >= 40000) signatureCache.clear()
+  signatureCache.set(cacheKey, signature)
+  return signature
+}
+
+function computeProductSignature(name:unknown, supplier:unknown):AssinaturaProduto {
   let text = normalizeProductName(name)
   text = text.replace(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*(MCG|MG|G|UI)\b/g, '$1$3 + $2$3')
   const metoprololSuccinate = /\bMETOPROLOL\b/.test(text) && /\b(SUC|SUCC|SUCCINATO)\b/.test(text)
@@ -593,14 +663,105 @@ export function getOfferComparisonStatus(orderResults:ItemResultadoCompra[], sup
   return compared ? 'compared' : 'unused'
 }
 
+interface IndiceCotacoes {
+  produtos:ProdutoCotado[]
+  dcbPorProduto:(EntradaDcb|null)[]
+  dcbCatalog:CatalogoDcb
+  porEan:Map<string, number>
+  porEanNormalizado:Map<string, number[]>
+  porDcb:Map<string, number[]>
+  porPrincipioAtivo:Map<string, number[]>
+}
+
+const indiceCotacoesCache = new WeakMap<MapaCotacoes, IndiceCotacoes>()
+
+function adicionarAoGrupo(indice:Map<string, number[]>, chave:string, posicao:number) {
+  const grupo = indice.get(chave)
+  if (grupo) grupo.push(posicao)
+  else indice.set(chave, [posicao])
+}
+
+/*
+ * Indexa as tabelas de fornecedor uma única vez por importação, para que cada item do
+ * pedido consulte apenas os candidatos plausíveis em vez de varrer o catálogo inteiro.
+ */
+function indexarCotacoes(cotacoes:MapaCotacoes, dcbCatalog:CatalogoDcb):IndiceCotacoes {
+  const cache = indiceCotacoesCache.get(cotacoes)
+  if (cache && cache.dcbCatalog === dcbCatalog) return cache
+  const produtos = Object.values(cotacoes)
+  const indice:IndiceCotacoes = {
+    produtos,
+    dcbPorProduto: [],
+    dcbCatalog,
+    porEan: new Map(),
+    porEanNormalizado: new Map(),
+    porDcb: new Map(),
+    porPrincipioAtivo: new Map(),
+  }
+  produtos.forEach((produto, posicao) => {
+    const dcb = dcbCatalog[normalizeEan(produto.ean)] || null
+    indice.dcbPorProduto.push(dcb)
+    indice.porEan.set(produto.ean, posicao)
+    adicionarAoGrupo(indice.porEanNormalizado, normalizeEan(produto.ean), posicao)
+    if (dcb?.key) adicionarAoGrupo(indice.porDcb, dcb.key, posicao)
+    buildProductSignature(produto.nome, produto.ofertas[0]?.fornecedor || '').ingredientTokens
+      .forEach((token) => adicionarAoGrupo(indice.porPrincipioAtivo, token, posicao))
+  })
+  indiceCotacoesCache.set(cotacoes, indice)
+  return indice
+}
+
+const indiceVinculosCache = new WeakMap<MapaVinculos, Map<string, string[]>>()
+
+/* Agrupa por item do pedido os EANs cuja equivalência o usuário confirmou manualmente. */
+function indexarVinculosAprovados(productLinks:MapaVinculos):Map<string, string[]> {
+  const cache = indiceVinculosCache.get(productLinks)
+  if (cache) return cache
+  const indice = new Map<string, string[]>()
+  Object.entries(productLinks).forEach(([chave, estado]) => {
+    if (estado !== 'approved') return
+    const separador = chave.indexOf('=>')
+    if (separador < 0) return
+    const identidadePedido = chave.slice(0, separador)
+    const eanCandidato = chave.slice(separador + 2)
+    const grupo = indice.get(identidadePedido)
+    if (grupo) grupo.push(eanCandidato)
+    else indice.set(identidadePedido, [eanCandidato])
+  })
+  indiceVinculosCache.set(productLinks, indice)
+  return indice
+}
+
 export function findProductMatches(cotacoes:MapaCotacoes, item:ItemPedido, productLinks:MapaVinculos = {}, matchingOptions:ConfiguracaoCorrespondencia = { autoAcceptSafe: false }, dcbCatalog:CatalogoDcb = {}):{ offers:OfertaEnriquecida[]; matchedProducts:ProdutoCorrespondente[]; suggestions:ProdutoCorrespondente[]; orderDcb:EntradaDcb|null } {
   const matchedProducts:ProdutoCorrespondente[] = []
   const suggestions:ProdutoCorrespondente[] = []
   const orderDcb = dcbCatalog[normalizeEan(item.ean)] || null
-  Object.values(cotacoes).forEach((candidate) => {
+  const indice = indexarCotacoes(cotacoes, dcbCatalog)
+  const identidadePedido = normalizeEan(item.ean) || `NAME:${buildProductSignature(item.nome).key}`
+
+  /*
+   * Um candidato só vira correspondência ou sugestão quando tem EAN idêntico, o mesmo DCB,
+   * um vínculo já confirmado, ou quando divide algum princípio ativo com o item — porque
+   * tanto "automatic" quanto "suggestion" exigem similaridade de princípio ativo acima de
+   * zero. Reunir esses quatro grupos dá um superconjunto seguro de quem precisa ser comparado.
+   */
+  const candidatos = new Set<number>()
+  const posicaoEanExato = item.ean ? indice.porEan.get(item.ean) : undefined
+  if (posicaoEanExato !== undefined) candidatos.add(posicaoEanExato)
+  if (orderDcb?.key) indice.porDcb.get(orderDcb.key)?.forEach((posicao) => candidatos.add(posicao))
+  indexarVinculosAprovados(productLinks).get(identidadePedido)?.forEach((ean) => {
+    indice.porEanNormalizado.get(ean)?.forEach((posicao) => candidatos.add(posicao))
+  })
+  buildProductSignature(item.nome).ingredientTokens.forEach((token) => {
+    indice.porPrincipioAtivo.get(token)?.forEach((posicao) => candidatos.add(posicao))
+  })
+
+  // Percorrer o catálogo na ordem original mantém o desempate de ofertas de mesmo preço.
+  indice.produtos.forEach((candidate, posicao) => {
+    if (!candidatos.has(posicao)) return
     const exact = Boolean(item.ean && candidate.ean === item.ean)
-    const linkState = productLinks[productLinkId(item, candidate.ean)]
-    const candidateDcb = dcbCatalog[normalizeEan(candidate.ean)] || null
+    const linkState = productLinks[`${identidadePedido}=>${normalizeEan(candidate.ean)}`]
+    const candidateDcb = indice.dcbPorProduto[posicao]
     const sameDcb = Boolean(orderDcb?.key && candidateDcb?.key && orderDcb.key === candidateDcb.key)
     const comparison = exact ? null : compareProductNames(item.nome, candidate.nome, candidate.ofertas[0]?.fornecedor || '')
     let method:MetodoCorrespondencia|null = null
