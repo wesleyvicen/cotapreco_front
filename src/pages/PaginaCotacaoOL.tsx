@@ -16,7 +16,7 @@ import {
   type OfertaEnriquecida, type ProdutoCorrespondente, type ProdutoCotado,
 } from '../lib/melhorCompra'
 
-interface DcbInfo { fileName:string; importedAt:string; total:number; orderMatched:number; quotationMatched:number }
+interface DcbInfo { fileName:string; importedAt:string; total:number; orderMatched:number; quotationMatched:number; origem?:'padrao'|'manual' }
 interface HistoricoInfo { fileName:string; importedAt:string; total:number; matched:number }
 type TipoImportacao = 'cotacao'|'dcb'|'historico'|'pedido'
 interface CampoMapeamento { key:string; label:string; type?:'text'; required?:boolean }
@@ -35,7 +35,16 @@ interface EstadoPersistido {
   dcbInfo?:DcbInfo|null
   historicoPrecos?:MapaHistoricoPrecos
   historicoInfo?:HistoricoInfo|null
+  dcbPadraoDispensada?:boolean
 }
+
+/*
+ * Nome ofuscado de propósito: o arquivo público em /public é sempre baixável por quem
+ * souber a URL exata, mas um nome não-óbvio impede o acesso casual (digitar a URL,
+ * encontrar por buscador). Não protege contra alguém inspecionando a rede do app.
+ */
+const ARQUIVO_DCB_PADRAO = 'ref-77e0f812a09e70c9cccb.dat'
+const NOME_EXIBICAO_DCB_PADRAO = 'Base padrão DCB'
 
 function estadoSalvo():EstadoPersistido {
   try {
@@ -200,6 +209,7 @@ export default function PaginaCotacaoOL() {
   const [matchingSettings, setMatchingSettings] = useState({ autoAcceptSafe: true, ...(saved.matchingSettings || {}) })
   const [dcbCatalog, setDcbCatalog] = useState<CatalogoDcb>(saved.dcbCatalog || {})
   const [dcbInfo, setDcbInfo] = useState<DcbInfo|null>(saved.dcbInfo || null)
+  const [dcbPadraoDispensada, setDcbPadraoDispensada] = useState(Boolean(saved.dcbPadraoDispensada))
   const [historicoPrecos, setHistoricoPrecos] = useState<MapaHistoricoPrecos>(saved.historicoPrecos || {})
   const [historicoInfo, setHistoricoInfo] = useState<HistoricoInfo|null>(saved.historicoInfo || null)
   const [activeTab, setActiveTab] = useState('')
@@ -245,8 +255,33 @@ export default function PaginaCotacaoOL() {
   ] : [], [cotacoes, supplierList])
   const tabs = useMemo(() => [...purchaseTabs, ...supplierTabs], [purchaseTabs, supplierTabs])
 
-  useEffect(() => { window.localStorage.setItem(ARMAZENAMENTO_COTACAO_OL, JSON.stringify({ cotacoes, fornecedores: supplierList, pedido, ajustesManuais, productLinks, matchingSettings, dcbCatalog, dcbInfo, historicoPrecos, historicoInfo })) }, [ajustesManuais, cotacoes, dcbCatalog, dcbInfo, historicoInfo, historicoPrecos, matchingSettings, pedido, productLinks, supplierList])
+  useEffect(() => { window.localStorage.setItem(ARMAZENAMENTO_COTACAO_OL, JSON.stringify({ cotacoes, fornecedores: supplierList, pedido, ajustesManuais, productLinks, matchingSettings, dcbCatalog, dcbInfo, historicoPrecos, historicoInfo, dcbPadraoDispensada })) }, [ajustesManuais, cotacoes, dcbCatalog, dcbInfo, dcbPadraoDispensada, historicoInfo, historicoPrecos, matchingSettings, pedido, productLinks, supplierList])
   useEffect(() => { if (!tabs.some((tab) => tab.id === activeTab)) setActiveTab(tabs[0]?.id || '') }, [activeTab, tabs])
+
+  useEffect(() => {
+    if (Object.keys(dcbCatalog).length || dcbInfo || dcbPadraoDispensada) return
+    let cancelado = false
+    void (async () => {
+      try {
+        const resposta = await fetch(`${import.meta.env.BASE_URL}${ARQUIVO_DCB_PADRAO}`)
+        if (!resposta.ok) return
+        const arquivo = new File([await resposta.blob()], ARQUIVO_DCB_PADRAO)
+        const matrix = await readSpreadsheet(arquivo, 'dcb')
+        if (cancelado || !matrix.length) return
+        const headerIndex = detectHeaderRow(matrix)
+        const headers = (matrix[headerIndex] || []).map((header) => String(header || '').trim())
+        const rows = matrix.slice(headerIndex + 1).filter((row) => row.some((cell) => String(cell || '').trim()))
+        const auto = autoMapColumns(headers, rows)
+        if (auto.ean === undefined || auto.dcb === undefined) return
+        const { catalog } = parseDcbCatalog(rows, { eanIndex: auto.ean, dcbIndex: auto.dcb })
+        const total = Object.keys(catalog).length
+        if (!total || cancelado) return
+        setDcbCatalog(catalog)
+        setDcbInfo({ fileName: NOME_EXIBICAO_DCB_PADRAO, importedAt: new Date().toISOString(), total, orderMatched: 0, quotationMatched: 0, origem: 'padrao' })
+      } catch { /* Sem o arquivo padrão ou sem conexão: a tela segue funcionando normalmente sem DCB. */ }
+    })()
+    return () => { cancelado = true }
+  }, [dcbCatalog, dcbInfo, dcbPadraoDispensada])
 
   async function iniciarImportacao(kind:TipoImportacao, file?:File|null) {
     if (!file) return
@@ -314,7 +349,8 @@ export default function PaginaCotacaoOL() {
       const orderMatched = pedido.filter((item) => catalog[normalizeEan(item.ean)]).length
       const quotationMatched = Object.keys(cotacoes).filter((ean) => catalog[normalizeEan(ean)]).length
       setDcbCatalog(catalog)
-      setDcbInfo({ fileName: mapping.fileName, importedAt: new Date().toISOString(), total, orderMatched, quotationMatched })
+      setDcbInfo({ fileName: mapping.fileName, importedAt: new Date().toISOString(), total, orderMatched, quotationMatched, origem: 'manual' })
+      setDcbPadraoDispensada(true)
       setWarnings([...(duplicates ? [`${duplicates} EAN(s) repetido(s) na base DCB.`] : []), ...(conflicts ? [`${conflicts} EAN(s) com DCB conflitante foram descartados por segurança.`] : []), ...(invalid ? [`${invalid} linha(s) sem EAN ou DCB válido foram ignoradas.`] : [])])
       setNotice(`Base DCB importada com ${total} EAN(s). ${orderMatched} item(ns) do pedido e ${quotationMatched} produto(s) cotado(s) foram identificados.`)
     } else if (mapping.kind === 'pedido') {
@@ -491,15 +527,17 @@ export default function PaginaCotacaoOL() {
 
   function limparDados() {
     setCotacoes({}); setPedido([]); setAjustesManuais({}); setProductLinks({}); setDcbCatalog({}); setDcbInfo(null)
+    setDcbPadraoDispensada(false)
     setHistoricoPrecos({}); setHistoricoInfo(null); setWarnings([]); setOnlyMissing(false); setOnlyAutoAccepted(false)
     setOnlyAdjusted(false); setOnlyCheaperName(false); setHistoryFilter('all'); setHistorySort('default')
-    setReviewingLineId(''); setNotice('Dados removidos deste dispositivo.'); setClearOpen(false)
+    setReviewingLineId(''); setNotice('Dados removidos deste dispositivo. A base DCB padrão será recarregada.'); setClearOpen(false)
     window.localStorage.removeItem(ARMAZENAMENTO_COTACAO_OL)
   }
 
   function limparBaseDcb() {
     setDcbCatalog({})
     setDcbInfo(null)
+    setDcbPadraoDispensada(true)
     setNotice('A base DCB foi removida. O sistema voltou a comparar por EAN e descrição.')
   }
 
@@ -602,7 +640,7 @@ export default function PaginaCotacaoOL() {
       <button type="button" className="button button-danger-soft" onClick={() => setClearOpen(true)}><Trash2 size={18}/>Limpar dados</button>
     </div>
     <div className="card ol-panel">
-      <div><span className="eyebrow green">Base de equivalência DCB</span><b>{dcbInfo ? `${dcbInfo.total} EANs prontos para comparar por princípio ativo` : 'Importe a tabela EAN → DCB'}</b><small>{dcbInfo ? `${dcbInfo.fileName} · produtos com o mesmo DCB disputarão automaticamente o menor preço` : 'A base é opcional. Sem ela, o sistema continua usando EAN e descrição.'}</small></div>
+      <div><span className="eyebrow green">Base de equivalência DCB</span><b>{dcbInfo ? `${dcbInfo.total} EANs prontos para comparar por princípio ativo` : 'Importe a tabela EAN → DCB'}</b><small>{dcbInfo ? `${dcbInfo.fileName}${dcbInfo.origem === 'padrao' ? ' · base padrão carregada automaticamente' : ''} · produtos com o mesmo DCB disputarão automaticamente o menor preço` : 'A base é opcional. Sem ela, o sistema continua usando EAN e descrição.'}</small></div>
       <div><label className="button button-secondary">{loading === 'dcb' ? 'Lendo base...' : dcbInfo ? 'Atualizar DCB' : 'Importar DCB'}<input type="file" accept=".xls,.xlsx" onChange={(event) => { void iniciarImportacao('dcb', event.target.files?.[0]); event.target.value = '' }}/></label>{dcbInfo && <button type="button" className="button button-ghost" onClick={limparBaseDcb}>Remover base</button>}</div>
     </div>
     {cheaperNameOpportunityCount > 0 && <div className="ol-opportunity" role="alert">
