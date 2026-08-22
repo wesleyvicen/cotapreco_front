@@ -18,6 +18,7 @@ const PaginaCotacoes=lazy(()=>import('./pages/PaginaCotacoes'))
 const PaginaConfiguracoes=lazy(()=>import('./pages/PaginaConfiguracoes'))
 const PaginaAlterarSenha=lazy(()=>import('./pages/PaginaAlterarSenha'))
 const PaginaUsuarios=lazy(()=>import('./pages/PaginaUsuarios'))
+const PaginaCotacaoOL=lazy(()=>import('./pages/PaginaCotacaoOL'))
 
 export default function App(){
   const{pathname}=usarLocalizacao()
@@ -32,6 +33,7 @@ export default function App(){
       '/representante/alterar-senha':'Minha conta',
       '/cotacoes':'Cotações',
       '/cotacoes/nova':'Nova cotação',
+      '/cotacao-ol':'Cotação para OL',
       '/produtos':'Produtos',
       '/dados-farmacia':'Dados da farmácia',
       '/usuarios':'Usuários',
@@ -51,6 +53,7 @@ export default function App(){
   if(pathname==='/')page=<PaginaPainel/>
   else if(pathname==='/cotacoes')page=<PaginaCotacoes/>
   else if(pathname==='/cotacoes/nova')page=<PaginaNovaCotacao/>
+  else if(pathname==='/cotacao-ol')page=<PaginaCotacaoOL/>
   else if(pathname==='/produtos')page=<PaginaProdutos/>
   else if(pathname==='/dados-farmacia')page=<PaginaConfiguracoes/>
   else if(pathname==='/usuarios')page=<PaginaUsuarios/>

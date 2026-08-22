@@ -1,9 +1,9 @@
-import { BarChart3, Boxes, Building2, ChevronRight, ClipboardList, KeyRound, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Users, X } from 'lucide-react'
+import { BarChart3, Boxes, Building2, ChevronRight, ClipboardList, KeyRound, LogOut, Menu, PackageSearch, PanelLeftClose, PanelLeftOpen, Users, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { LinkNavegacao } from '../roteamento'
 import { usarAutenticacao } from '../autenticacao'
 
-const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/produtos',label:'Produtos',icon:Boxes}]
+const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/cotacao-ol',label:'Cotação para OL',icon:PackageSearch},{to:'/produtos',label:'Produtos',icon:Boxes}]
 const SIDEBAR_RECOLHIDA_KEY='cotapreco:sidebar-recolhida'
 
 function lerPreferenciaMenu(){
