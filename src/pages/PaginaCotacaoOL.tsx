@@ -2,7 +2,9 @@ import {
   ArrowDownToLine, Check, CircleAlert, CircleCheck, Columns3, ListChecks, PenLine,
   RotateCcw, ScanSearch, Search, ShieldCheck, TableProperties, Trash2, Upload, X,
 } from 'lucide-react'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  useEffect, useMemo, useRef, useState, type ReactNode,
+} from 'react'
 import { EstadoVazio } from '../components/ComponentesUI'
 import {
   ARMAZENAMENTO_COTACAO_OL, autoMapColumns, buildProductSignature, calculateOrder, compareProductNames,
@@ -466,6 +468,12 @@ export default function PaginaCotacaoOL() {
     setNotice(state === 'approved' ? `${item.nome}: equivalência confirmada e incluída na comparação.` : state === 'rejected' ? `${item.nome}: sugestão rejeitada e removida da comparação.` : `${item.nome}: decisão removida; o sistema voltará a avaliar o nome.`)
   }
 
+  function avancarRevisao() {
+    const proximo = filaRevisaoIds.find((id) => id !== reviewingLineId)
+    if (proximo) { setReviewingLineId(proximo); setMatchSearch('') }
+    else { setReviewingLineId(''); setMatchSearch(''); setNotice('Revisão concluída — não há mais correspondências pendentes.') }
+  }
+
   function limparVinculosProdutos() {
     const count = Object.keys(productLinks).length
     setProductLinks({})
@@ -533,7 +541,9 @@ export default function PaginaCotacaoOL() {
   const filterLabel = supplierFilter === 'todos' ? 'Todos os fornecedores' : supplierFilter
   const editingItem = resultado.find((item) => item.id === editingLineId)
   const reviewingItem = resultado.find((item) => item.id === reviewingLineId)
-  const reviewPendingCount = resultado.filter((item) => item.sugestoesCorrespondencia.length > 0).length
+  const filaRevisaoIds = resultado.filter((item) => item.sugestoesCorrespondencia.length > 0).map((item) => item.id)
+  const posicaoFilaRevisao = filaRevisaoIds.indexOf(reviewingLineId)
+  const reviewPendingCount = filaRevisaoIds.length
   const autoAcceptedCount = resultado.filter((item) => metodoAceitoAutomaticamente(item.matchMethod)).length
   const cheaperNameOpportunityCount = resultado.filter((item) => item.temOfertaNomeMaisBarata).length
   const cheaperNameOpportunitySavings = resultado.reduce((sum, item) => sum + (item.temOfertaNomeMaisBarata ? item.economiaNomeTotal : 0), 0)
@@ -675,7 +685,7 @@ export default function PaginaCotacaoOL() {
 
     {mapping && <DialogoMapeamento mapping={mapping} onChange={(key, value) => setMapping((current) => current && ({ ...current, values: { ...current.values, [key]: value } }))} onCancel={() => setMapping(null)} onConfirm={confirmarMapeamento}/>}
     {editingItem && <DialogoEdicaoCompra item={editingItem} offers={editingItem.ofertasDisponiveis || []} draft={purchaseDraft} error={purchaseEditError} onChange={(key, value) => { setPurchaseDraft((current) => ({ ...current, [key]: value })); setPurchaseEditError('') }} onCancel={() => { setEditingLineId(''); setPurchaseEditError('') }} onSave={salvarEdicaoCompra} onRestore={() => restaurarItemCompra(editingItem.id)}/>}
-    {reviewingItem && <DialogoRevisaoCorrespondencia item={reviewingItem} products={Object.values(cotacoes)} productLinks={productLinks} search={matchSearch} onSearch={setMatchSearch} onDecision={(ean, state) => atualizarVinculoProduto(reviewingItem.id, ean, state)} onClose={() => { setReviewingLineId(''); setMatchSearch('') }}/>}
+    {reviewingItem && <DialogoRevisaoCorrespondencia item={reviewingItem} products={Object.values(cotacoes)} productLinks={productLinks} search={matchSearch} onSearch={setMatchSearch} onDecision={(ean, state) => atualizarVinculoProduto(reviewingItem.id, ean, state)} onClose={() => { setReviewingLineId(''); setMatchSearch('') }} filaPosicao={posicaoFilaRevisao >= 0 ? posicaoFilaRevisao + 1 : null} filaTotal={filaRevisaoIds.length} onAvancar={avancarRevisao}/>}
 
     {resetAdjustmentsOpen && <div className="modal-backdrop"><section className="modal"><span className="eyebrow green">Restaurar cálculo</span><h2>Remover todos os ajustes manuais?</h2><p>Os fornecedores e as quantidades voltarão aos valores calculados automaticamente. O pedido e as tabelas importadas continuarão salvos.</p><div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => setResetAdjustmentsOpen(false)}>Cancelar</button><button type="button" className="button button-danger-soft" onClick={restaurarTodosAjustes}>Restaurar todos</button></div></section></div>}
     {supplierToRename && <div className="modal-backdrop"><section className="modal"><span className="eyebrow green">Editar fornecedor</span><h2>Renomear {supplierToRename}</h2><p>O novo nome será aplicado às ofertas e às preferências existentes no pedido.</p><label className="ol-modal-field">Nome do fornecedor<input autoFocus value={supplierNameDraft} onChange={(event) => { setSupplierNameDraft(event.target.value); setSupplierRenameError('') }} onKeyDown={(event) => { if (event.key === 'Enter') renomearFornecedor() }}/></label>{supplierRenameError && <div className="field-error" role="alert">{supplierRenameError}</div>}<div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => { setSupplierToRename(''); setSupplierRenameError('') }}>Cancelar</button><button type="button" className="button button-primary" onClick={renomearFornecedor}>Salvar novo nome</button></div></section></div>}
@@ -745,10 +755,22 @@ function resumoAssinatura(signature:AssinaturaProduto):string {
   ].join(' · ')
 }
 
-function DialogoRevisaoCorrespondencia({ item, products, productLinks, search, onSearch, onDecision, onClose }:{
+function DialogoRevisaoCorrespondencia({ item, products, productLinks, search, onSearch, onDecision, onClose, filaPosicao, filaTotal, onAvancar }:{
   item:ItemResultadoCompra; products:ProdutoCotado[]; productLinks:MapaVinculos; search:string
   onSearch:(value:string) => void; onDecision:(ean:string, state:'approved'|'rejected'|null) => void; onClose:() => void
+  filaPosicao:number|null; filaTotal:number; onAvancar:() => void
 }) {
+  const estadoAnteriorRef = useRef({ id: item.id, contagem: item.sugestoesCorrespondencia.length })
+  useEffect(() => {
+    const anterior = estadoAnteriorRef.current
+    const contagemAtual = item.sugestoesCorrespondencia.length
+    const mesmoItem = anterior.id === item.id
+    estadoAnteriorRef.current = { id: item.id, contagem: contagemAtual }
+    // Só avança sozinho quando a decisão que acabou de ser tomada zerou as sugestões deste
+    // item — nunca ao abrir o diálogo num item que já não tinha nada pendente.
+    if (mesmoItem && anterior.contagem > 0 && contagemAtual === 0) onAvancar()
+  }, [item.id, item.sugestoesCorrespondencia.length, onAvancar])
+
   const searchText = normalizeHeader(search)
   const searchEan = search.replace(/\D/g, '')
   const searched:ProdutoCorrespondente[] = searchText.length >= 2 ? products.filter((product) => normalizeHeader(product.nome).includes(searchText) || (searchEan.length >= 3 && product.ean.includes(searchEan))).slice(0, 30).map((product) => {
@@ -760,12 +782,20 @@ function DialogoRevisaoCorrespondencia({ item, products, productLinks, search, o
   const candidates = [...candidatesByEan.values()]
   const orderSignature = buildProductSignature(item.nome)
   return <div className="modal-backdrop"><section className="modal ol-match-dialog">
-    <span className="eyebrow green">Revisar correspondência</span>
-    <h2>{item.nome}</h2>
-    <p>EAN do pedido: <b>{item.ean}</b></p>
-    {item.dcb && <div className="ol-signature ol-dcb-signature"><small>DCB identificado</small><b>{item.dcb}</b></div>}
-    <div className="ol-signature"><small>Apresentação identificada</small><b>{resumoAssinatura(orderSignature)}</b></div>
-    <label className="ol-modal-field">Buscar manualmente nos fornecedores<input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Digite nome ou EAN para marca, genérico ou outra descrição..."/></label>
+    <div className="ol-match-dialog-header">
+      <div className="ol-match-dialog-top">
+        <span className="eyebrow green">Revisar correspondência{filaPosicao ? ` · item ${filaPosicao} de ${filaTotal}` : ''}</span>
+        <button type="button" className="icon-button" aria-label="Fechar" onClick={onClose}><X/></button>
+      </div>
+      <div className="ol-match-reference">
+        <span className="ol-match-reference-label">Comparando com este item do pedido</span>
+        <h2>{item.nome}</h2>
+        <p>EAN do pedido: <b>{item.ean}</b>{item.laboratorio ? <> · Laboratório informado: <b>{item.laboratorio}</b></> : null}</p>
+        {item.dcb && <div className="ol-signature ol-dcb-signature"><small>DCB identificado</small><b>{item.dcb}</b></div>}
+        <div className="ol-signature"><small>Apresentação identificada</small><b>{resumoAssinatura(orderSignature)}</b></div>
+      </div>
+      <label className="ol-modal-field">Buscar manualmente nos fornecedores<input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Digite nome ou EAN para marca, genérico ou outra descrição..."/></label>
+    </div>
     <div className="ol-match-list">{candidates.length ? candidates.map((candidate) => {
       const exact = candidate.ean === item.ean
       const dcbMatched = candidate.method === 'dcb'
@@ -791,7 +821,7 @@ function DialogoRevisaoCorrespondencia({ item, products, productLinks, search, o
         </div>
       </article>
     }) : <div className="ol-match-empty">{searchText.length >= 2 ? 'Nenhum produto corresponde à busca.' : 'Nenhuma sugestão pendente. Use a busca para localizar uma marca ou genérico manualmente.'}</div>}</div>
-    <div className="modal-actions"><button type="button" className="button button-ghost" onClick={onClose}>Concluir revisão</button></div>
+    <div className="modal-actions">{filaPosicao && filaTotal > filaPosicao ? <small className="ol-match-remaining">{filaTotal - filaPosicao} item(ns) aguardando revisão depois deste</small> : <span/>}<button type="button" className="button button-ghost" onClick={onClose}>Concluir revisão</button></div>
   </section></div>
 }
 
