@@ -5117,6 +5117,7 @@ label small {
   gap: 12px;
   flex-wrap: wrap;
   margin: 0 0 16px;
+  padding: 0 24px;
 }
 .comparison-search {
   display: grid;
@@ -5180,6 +5181,70 @@ label small {
 }
 .comparison-metric.savings strong {
   color: var(--green);
+}
+.comparison-controls label input[type="checkbox"] { accent-color: var(--green); width: 15px; height: 15px; cursor: pointer; }
+.comparison-filters-trigger { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; border: 1px solid #d7e1dd; border-radius: 9px; background: #fff; padding: 7px 12px; color: #526a62; font-size: 11px; font-weight: 800; cursor: pointer; }
+.comparison-filters-trigger svg { width: 15px; height: 15px; }
+.comparison-filters-trigger:hover { border-color: #b9cdc4; color: var(--green); }
+.comparison-filters-trigger.active { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.comparison-filters-badge { display: grid; place-items: center; min-width: 17px; height: 17px; border-radius: 999px; background: var(--green); color: #fff; font-size: 9px; font-weight: 800; padding: 0 4px; }
+.comparison-filters-modal { width: min(480px, 100%); }
+.comparison-filters-modal-body { display: flex; flex-direction: column; gap: 16px; margin: 4px 0 6px; }
+.comparison-filters-modal-body > label { display: flex; flex-direction: column; align-items: stretch; gap: 7px; color: #526a62; font-size: 11px; font-weight: 800; }
+.comparison-filters-modal-body > label select { min-height: 42px; }
+.comparison-filters-modal-body > label.comparison-checkbox-filter { flex-direction: row; align-items: center; gap: 9px; color: var(--ink); font-size: 12px; font-weight: 600; }
+.comparison-checkbox-filter input[type="checkbox"] { flex: none; accent-color: var(--green); width: 16px; height: 16px; cursor: pointer; }
+.comparison-filters-price { display: flex; flex-direction: column; gap: 7px; }
+.comparison-filters-price > span { color: #526a62; font-size: 11px; font-weight: 800; }
+.comparison-toggle-pair { display: flex; border: 1px solid #d7e1dd; border-radius: 9px; overflow: hidden; }
+.comparison-toggle-pair button { min-height: 40px; flex: 1; border: 0; background: #fff; padding: 7px 11px; color: #526a62; font-size: 11px; font-weight: 800; cursor: pointer; }
+.comparison-toggle-pair button:first-child { border-right: 1px solid #d7e1dd; }
+.comparison-toggle-pair button.active { background: var(--green); color: #fff; }
+.comparison-price-range { display: flex; align-items: center; gap: 6px; min-height: 42px; border: 1px solid #d7e1dd; border-radius: 9px; padding: 0 9px; background: #fff; }
+.comparison-price-range input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 4px 0; color: var(--ink); font-size: 13px; background: transparent; }
+.comparison-price-range span { color: #a2adaa; }
+.comparison-column-toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 0 0 14px; padding: 0 24px; }
+.comparison-column-toggles > svg { width: 16px; height: 16px; color: var(--green); }
+.comparison-column-toggles > span { color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; }
+.comparison-column-toggles button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; border: 1px solid #cce6dc; border-radius: 999px; background: var(--green-soft); padding: 5px 11px; color: var(--green); font-size: 11px; font-weight: 700; cursor: pointer; }
+.comparison-column-toggles button svg { width: 14px; height: 14px; }
+.comparison-column-toggles button.hidden { border-color: var(--line); background: #f4f6f5; color: #8a9791; text-decoration: line-through; }
+.comparison-th-fornecedor.dragging { opacity: 0.4; }
+.comparison-th-fornecedor.drop-target { background: var(--green-soft); box-shadow: inset 0 0 0 2px var(--green); }
+.comparison-th-controls { display: flex; align-items: center; gap: 3px; }
+.comparison-drag-handle { display: flex; align-items: center; color: #b7c2bd; cursor: grab; touch-action: none; user-select: none; }
+.comparison-drag-handle:active { cursor: grabbing; color: var(--green); }
+.comparison-move-button { display: grid; place-items: center; width: 20px; height: 20px; flex: none; border: 0; border-radius: 5px; background: transparent; color: #8a9791; cursor: pointer; }
+.comparison-move-button:hover:not(:disabled) { background: #e4efeb; color: var(--green); }
+.comparison-move-button:disabled { opacity: 0.3; cursor: not-allowed; }
+.comparison-sort-button { display: flex; align-items: center; gap: 4px; border: 0; background: transparent; padding: 0; color: inherit; font: inherit; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; cursor: pointer; white-space: nowrap; }
+.comparison-sort-button:hover { color: var(--green); }
+.comparison-sort-button svg { width: 12px; height: 12px; }
+.comparison-hide-button { display: grid; place-items: center; width: 20px; height: 20px; flex: none; margin-left: auto; border: 0; border-radius: 5px; background: transparent; color: #b7c2bd; cursor: pointer; opacity: 0; transition: opacity 0.15s ease; }
+.comparison-th-fornecedor:hover .comparison-hide-button { opacity: 1; }
+.comparison-hide-button:hover { background: #fdeceb; color: var(--danger); }
+@media (max-width: 760px) {
+  .comparison-controls,
+  .comparison-column-toggles { padding: 0 16px; }
+  .comparison-controls { flex-direction: column; align-items: stretch; gap: 8px; }
+  .comparison-controls .comparison-search,
+  .comparison-controls > label,
+  .comparison-controls .comparison-filters-trigger,
+  .comparison-controls > span { width: 100%; }
+  /* No desktop o flex:1 1 280px faz o campo de busca crescer na horizontal; em coluna
+     (mobile) esse mesmo grow passa a esticar a altura, então zera-se aqui. */
+  .comparison-controls .comparison-search { flex: 0 0 auto; }
+  .comparison-controls > label { justify-content: space-between; }
+  .comparison-controls > label select { flex: 1; min-width: 0; }
+  .comparison-controls .comparison-filters-trigger { justify-content: center; }
+  .comparison-controls > span { text-align: center; }
+  .comparison-column-toggles button { min-height: 36px; padding: 7px 13px; font-size: 12px; }
+  .comparison-filters-modal .comparison-toggle-pair button { font-size: 10px; padding: 7px 6px; }
+  /* Em telas sem mouse não existe :hover, então o botão de ocultar coluna precisa ficar sempre visível. */
+  .comparison-hide-button { opacity: 1; width: 26px; height: 26px; }
+  .comparison-move-button { width: 26px; height: 26px; }
+  .comparison-drag-handle { padding: 4px; touch-action: none; }
+  .comparison-th-controls { gap: 5px; }
 }
 @media (max-width: 600px) {
   .representative-product-search {
