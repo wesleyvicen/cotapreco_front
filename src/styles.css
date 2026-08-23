@@ -5284,7 +5284,8 @@ label small {
  * só aparecem ao passar o mouse, senão não sobra espaço nenhum pra ler o nome quando a
  * coluna está fina (o objetivo de afinar é justamente caber mais fornecedores na tela).
  */
-.comparison-th-fornecedor { position: relative; overflow: hidden; padding: 11px 14px 11px 8px; }
+.comparison-th-fornecedor { position: relative; overflow: hidden; padding: 11px 14px 11px 8px; cursor: grab; user-select: none; }
+.comparison-th-fornecedor.dragging { cursor: grabbing; }
 .comparison-th-fornecedor .comparison-th-controls { min-width: 0; }
 .comparison-th-fornecedor .comparison-sort-button { flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .comparison-drag-handle, .comparison-move-button { display: none; }
@@ -5298,8 +5299,27 @@ label small {
 .comparison-column-toggles > button:not([class]) { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; border: 1px solid var(--line); border-radius: 999px; background: #fff; padding: 5px 11px; color: #526a62; font-size: 11px; font-weight: 700; cursor: pointer; }
 .comparison-column-toggles > button:not([class]):hover { border-color: #b9cdc4; color: var(--green); }
 .comparison-column-toggles > button:not([class]) svg { width: 14px; height: 14px; }
-.comparison-th-fornecedor.dragging { opacity: 0.4; }
-.comparison-th-fornecedor.drop-target { background: var(--green-soft); box-shadow: inset 0 0 0 2px var(--green); }
+/*
+ * Arraste de coluna: a coluna inteira (cabeçalho e células) acompanha o cursor, e as vizinhas
+ * deslizam para abrir o espaço — o mesmo gesto dos cartões no mobile. As colunas fixas têm
+ * z-index 2, então a coluna arrastada passa por baixo delas em vez de vazar para fora.
+ */
+.comparison-th-fornecedor,
+.comparison-table td.comparison-cell-fornecedor { transition: transform 0.16s ease; }
+.comparison-th-fornecedor.dragging,
+.comparison-table td.comparison-cell-fornecedor.dragging {
+  position: relative;
+  z-index: 1;
+  transition: none;
+  box-shadow: 14px 0 22px -16px rgba(20, 57, 45, 0.35), -14px 0 22px -16px rgba(20, 57, 45, 0.35);
+}
+.comparison-th-fornecedor.dragging .comparison-drag-handle { color: var(--green); }
+.comparison-table td.comparison-cell-fornecedor.dragging { background: #fff; }
+.comparison-table td.comparison-cell-fornecedor.best-cell.dragging { background: #eff9f5; }
+@media (prefers-reduced-motion: reduce) {
+  .comparison-th-fornecedor,
+  .comparison-table td.comparison-cell-fornecedor { transition: none; }
+}
 .comparison-th-controls { display: flex; align-items: center; gap: 3px; }
 .comparison-drag-handle { align-items: center; flex: none; color: #b7c2bd; cursor: grab; touch-action: none; user-select: none; }
 .comparison-drag-handle:active { cursor: grabbing; color: var(--green); }
@@ -5313,9 +5333,310 @@ label small {
 .comparison-hide-button { display: grid; place-items: center; width: 20px; height: 20px; flex: none; margin-left: auto; border: 0; border-radius: 5px; background: transparent; color: #b7c2bd; cursor: pointer; opacity: 0; transition: opacity 0.15s ease; }
 .comparison-th-fornecedor:hover .comparison-hide-button { opacity: 1; }
 .comparison-hide-button:hover { background: #fdeceb; color: var(--danger); }
+
+/*
+ * Comparativo em cartões (mobile): substitui a tabela em telas estreitas. Tudo fica em uma
+ * coluna só, sem rolagem horizontal, com o melhor preço em destaque e o ranking de ofertas
+ * aberto sob demanda.
+ */
+.comparison-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 18px;
+}
+.comparison-product-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(20, 57, 45, 0.05);
+}
+.comparison-product-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 14px;
+}
+.comparison-product-card-head strong {
+  display: block;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.comparison-product-card-head small {
+  display: block;
+  margin-top: 3px;
+  color: #83918d;
+  font-size: 10px;
+}
+.comparison-product-card-qty {
+  flex: none;
+  border-radius: 999px;
+  background: #f0f5f3;
+  padding: 5px 10px;
+  color: #526a62;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.comparison-product-card-best {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 11px 14px 12px;
+  background: var(--green-soft);
+}
+.comparison-product-card-best-label {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.comparison-product-card-best > strong {
+  font-family: "Manrope", sans-serif;
+  color: var(--green);
+  font-size: 22px;
+  letter-spacing: -0.4px;
+}
+.comparison-product-card-best-supplier {
+  min-width: 0;
+  overflow: hidden;
+  color: #2c5f4e;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comparison-product-card-best small {
+  grid-column: 1 / -1;
+  color: #4c6b5f;
+  font-size: 10px;
+}
+.comparison-product-card-empty {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.comparison-product-card-empty svg {
+  flex: none;
+  color: #c08a3e;
+}
+.comparison-product-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 11px 14px;
+}
+.comparison-product-card-metrics dt {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.comparison-product-card-metrics dd {
+  margin: 3px 0 0;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+.comparison-product-card-metrics dd.savings {
+  color: var(--green);
+}
+.comparison-product-card-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.comparison-product-card-toggle:hover {
+  background: #f7fbf9;
+}
+.comparison-product-card-toggle:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+}
+.comparison-product-card-offers {
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding: 0;
+  background: #fbfdfc;
+  list-style: none;
+}
+.comparison-product-card-offers li {
+  display: grid;
+  grid-template-columns: 22px 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #eef3f1;
+  padding: 10px 12px 10px 8px;
+  /* Segurar para arrastar não pode selecionar texto nem abrir o menu de toque do iOS. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+/* As vizinhas deslizam para abrir espaço; a arrastada acompanha o dedo sem atraso nenhum. */
+.comparison-product-card-offers li {
+  transition: transform 0.16s ease;
+}
+.comparison-product-card-offers li.dragging {
+  position: relative;
+  z-index: 3;
+  border-bottom-color: transparent;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(20, 57, 45, 0.18);
+  transition: none;
+  /* Sem isso o elementFromPoint acha sempre a própria linha arrastada, nunca o alvo embaixo. */
+  pointer-events: none;
+}
+.comparison-product-card-offers li.dragging .comparison-offer-grip {
+  color: var(--green);
+}
+@media (prefers-reduced-motion: reduce) {
+  .comparison-product-card-offers li { transition: none; }
+}
+.comparison-offer-grip {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #b7c2bd;
+  cursor: grab;
+  touch-action: none;
+}
+.comparison-offer-grip:active {
+  cursor: grabbing;
+  color: var(--green);
+}
+.comparison-offer-grip:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+}
+.comparison-offer-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding: 8px 12px;
+  background: #fbfdfc;
+  color: var(--muted);
+  font-size: 9px;
+}
+.comparison-offer-hint svg {
+  flex: none;
+}
+.comparison-offer-order {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid #d7e1dd;
+  border-radius: 999px;
+  background: #fff;
+}
+.comparison-offer-order button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 5px 11px;
+  color: #526a62;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.comparison-offer-order button.active {
+  background: var(--green);
+  color: #fff;
+}
+.comparison-product-card-offers li:last-child {
+  border-bottom: 0;
+}
+.comparison-product-card-offers li.best {
+  background: #eff9f5;
+}
+.comparison-offer-rank {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+.comparison-product-card-offers li.best .comparison-offer-rank {
+  color: var(--green);
+}
+.comparison-offer-supplier strong {
+  display: block;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.comparison-offer-supplier small {
+  display: block;
+  margin-top: 2px;
+  color: #83918d;
+  font-size: 10px;
+}
+.comparison-offer-price {
+  text-align: right;
+  white-space: nowrap;
+}
+.comparison-offer-price strong {
+  display: block;
+  color: var(--ink);
+  font-size: 13px;
+}
+.comparison-product-card-offers li.best .comparison-offer-price strong {
+  color: #147454;
+}
+.comparison-offer-price small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.comparison-product-card-offers li.comparison-offer-missing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.comparison-offer-missing svg {
+  flex: none;
+  color: #c08a3e;
+}
 @media (max-width: 760px) {
   .comparison-controls,
   .comparison-column-toggles { padding: 0 16px; }
+  /* Sem os ajustes de largura das colunas, o divisor sobra solto no fim de uma linha quebrada. */
+  .comparison-column-toggles-divider { display: none; }
   .comparison-controls { flex-direction: column; align-items: stretch; gap: 8px; }
   .comparison-controls .comparison-search,
   .comparison-controls > label,

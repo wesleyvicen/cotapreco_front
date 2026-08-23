@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clipboard, Clock3, Download, Edit3, ExternalLink, Eye, EyeOff, FileImage, FileSpreadsheet, FileText, FoldHorizontal, GripVertical, History, Link2, Lock, PackageCheck, Power, RefreshCw, RotateCcw, Save, Search, Send, Share2, ShoppingCart, SlidersHorizontal, Trophy, Users, X } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clipboard, Clock3, Download, Edit3, ExternalLink, Eye, EyeOff, FileImage, FileSpreadsheet, FileText, FoldHorizontal, GripVertical, History, Link2, Lock, PackageCheck, Power, RefreshCw, RotateCcw, Save, Search, Send, Share2, ShoppingCart, SlidersHorizontal, Trophy, Users, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPonteiroReact } from 'react'
 import { api, apiArquivo, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
@@ -162,7 +162,8 @@ function Produtos({cotacao,podeEditar,ocupado,aoSalvar}:{cotacao:Cotacao;podeEdi
 function LinhaProduto({item,numero,podeEditar,ocupado,aoSalvar}:{item:Cotacao['items'][number];numero:number;podeEditar:boolean;ocupado:boolean;aoSalvar:(itemId:number,quantity:number,active:boolean)=>Promise<void>}){const[quantityInput,setQuantityInput]=useState(String(item.requestedQuantity));const[active,setActive]=useState(item.active);useEffect(()=>{setQuantityInput(String(item.requestedQuantity));setActive(item.active)},[item]);const quantity=quantityInput.trim()===''?null:Number(quantityInput);const quantidadeValida=quantity!==null&&Number.isInteger(quantity)&&quantity>=1;const mudou=(quantidadeValida&&quantity!==item.requestedQuantity)||active!==item.active;return <tr className={active?'':'inactive-row'}><td>{numero}</td><td><strong>{item.productName}</strong>{!active&&<small className="inactive-note">Fora da cotação</small>}</td><td>{item.ean??'—'}</td><td>{podeEditar?<input className="quotation-quantity-input" type="number" min="1" step="1" value={quantityInput} onChange={event=>setQuantityInput(event.target.value)}/>:<>{item.requestedQuantity} un.</>}</td><td><span className={active?'status-active':'status-inactive'}>{active?'Ativo':'Desativado'}</span></td>{podeEditar&&<td><div className="quotation-item-actions"><label className="active-toggle"><input type="checkbox" checked={active} onChange={event=>setActive(event.target.checked)}/><span>{active?'Ativo na cotação':'Inativo'}</span></label><button className="button button-secondary" disabled={ocupado||!mudou||!quantidadeValida} onClick={()=>{if(quantidadeValida)void aoSalvar(item.id,quantity,active)}}><Save/>Salvar</button></div></td>}</tr>}
 function ModalPreviaResposta({previa,aoFechar}:{previa:PreviaResposta;aoFechar:()=>void}){const[busca,setBusca]=useState('');const preenchido=(item:PreviaResposta['items'][number])=>item.available&&item.unitPrice!=null&&item.availableQuantity!=null&&item.availableQuantity>0;const cotados=previa.items.filter(preenchido);const termo=busca.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const itens=previa.items.filter(item=>!termo||`${item.productName} ${item.ean??''} ${item.laboratory??''}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(termo)).sort((a,b)=>(preenchido(a)?0:1)-(preenchido(b)?0:1));return <div className="modal-backdrop"><section className="modal response-preview-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-previa-resposta"><div className="modal-header modal-header-simple"><div><span className="eyebrow green">Prévia em preenchimento</span><h2 id="titulo-previa-resposta">{previa.supplierName}</h2><p>{previa.representativeName} · {cotados.length} de {previa.items.length} produtos respondidos</p></div><button className="icon-button" aria-label="Fechar" onClick={aoFechar}><X/></button></div><div className="response-preview-summary"><div><span>Produtos cotados</span><strong>{previa.quotedItems} de {previa.items.length}</strong></div><div><span>Total parcial</span><strong>{money(previa.total)}</strong></div><div><span>Pedido mínimo</span><strong>{previa.minimumOrderValue==null?'Sem mínimo':money(previa.minimumOrderValue)}</strong></div></div><div className="response-preview-search"><Search/><input type="search" autoFocus placeholder="Buscar produto, EAN ou laboratório" value={busca} onChange={event=>setBusca(event.target.value)}/>{busca&&<button type="button" onClick={()=>setBusca('')} aria-label="Limpar busca">×</button>}<span>{itens.length} de {previa.items.length}</span></div><div className="response-preview-items">{itens.length===0?<EstadoVazio title="Nenhum produto encontrado" description="Tente buscar por outro produto, EAN ou laboratório."/>:itens.map(item=>{const itemPreenchido=preenchido(item);return <article className={itemPreenchido?'quoted':'pending'} key={item.quotationItemId}><div><strong>{item.productName}</strong><span>{item.ean?`EAN ${item.ean} · `:''}Solicitado: {item.requestedQuantity} un.</span>{item.laboratory&&<small>{item.laboratory}</small>}</div>{itemPreenchido?<div className="response-preview-values"><span>{item.availableQuantity} un.</span><strong>{money(item.unitPrice!)}</strong>{item.note&&<small>{item.note}</small>}</div>:<span className="response-preview-pending">Ainda não respondido</span>}</article>})}</div><div className="modal-actions"><button className="button button-primary" onClick={aoFechar}>Fechar prévia</button></div></section></div>}
 function Respostas({respostas,total,podeEditar,ocupado,carregandoPrevia,aoEspiar,aoAlternar}:{respostas:RespostaCotacao[];total:number;podeEditar:boolean;ocupado:boolean;carregandoPrevia:boolean;aoEspiar:(resposta:RespostaCotacao)=>void;aoAlternar:(resposta:RespostaCotacao,active:boolean)=>void}){return <section className="card"><div className="card-header"><div><h2>Respostas dos representantes</h2><p>Abra as propostas em preenchimento para acompanhar o que cada distribuidora já informou.</p></div></div>{respostas.length===0?<EstadoVazio title="Nenhuma resposta ainda" description="Compartilhe o link com seus representantes."/>:<div className="table-wrap"><table><thead><tr><th>Distribuidora</th><th>Representante</th><th>Status</th><th>Envio</th><th>Itens</th><th>Total</th><th>Pedido mínimo</th>{podeEditar&&<th/>}</tr></thead><tbody>{respostas.map(r=><tr key={r.id} className={r.active?'':'inactive-row'}><td>{r.status==='IN_PROGRESS'?<button className="response-preview-trigger" disabled={carregandoPrevia} onClick={()=>aoEspiar(r)}><strong>{r.supplierName}</strong><small><Eye/>{carregandoPrevia?'Carregando prévia...':'Espiar preenchimento'}</small></button>:<><strong>{r.supplierName}</strong></>}{!r.active&&<small className="inactive-note">Ignorada nos cálculos</small>}{r.active&&!r.includedInSuggestedPurchase&&r.status==='SUBMITTED'&&<small className="inactive-note">Repassada para outras ofertas</small>}</td><td>{r.representativeName}</td><td><EtiquetaStatus status={r.status}/></td><td>{r.submittedAt?date(r.submittedAt):<Clock3/>}</td><td>{r.quotedItems} de {total}</td><td>{money(r.total)}</td><td>{r.minimumOrderValue==null?'Sem mínimo':money(r.minimumOrderValue)}</td>{podeEditar&&<td><button className={`button ${r.active?'button-danger-soft':'button-secondary'}`} disabled={ocupado} onClick={()=>aoAlternar(r,!r.active)}><Power/>{r.active?'Desativar':'Reativar'}</button></td>}</tr>)}</tbody></table></div>}</section>}
-interface PreferenciasColunasComparativo { ordem:number[]; ocultos:number[]; larguras:Record<number,number>; escalaProdutoQtd:number; escalaResumo:number }
+type OrdenacaoOfertasCartao='preco'|'fornecedor'
+interface PreferenciasColunasComparativo { ordem:number[]; ocultos:number[]; larguras:Record<number,number>; escalaProdutoQtd:number; escalaResumo:number; ordenacaoOfertas:OrdenacaoOfertasCartao }
 const chaveColunasComparativo=(cotacaoId:string)=>`cotapreco:comparativo-colunas:${cotacaoId}`
 const LARGURA_COLUNA_FORNECEDOR_PADRAO=130
 const LARGURA_COLUNA_FORNECEDOR_MINIMA=70
@@ -185,8 +186,8 @@ function lerPreferenciasColunasComparativo(cotacaoId:string):PreferenciasColunas
     const bruto=JSON.parse(window.localStorage.getItem(chaveColunasComparativo(cotacaoId))||'{}')
     const larguras:Record<number,number>={}
     if(bruto.larguras&&typeof bruto.larguras==='object')Object.entries(bruto.larguras).forEach(([chave,valor])=>{const id=Number(chave);const largura=Number(valor);if(Number.isFinite(id)&&Number.isFinite(largura))larguras[id]=largura})
-    return{ordem:Array.isArray(bruto.ordem)?bruto.ordem:[],ocultos:Array.isArray(bruto.ocultos)?bruto.ocultos:[],larguras,escalaProdutoQtd:normalizarEscalaGrupo(bruto.escalaProdutoQtd),escalaResumo:normalizarEscalaGrupo(bruto.escalaResumo)}
-  }catch{return{ordem:[],ocultos:[],larguras:{},escalaProdutoQtd:1,escalaResumo:1}}
+    return{ordem:Array.isArray(bruto.ordem)?bruto.ordem:[],ocultos:Array.isArray(bruto.ocultos)?bruto.ocultos:[],larguras,escalaProdutoQtd:normalizarEscalaGrupo(bruto.escalaProdutoQtd),escalaResumo:normalizarEscalaGrupo(bruto.escalaResumo),ordenacaoOfertas:bruto.ordenacaoOfertas==='fornecedor'?'fornecedor':'preco'}
+  }catch{return{ordem:[],ocultos:[],larguras:{},escalaProdutoQtd:1,escalaResumo:1,ordenacaoOfertas:'preco'}}
 }
 
 function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotacaoId:string}){
@@ -202,10 +203,16 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
   const[preferenciasColunas,setPreferenciasColunas]=useState<PreferenciasColunasComparativo>(()=>lerPreferenciasColunasComparativo(cotacaoId))
   const[colunaArrastada,setColunaArrastada]=useState<number|null>(null)
   const[colunaSobreposta,setColunaSobreposta]=useState<number|null>(null)
+  const[deslocamentoColuna,setDeslocamentoColuna]=useState(0)
+  const geometriaColunas=useRef<{responseId:number;centro:number;largura:number}[]>([])
+  const temporizadorColuna=useRef<number|null>(null)
+  const arrastouColuna=useRef(false)
   const[filtrosAbertos,setFiltrosAbertos]=useState(false)
+  const[cartoesAbertos,setCartoesAbertos]=useState<Set<number>>(()=>new Set())
   const[larguraJanela,setLarguraJanela]=useState(()=>typeof window==='undefined'?1024:window.innerWidth)
 
   useEffect(()=>{try{window.localStorage.setItem(chaveColunasComparativo(cotacaoId),JSON.stringify(preferenciasColunas))}catch{/* Preferência de colunas é opcional quando o navegador bloqueia armazenamento. */}},[cotacaoId,preferenciasColunas])
+  useEffect(()=>()=>{if(temporizadorColuna.current!==null)window.clearTimeout(temporizadorColuna.current)},[])
   useEffect(()=>{
     const aoRedimensionarJanela=()=>setLarguraJanela(window.innerWidth)
     window.addEventListener('resize',aoRedimensionarJanela)
@@ -253,23 +260,92 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
       return null
     })
   }
-  function colunaSobPonteiro(x:number,y:number):number|null{
-    const alvo=document.elementFromPoint(x,y)?.closest('[data-coluna-fornecedor]')
-    const atributo=alvo?.getAttribute('data-coluna-fornecedor')
-    return atributo?Number(atributo):null
+  /*
+   * O destino sai da posição medida das colunas no início do arraste, e não de elementFromPoint:
+   * como as vizinhas deslizam para abrir espaço, o ponto sob o cursor fica vazio no meio do
+   * gesto e a coluna seria solta no nada.
+   */
+  function medirColunas(elemento:HTMLElement){
+    const cabecalho=elemento.closest('tr')
+    geometriaColunas.current=cabecalho?[...cabecalho.querySelectorAll<HTMLElement>('[data-coluna-fornecedor]')].map(coluna=>{
+      const caixa=coluna.getBoundingClientRect()
+      return{responseId:Number(coluna.dataset.colunaFornecedor),centro:caixa.left+caixa.width/2,largura:caixa.width}
+    }):[]
   }
-  function iniciarArrasteColuna(event:EventoPonteiroReact,responseId:number){
-    if(event.button!==0)return
-    event.preventDefault()
-    setColunaArrastada(responseId)
-    const mover=(moveEvent:PointerEvent)=>{setColunaSobreposta(colunaSobPonteiro(moveEvent.clientX,moveEvent.clientY))}
+  function colunaMaisProxima(x:number):number|null{
+    let alvo:number|null=null
+    let menorDistancia=Number.POSITIVE_INFINITY
+    for(const coluna of geometriaColunas.current){
+      const distancia=Math.abs(coluna.centro-x)
+      if(distancia<menorDistancia){menorDistancia=distancia;alvo=coluna.responseId}
+    }
+    return alvo
+  }
+  function iniciarArrasteColuna(responseId:number,xInicial:number,cabecalho:HTMLElement){
+    medirColunas(cabecalho)
+    setColunaArrastada(responseId);setColunaSobreposta(responseId);setDeslocamentoColuna(0)
+    let saiuDoLugar=false
+    const mover=(moveEvent:PointerEvent)=>{
+      if(Math.abs(moveEvent.clientX-xInicial)>6)saiuDoLugar=true
+      setDeslocamentoColuna(moveEvent.clientX-xInicial)
+      setColunaSobreposta(colunaMaisProxima(moveEvent.clientX))
+    }
     const soltar=(upEvent:PointerEvent)=>{
-      const destino=colunaSobPonteiro(upEvent.clientX,upEvent.clientY)
-      if(destino!==null)moverColunaPara(responseId,destino)
-      setColunaArrastada(null);setColunaSobreposta(null)
+      /* Segurar e soltar sem sair do lugar continua sendo um clique — ordena por esta coluna. */
+      if(saiuDoLugar){
+        const destino=colunaMaisProxima(upEvent.clientX)
+        if(destino!==null)moverColunaPara(responseId,destino)
+        arrastouColuna.current=true
+        window.setTimeout(()=>{arrastouColuna.current=false},250)
+      }
+      setColunaArrastada(null);setColunaSobreposta(null);setDeslocamentoColuna(0)
       window.removeEventListener('pointermove',mover);window.removeEventListener('pointerup',soltar)
     }
     window.addEventListener('pointermove',mover);window.addEventListener('pointerup',soltar)
+  }
+  function agarrarColuna(evento:EventoPonteiroReact<HTMLElement>,responseId:number){
+    if(evento.button!==0)return
+    evento.preventDefault();evento.stopPropagation()
+    const cabecalho=evento.currentTarget.closest('th')
+    if(cabecalho)iniciarArrasteColuna(responseId,evento.clientX,cabecalho)
+  }
+  /*
+   * Dá para pegar a coluna em qualquer ponto do cabeçalho, não só na alça: com o mouse basta
+   * apertar e arrastar; parado, o arraste começa depois de segurar. Os botões de ordenar,
+   * ocultar e mover continuam funcionando porque um clique curto nunca vira arraste.
+   */
+  function pressionarColuna(evento:EventoPonteiroReact<HTMLTableCellElement>,responseId:number){
+    if(evento.button!==0)return
+    if(evento.target instanceof Element&&evento.target.closest('.comparison-resize-handle,.comparison-drag-handle'))return
+    const tipoPonteiro=evento.pointerType
+    const xInicial=evento.clientX,yInicial=evento.clientY
+    const cabecalho=evento.currentTarget
+    function encerrarEspera(){
+      if(temporizadorColuna.current!==null){window.clearTimeout(temporizadorColuna.current);temporizadorColuna.current=null}
+      window.removeEventListener('pointermove',vigiar);window.removeEventListener('pointerup',encerrarEspera);window.removeEventListener('pointercancel',encerrarEspera)
+    }
+    function vigiar(movimento:PointerEvent){
+      if(Math.abs(movimento.clientX-xInicial)<=6&&Math.abs(movimento.clientY-yInicial)<=6)return
+      encerrarEspera()
+      /* Com o mouse, sair do lugar já é arrastar; no toque, é rolagem da tabela. */
+      if(tipoPonteiro!=='touch')iniciarArrasteColuna(responseId,xInicial,cabecalho)
+    }
+    window.addEventListener('pointermove',vigiar);window.addEventListener('pointerup',encerrarEspera);window.addEventListener('pointercancel',encerrarEspera)
+    temporizadorColuna.current=window.setTimeout(()=>{encerrarEspera();iniciarArrasteColuna(responseId,xInicial,cabecalho)},350)
+  }
+  /* Mesma ideia dos cartões no mobile: a coluna arrastada acompanha o cursor e as vizinhas
+     entre a origem e o destino andam uma posição para abrir o espaço. */
+  function deslocamentoDaColuna(responseId:number,indice:number):number{
+    if(colunaArrastada===null)return 0
+    if(colunaArrastada===responseId)return deslocamentoColuna
+    if(colunaSobreposta===null)return 0
+    const origem=fornecedoresVisiveis.findIndex(s=>s.responseId===colunaArrastada)
+    const destino=fornecedoresVisiveis.findIndex(s=>s.responseId===colunaSobreposta)
+    if(origem<0||destino<0||origem===destino)return 0
+    const largura=geometriaColunas.current.find(coluna=>coluna.responseId===colunaArrastada)?.largura??larguraColuna(colunaArrastada)
+    if(origem<destino&&indice>origem&&indice<=destino)return -largura
+    if(origem>destino&&indice>=destino&&indice<origem)return largura
+    return 0
   }
   function larguraColuna(responseId:number):number{
     return preferenciasColunas.larguras[responseId]??LARGURA_COLUNA_FORNECEDOR_PADRAO
@@ -338,23 +414,39 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
   const contagemFiltrosAtivos=[filtroFornecedorId!=='todos',somenteSemOferta,somenteComEconomia,min!==null,max!==null].filter(Boolean).length
   const filtrosAtivos=contagemFiltrosAtivos>0
   function limparFiltros(){setFiltroFornecedorId('todos');setSomenteSemOferta(false);setSomenteComEconomia(false);setPrecoMinimo('');setPrecoMaximo('')}
+  function alternarCartao(quotationItemId:number){
+    setCartoesAbertos(atual=>{const copia=new Set(atual);if(copia.has(quotationItemId))copia.delete(quotationItemId);else copia.add(quotationItemId);return copia})
+  }
+  const todosCartoesAbertos=detalhes.length>0&&detalhes.every(({produto})=>cartoesAbertos.has(produto.quotationItemId))
+  function alternarTodosCartoes(){setCartoesAbertos(todosCartoesAbertos?new Set():new Set(detalhes.map(({produto})=>produto.quotationItemId)))}
+  function definirOrdenacaoOfertas(valor:OrdenacaoOfertasCartao){setPreferenciasColunas(atual=>({...atual,ordenacaoOfertas:valor}))}
+  /* Arrastar um fornecedor dentro de um cartão muda a ordem de todos eles (a mesma das colunas
+     no desktop) — e só dá para ver o efeito com os cartões na ordem escolhida, não por preço. */
+  function reordenarFornecedorNoCartao(origemId:number,destinoId:number){
+    moverColunaPara(origemId,destinoId)
+    setPreferenciasColunas(atual=>atual.ordenacaoOfertas==='fornecedor'?atual:{...atual,ordenacaoOfertas:'fornecedor'})
+  }
+  function moverFornecedorNoCartao(responseId:number,direcao:-1|1){
+    moverColuna(responseId,direcao)
+    setPreferenciasColunas(atual=>atual.ordenacaoOfertas==='fornecedor'?atual:{...atual,ordenacaoOfertas:'fornecedor'})
+  }
 
-  return <section className="card comparison-card"><div className="card-header"><div><h2>Comparativo de preços</h2><p>Veja a faixa de preço e a economia potencial de cada produto. Arraste as colunas dos fornecedores para reordenar, clique no nome para comparar coluna por coluna, e use os olhinhos para ocultar quem não interessa agora.</p></div></div>{comparacao.supplierTotals.length===0?<EstadoVazio title="Aguardando propostas" description="O comparativo será preenchido após o primeiro envio."/>:<>
+  return <section className="card comparison-card"><div className="card-header"><div><h2>Comparativo de preços</h2><p>{mobile?'Cada produto vira um cartão com o melhor preço em destaque. Toque em "ver ofertas" para abrir o ranking completo de fornecedores, do mais barato ao mais caro.':'Veja a faixa de preço e a economia potencial de cada produto. Segure e arraste o cabeçalho de um fornecedor para reordenar as colunas, clique no nome para ordenar por ele, e use os olhinhos para ocultar quem não interessa agora.'}</p></div></div>{comparacao.supplierTotals.length===0?<EstadoVazio title="Aguardando propostas" description="O comparativo será preenchido após o primeiro envio."/>:<>
     <div className="comparison-controls">
       <div className="comparison-search"><Search/><input type="search" placeholder="Buscar produto ou EAN" value={busca} onChange={event=>setBusca(event.target.value)}/>{busca&&<button type="button" onClick={()=>setBusca('')} aria-label="Limpar busca">×</button>}</div>
       <label>Ordenar por<select value={ordemColuna?'coluna':ordem} onChange={event=>{setOrdemColuna(null);setOrdem(event.target.value as typeof ordem)}}><option value="menor">Menor preço</option><option value="maior">Maior preço</option><option value="economia">Maior economia</option>{ordemColuna&&<option value="coluna">Coluna: {comparacao.supplierTotals.find(s=>s.responseId===ordemColuna.responseId)?.supplierName}</option>}</select></label>
       <button type="button" className={`comparison-filters-trigger ${filtrosAtivos?'active':''}`} onClick={()=>setFiltrosAbertos(true)}><SlidersHorizontal size={15}/>Filtros{contagemFiltrosAtivos>0&&<span className="comparison-filters-badge">{contagemFiltrosAtivos}</span>}</button>
       <span>{detalhes.length} de {comparacao.products.length} produtos</span>
     </div>
-    <div className="comparison-column-toggles"><SlidersHorizontal/><span>Fornecedores no comparativo:</span>{fornecedoresOrdenados.map(s=>{const oculto=preferenciasColunas.ocultos.includes(s.responseId);return <button type="button" key={s.responseId} className={oculto?'hidden':''} title={oculto?`Mostrar ${s.supplierName} no comparativo`:`Ocultar ${s.supplierName} do comparativo`} onClick={()=>alternarVisibilidadeColuna(s.responseId)}>{oculto?<EyeOff/>:<Eye/>}{s.supplierName}</button>})}<span className="comparison-column-toggles-divider"/><button type="button" title="Deixa as colunas dos fornecedores bem finas, pra caber mais na tela sem precisar rolar." onClick={compactarColunas}><FoldHorizontal size={14}/>Compactar colunas</button>{larguraPersonalizada&&<button type="button" title="Volta todas as colunas de fornecedor para a largura padrão." onClick={redefinirLargurasColunas}><RotateCcw size={14}/>Largura padrão</button>}</div>
-    {detalhes.length===0?<EstadoVazio title="Nenhum produto encontrado" description="Tente buscar por outro nome ou EAN, ou ajuste os filtros ativos."/>:<div className="table-wrap"><table className="comparison-table"><thead><tr>
+    <div className="comparison-column-toggles"><SlidersHorizontal/><span>Fornecedores no comparativo:</span>{fornecedoresOrdenados.map(s=>{const oculto=preferenciasColunas.ocultos.includes(s.responseId);return <button type="button" key={s.responseId} className={oculto?'hidden':''} title={oculto?`Mostrar ${s.supplierName} no comparativo`:`Ocultar ${s.supplierName} do comparativo`} onClick={()=>alternarVisibilidadeColuna(s.responseId)}>{oculto?<EyeOff/>:<Eye/>}{s.supplierName}</button>})}<span className="comparison-column-toggles-divider"/>{mobile?<><span>Ofertas por:</span><div className="comparison-offer-order" role="group" aria-label="Ordem das ofertas dentro dos cartões"><button type="button" className={preferenciasColunas.ordenacaoOfertas==='preco'?'active':''} onClick={()=>definirOrdenacaoOfertas('preco')}>Menor preço</button><button type="button" className={preferenciasColunas.ordenacaoOfertas==='fornecedor'?'active':''} onClick={()=>definirOrdenacaoOfertas('fornecedor')}>Minha ordem</button></div><button type="button" title="Abre ou fecha o ranking de ofertas de todos os produtos de uma vez." onClick={alternarTodosCartoes}>{todosCartoesAbertos?<ChevronUp size={14}/>:<ChevronDown size={14}/>}{todosCartoesAbertos?'Recolher ofertas':'Abrir todas as ofertas'}</button></>:<><button type="button" title="Deixa as colunas dos fornecedores bem finas, pra caber mais na tela sem precisar rolar." onClick={compactarColunas}><FoldHorizontal size={14}/>Compactar colunas</button>{larguraPersonalizada&&<button type="button" title="Volta todas as colunas de fornecedor para a largura padrão." onClick={redefinirLargurasColunas}><RotateCcw size={14}/>Largura padrão</button>}</>}</div>
+    {detalhes.length===0?<EstadoVazio title="Nenhum produto encontrado" description="Tente buscar por outro nome ou EAN, ou ajuste os filtros ativos."/>:mobile?<div className="comparison-cards">{detalhes.map(({produto:p})=><CartaoComparativo key={p.quotationItemId} produto={p} fornecedoresVisiveis={fornecedoresVisiveis} ordenacaoOfertas={preferenciasColunas.ordenacaoOfertas} aberto={cartoesAbertos.has(p.quotationItemId)} aoAlternar={()=>alternarCartao(p.quotationItemId)} aoReordenar={reordenarFornecedorNoCartao} aoMover={moverFornecedorNoCartao}/>)}</div>:<div className="table-wrap"><table className="comparison-table"><thead><tr>
       <th className="comparison-col-produto" style={{width:larguraProduto,minWidth:larguraProduto,maxWidth:larguraProduto}}>Produto</th>
       <th className="comparison-col-qtd" style={{width:larguraQtd,minWidth:larguraQtd,maxWidth:larguraQtd,left:larguraProduto}}>Qtd.
         <span className="comparison-resize-handle" role="separator" aria-orientation="vertical" aria-label="Redimensionar colunas de Produto e Qtd." title="Arraste para afinar ou alargar as colunas de Produto e Qtd. juntas" onPointerDown={event=>iniciarRedimensionamentoGrupo(event,'produtoQtd')}/>
       </th>
-      {fornecedoresVisiveis.map((s,indice)=>{const ordenandoPorEsta=ordemColuna?.responseId===s.responseId;const arrastando=colunaArrastada===s.responseId;const alvoDoArraste=colunaArrastada!==null&&colunaSobreposta===s.responseId&&colunaArrastada!==s.responseId;const largura=larguraColuna(s.responseId);return <th key={s.responseId} data-coluna-fornecedor={s.responseId} className={`comparison-th-fornecedor ${arrastando?'dragging':''} ${alvoDoArraste?'drop-target':''}`} style={{width:largura,minWidth:largura,maxWidth:largura}}>
+      {fornecedoresVisiveis.map((s,indice)=>{const ordenandoPorEsta=ordemColuna?.responseId===s.responseId;const arrastando=colunaArrastada===s.responseId;const largura=larguraColuna(s.responseId);const deslocamento=deslocamentoDaColuna(s.responseId,indice);return <th key={s.responseId} data-coluna-fornecedor={s.responseId} className={`comparison-th-fornecedor ${arrastando?'dragging':''}`} style={{width:largura,minWidth:largura,maxWidth:largura,transform:deslocamento?`translateX(${deslocamento}px)`:undefined}} onPointerDown={evento=>pressionarColuna(evento,s.responseId)} onClickCapture={evento=>{if(arrastouColuna.current){arrastouColuna.current=false;evento.preventDefault();evento.stopPropagation()}}}>
         <div className="comparison-th-controls">
-          <span className="comparison-drag-handle" aria-hidden="true" onPointerDown={event=>iniciarArrasteColuna(event,s.responseId)}><GripVertical size={14}/></span>
+          <span className="comparison-drag-handle" aria-hidden="true" onPointerDown={event=>agarrarColuna(event,s.responseId)}><GripVertical size={14}/></span>
           <button type="button" className="comparison-move-button" disabled={indice===0} aria-label={`Mover ${s.supplierName} para a esquerda`} onClick={()=>moverColuna(s.responseId,-1)}><ChevronLeft size={13}/></button>
           <button type="button" className="comparison-move-button" disabled={indice===fornecedoresVisiveis.length-1} aria-label={`Mover ${s.supplierName} para a direita`} onClick={()=>moverColuna(s.responseId,1)}><ChevronRight size={13}/></button>
           <button type="button" className="comparison-sort-button" title={`Ordenar a tabela pelo preço de ${s.supplierName}`} onClick={()=>alternarOrdemColuna(s.responseId)}><span className="comparison-sort-label">{s.supplierName}</span>{ordenandoPorEsta&&(ordemColuna?.direcao==='asc'?<ArrowUp size={12}/>:<ArrowDown size={12}/>)}</button>
@@ -368,8 +460,162 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
       </th>
       <th className={`comparison-col-economia ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraEconomia,minWidth:larguraEconomia,maxWidth:larguraEconomia,right:larguraMelhor}}>Economia</th>
       <th className={`comparison-col-melhor ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraMelhor,minWidth:larguraMelhor,maxWidth:larguraMelhor,right:0}}>Melhor</th>
-    </tr></thead><tbody>{detalhes.map(({produto:p,menor,maior,economia})=><tr key={p.quotationItemId}><td className="comparison-col-produto" style={{width:larguraProduto,minWidth:larguraProduto,maxWidth:larguraProduto}}><strong>{p.productName}</strong><small>{p.ean?`EAN ${p.ean}`:'Sem EAN'}</small></td><td className="comparison-col-qtd" style={{width:larguraQtd,minWidth:larguraQtd,maxWidth:larguraQtd,left:larguraProduto}}>{p.requestedQuantity}</td>{fornecedoresVisiveis.map(s=>{const o=p.offers.find(x=>x.responseId===s.responseId);const largura=larguraColuna(s.responseId);return <td key={s.responseId} className={o?.bestPrice?'best-cell':''} style={{width:largura,minWidth:largura,maxWidth:largura}}>{o?<><strong>{money(o.unitPrice)}</strong><small>{o.availableQuantity} un.</small></>:<>—</>}</td>})}<td className={`comparison-col-faixa ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraFaixa,minWidth:larguraFaixa,maxWidth:larguraFaixa,right:larguraEconomia+larguraMelhor}}>{menor===null?'—':<div className="comparison-metric"><strong>{money(menor)}</strong><small>menor · até {money(maior!)}</small></div>}</td><td className={`comparison-col-economia ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraEconomia,minWidth:larguraEconomia,maxWidth:larguraEconomia,right:larguraMelhor}}>{economia>0?<div className="comparison-metric savings"><strong>{money(economia)}</strong><small>vs. 2ª melhor oferta</small></div>:'—'}</td><td className={`comparison-col-melhor ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraMelhor,minWidth:larguraMelhor,maxWidth:larguraMelhor,right:0}}>{p.winningSupplier??'Sem oferta'}</td></tr>)}</tbody></table></div>}
+    </tr></thead><tbody>{detalhes.map(({produto:p,menor,maior,economia})=><tr key={p.quotationItemId}><td className="comparison-col-produto" style={{width:larguraProduto,minWidth:larguraProduto,maxWidth:larguraProduto}}><strong>{p.productName}</strong><small>{p.ean?`EAN ${p.ean}`:'Sem EAN'}</small></td><td className="comparison-col-qtd" style={{width:larguraQtd,minWidth:larguraQtd,maxWidth:larguraQtd,left:larguraProduto}}>{p.requestedQuantity}</td>{fornecedoresVisiveis.map((s,indice)=>{const o=p.offers.find(x=>x.responseId===s.responseId);const largura=larguraColuna(s.responseId);const deslocamento=deslocamentoDaColuna(s.responseId,indice);return <td key={s.responseId} className={`comparison-cell-fornecedor ${o?.bestPrice?'best-cell':''} ${colunaArrastada===s.responseId?'dragging':''}`} style={{width:largura,minWidth:largura,maxWidth:largura,transform:deslocamento?`translateX(${deslocamento}px)`:undefined}}>{o?<><strong>{money(o.unitPrice)}</strong><small>{o.availableQuantity} un.</small></>:<>—</>}</td>})}<td className={`comparison-col-faixa ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraFaixa,minWidth:larguraFaixa,maxWidth:larguraFaixa,right:larguraEconomia+larguraMelhor}}>{menor===null?'—':<div className="comparison-metric"><strong>{money(menor)}</strong><small>menor · até {money(maior!)}</small></div>}</td><td className={`comparison-col-economia ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraEconomia,minWidth:larguraEconomia,maxWidth:larguraEconomia,right:larguraMelhor}}>{economia>0?<div className="comparison-metric savings"><strong>{money(economia)}</strong><small>vs. 2ª melhor oferta</small></div>:'—'}</td><td className={`comparison-col-melhor ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraMelhor,minWidth:larguraMelhor,maxWidth:larguraMelhor,right:0}}>{p.winningSupplier??'Sem oferta'}</td></tr>)}</tbody></table></div>}
   </>}{filtrosAbertos&&<ModalFiltrosComparativo fornecedores={comparacao.supplierTotals} filtroFornecedorId={filtroFornecedorId} setFiltroFornecedorId={setFiltroFornecedorId} filtroFornecedorModo={filtroFornecedorModo} setFiltroFornecedorModo={setFiltroFornecedorModo} fornecedorFiltro={fornecedorFiltro} somenteSemOferta={somenteSemOferta} setSomenteSemOferta={setSomenteSemOferta} somenteComEconomia={somenteComEconomia} setSomenteComEconomia={setSomenteComEconomia} precoMinimo={precoMinimo} setPrecoMinimo={setPrecoMinimo} precoMaximo={precoMaximo} setPrecoMaximo={setPrecoMaximo} contagemFiltrosAtivos={contagemFiltrosAtivos} aoLimpar={limparFiltros} aoFechar={()=>setFiltrosAbertos(false)}/>}</section>
+}
+
+/*
+ * No mobile a tabela do comparativo não cabe: os dois grupos de colunas fixas (Produto/Qtd. à
+ * esquerda e o resumo à direita) comem quase toda a largura e sobra uma fresta para rolar os
+ * fornecedores. Em telas estreitas cada produto vira um cartão com o melhor preço em destaque
+ * e o ranking completo de ofertas sob demanda, sem rolagem horizontal.
+ */
+const percentualComparativo=(valor:number)=>`${valor.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%`
+function CartaoComparativo({produto,fornecedoresVisiveis,ordenacaoOfertas,aberto,aoAlternar,aoReordenar,aoMover}:{produto:ComparacaoProduto;fornecedoresVisiveis:ComparacaoCotacao['supplierTotals'];ordenacaoOfertas:OrdenacaoOfertasCartao;aberto:boolean;aoAlternar:()=>void;aoReordenar:(origemId:number,destinoId:number)=>void;aoMover:(responseId:number,direcao:-1|1)=>void}){
+  const[arrastando,setArrastando]=useState<number|null>(null)
+  const[sobreposto,setSobreposto]=useState<number|null>(null)
+  const[deslocamentoArraste,setDeslocamentoArraste]=useState(0)
+  const[alturaArraste,setAlturaArraste]=useState(0)
+  const temporizadorPressao=useRef<number|null>(null)
+  const geometriaLinhas=useRef<{responseId:number;centro:number}[]>([])
+  useEffect(()=>()=>{if(temporizadorPressao.current!==null)window.clearTimeout(temporizadorPressao.current)},[])
+
+  const visiveis=new Set(fornecedoresVisiveis.map(s=>s.responseId))
+  const porPreco=produto.offers.filter(o=>visiveis.has(o.responseId)).sort((a,b)=>a.unitPrice-b.unitPrice)
+  const posicaoPorPreco=new Map(porPreco.map((oferta,indice)=>[oferta.responseId,indice+1]))
+  const ofertas=ordenacaoOfertas==='fornecedor'
+    ?fornecedoresVisiveis.map(s=>porPreco.find(o=>o.responseId===s.responseId)).filter((o):o is typeof porPreco[number]=>Boolean(o))
+    :porPreco
+  const melhor=porPreco.length?porPreco[0]:null
+  const segunda=porPreco.length>1?porPreco[1]:null
+  const maior=porPreco.length?porPreco[porPreco.length-1].unitPrice:null
+  const quantidadeComparavel=segunda?Math.min(produto.coveredQuantity,segunda.availableQuantity):0
+  const economia=melhor&&segunda?Math.max(0,(segunda.unitPrice-melhor.unitPrice)*quantidadeComparavel):0
+  const semOferta=fornecedoresVisiveis.filter(s=>!produto.offers.some(o=>o.responseId===s.responseId))
+  const faltando=melhor?Math.max(0,produto.requestedQuantity-melhor.availableQuantity):0
+  const idOfertas=`ofertas-produto-${produto.quotationItemId}`
+
+  /*
+   * O alvo sai da geometria das linhas medida no início do arraste, não de elementFromPoint:
+   * como as vizinhas deslizam para abrir espaço, o ponto sob o dedo fica vazio no meio do
+   * gesto e o fornecedor seria solto no nada.
+   */
+  function medirLinhas(elemento:HTMLElement){
+    const lista=elemento.closest('.comparison-product-card-offers')
+    geometriaLinhas.current=lista?[...lista.querySelectorAll<HTMLElement>('[data-oferta-fornecedor]')].map(linha=>{
+      const caixa=linha.getBoundingClientRect()
+      return{responseId:Number(linha.dataset.ofertaFornecedor),centro:caixa.top+caixa.height/2}
+    }):[]
+  }
+  function ofertaMaisProxima(y:number):number|null{
+    let alvo:number|null=null
+    let menorDistancia=Number.POSITIVE_INFINITY
+    for(const linha of geometriaLinhas.current){
+      const distancia=Math.abs(linha.centro-y)
+      if(distancia<menorDistancia){menorDistancia=distancia;alvo=linha.responseId}
+    }
+    return alvo
+  }
+  /*
+   * O arraste começa depois de segurar o dedo parado (ou direto pela alça): enquanto ele está
+   * ativo, o touchmove é bloqueado em listener não passivo, senão o navegador rola a página em
+   * vez de mover o fornecedor.
+   */
+  function iniciarArrasteOferta(responseId:number,yInicial:number,elemento:HTMLElement){
+    medirLinhas(elemento)
+    setArrastando(responseId);setSobreposto(responseId);setDeslocamentoArraste(0);setAlturaArraste(elemento.offsetHeight)
+    if(typeof navigator.vibrate==='function')navigator.vibrate(12)
+    /* A linha arrastada segue o dedo na vertical; ela fica sem pointer-events pelo CSS, senão
+       o elementFromPoint devolveria sempre ela mesma em vez da linha que está por baixo. */
+    function mover(evento:PointerEvent){
+      setDeslocamentoArraste(evento.clientY-yInicial)
+      setSobreposto(ofertaMaisProxima(evento.clientY))
+    }
+    function bloquearRolagem(evento:TouchEvent){evento.preventDefault()}
+    function soltar(evento:PointerEvent){
+      const destino=ofertaMaisProxima(evento.clientY)
+      if(destino!==null&&destino!==responseId)aoReordenar(responseId,destino)
+      setArrastando(null);setSobreposto(null);setDeslocamentoArraste(0)
+      window.removeEventListener('pointermove',mover);window.removeEventListener('pointerup',soltar);window.removeEventListener('pointercancel',soltar)
+      window.removeEventListener('touchmove',bloquearRolagem)
+    }
+    window.addEventListener('pointermove',mover);window.addEventListener('pointerup',soltar);window.addEventListener('pointercancel',soltar)
+    window.addEventListener('touchmove',bloquearRolagem,{passive:false})
+  }
+  function pressionarOferta(evento:EventoPonteiroReact<HTMLLIElement>,responseId:number){
+    if(evento.pointerType==='mouse'&&evento.button!==0)return
+    const xInicial=evento.clientX,yInicial=evento.clientY
+    const elemento=evento.currentTarget
+    function desistir(){
+      if(temporizadorPressao.current!==null){window.clearTimeout(temporizadorPressao.current);temporizadorPressao.current=null}
+      window.removeEventListener('pointermove',vigiar);window.removeEventListener('pointerup',desistir);window.removeEventListener('pointercancel',desistir)
+    }
+    /* Se o dedo saiu do lugar antes de completar a pressão, é rolagem da lista — não arraste. */
+    function vigiar(movimento:PointerEvent){if(Math.abs(movimento.clientX-xInicial)>8||Math.abs(movimento.clientY-yInicial)>8)desistir()}
+    window.addEventListener('pointermove',vigiar);window.addEventListener('pointerup',desistir);window.addEventListener('pointercancel',desistir)
+    temporizadorPressao.current=window.setTimeout(()=>{desistir();iniciarArrasteOferta(responseId,yInicial,elemento)},400)
+  }
+  function agarrarOferta(evento:EventoPonteiroReact<HTMLButtonElement>,responseId:number){
+    if(evento.pointerType==='mouse'&&evento.button!==0)return
+    evento.preventDefault();evento.stopPropagation()
+    const linha=evento.currentTarget.closest('li')
+    if(linha)iniciarArrasteOferta(responseId,evento.clientY,linha)
+  }
+  /* Enquanto uma linha é arrastada, as que ficam entre a origem e o destino andam uma posição
+     para abrir o espaço — é isso que dá a sensação de encaixe ao soltar. */
+  function espacoAberto(indice:number):number{
+    if(arrastando===null||sobreposto===null||alturaArraste===0)return 0
+    const origem=ofertas.findIndex(o=>o.responseId===arrastando)
+    const destino=ofertas.findIndex(o=>o.responseId===sobreposto)
+    if(origem<0||destino<0||origem===destino)return 0
+    if(origem<destino&&indice>origem&&indice<=destino)return -alturaArraste
+    if(origem>destino&&indice>=destino&&indice<origem)return alturaArraste
+    return 0
+  }
+  function teclarNaAlca(evento:{key:string;preventDefault:()=>void},responseId:number){
+    if(evento.key!=='ArrowUp'&&evento.key!=='ArrowDown')return
+    evento.preventDefault()
+    aoMover(responseId,evento.key==='ArrowUp'?-1:1)
+  }
+
+  return <article className={`comparison-product-card ${aberto?'expanded':''}`}>
+    <header className="comparison-product-card-head">
+      <div><strong>{produto.productName}</strong><small>{produto.ean?`EAN ${produto.ean}`:'Sem EAN'}</small></div>
+      <span className="comparison-product-card-qty">{produto.requestedQuantity} un.</span>
+    </header>
+    {melhor?<>
+      <div className="comparison-product-card-best">
+        <span className="comparison-product-card-best-label"><Trophy size={13}/>Melhor preço</span>
+        <strong>{money(melhor.unitPrice)}</strong>
+        <span className="comparison-product-card-best-supplier">{melhor.supplierName}</span>
+        <small>{melhor.availableQuantity} un. disponíveis{faltando>0?` · faltam ${faltando} un.`:''}</small>
+      </div>
+      <dl className="comparison-product-card-metrics">
+        <div><dt>Faixa de preço</dt><dd>{maior!==null&&maior>melhor.unitPrice?`${money(melhor.unitPrice)} – ${money(maior)}`:money(melhor.unitPrice)}</dd></div>
+        <div><dt>Economia</dt><dd className={economia>0?'savings':''}>{economia>0?money(economia):'—'}</dd></div>
+        <div><dt>Ofertas</dt><dd>{ofertas.length} de {fornecedoresVisiveis.length}</dd></div>
+      </dl>
+      <button type="button" className="comparison-product-card-toggle" aria-expanded={aberto} aria-controls={idOfertas} onClick={aoAlternar}>{aberto?'Ocultar ofertas':`Ver ${ofertas.length===1?'a oferta':`as ${ofertas.length} ofertas`}`}{aberto?<ChevronUp size={15}/>:<ChevronDown size={15}/>}</button>
+      {aberto&&<>
+        <ol className="comparison-product-card-offers" id={idOfertas}>
+          {ofertas.map((oferta,indice)=>{
+            const diferenca=oferta.unitPrice-melhor.unitPrice
+            const posicao=posicaoPorPreco.get(oferta.responseId)??1
+            const sendoArrastada=arrastando===oferta.responseId
+            const deslocamento=sendoArrastada?deslocamentoArraste:espacoAberto(indice)
+            return <li key={oferta.responseId} data-oferta-fornecedor={oferta.responseId} className={`${posicao===1?'best':''} ${sendoArrastada?'dragging':''}`} style={deslocamento?{transform:`translateY(${deslocamento}px)`}:undefined} onPointerDown={evento=>pressionarOferta(evento,oferta.responseId)}>
+              <button type="button" className="comparison-offer-grip" aria-label={`Mover ${oferta.supplierName} na ordem dos fornecedores`} onPointerDown={evento=>agarrarOferta(evento,oferta.responseId)} onKeyDown={evento=>teclarNaAlca(evento,oferta.responseId)}><GripVertical size={14}/></button>
+              <span className="comparison-offer-rank" title="Posição por preço">{posicao}º</span>
+              <div className="comparison-offer-supplier"><strong>{oferta.supplierName}</strong><small>{oferta.availableQuantity} un. disponíveis</small></div>
+              <div className="comparison-offer-price"><strong>{money(oferta.unitPrice)}</strong>{posicao===1?<small>menor preço</small>:<small>+{money(diferenca)} · +{percentualComparativo(diferenca/melhor.unitPrice*100)}</small>}</div>
+            </li>
+          })}
+          {semOferta.length>0&&<li className="comparison-offer-missing"><AlertTriangle size={13}/>Sem oferta: {semOferta.map(s=>s.supplierName).join(', ')}</li>}
+        </ol>
+        {ofertas.length>1&&<p className="comparison-offer-hint"><GripVertical size={12}/>Segure um fornecedor e arraste para cima ou para baixo para mudar a ordem.</p>}
+      </>}
+    </>:<p className="comparison-product-card-empty"><AlertTriangle size={14}/>Nenhum fornecedor ofertou este produto.</p>}
+  </article>
 }
 
 function ModalFiltrosComparativo({fornecedores,filtroFornecedorId,setFiltroFornecedorId,filtroFornecedorModo,setFiltroFornecedorModo,fornecedorFiltro,somenteSemOferta,setSomenteSemOferta,somenteComEconomia,setSomenteComEconomia,precoMinimo,setPrecoMinimo,precoMaximo,setPrecoMaximo,contagemFiltrosAtivos,aoLimpar,aoFechar}:{
