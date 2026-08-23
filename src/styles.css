@@ -1459,20 +1459,6 @@ label small {
 .comparison-table td.comparison-col-faixa {
   box-shadow: -6px 0 8px -6px rgba(20, 57, 45, 0.12);
 }
-/*
- * Em telas estreitas não sobra espaço para dois grupos fixos (esquerda e direita) mais os
- * fornecedores no meio — os fornecedores ficariam escondidos atrás dos grupos fixos. Por
- * isso o grupo da direita deixa de ser fixo no mobile e passa a rolar com o resto.
- */
-.comparison-table th.comparison-col-faixa.comparison-col-resumo-scroll,
-.comparison-table td.comparison-col-faixa.comparison-col-resumo-scroll,
-.comparison-table th.comparison-col-economia.comparison-col-resumo-scroll,
-.comparison-table td.comparison-col-economia.comparison-col-resumo-scroll,
-.comparison-table th.comparison-col-melhor.comparison-col-resumo-scroll,
-.comparison-table td.comparison-col-melhor.comparison-col-resumo-scroll {
-  position: static;
-  box-shadow: none;
-}
 .comparison-resize-handle-esquerda { right: auto; left: 0; }
 .comparison-col-qtd:hover .comparison-resize-handle::after,
 .comparison-col-faixa:hover .comparison-resize-handle::after {
@@ -5339,11 +5325,27 @@ label small {
  * coluna só, sem rolagem horizontal, com o melhor preço em destaque e o ranking de ofertas
  * aberto sob demanda.
  */
+.comparison-card {
+  container-type: inline-size;
+}
 .comparison-cards {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 0 16px 18px;
+}
+/*
+ * A quantidade de colunas sai da largura real do cartão do comparativo (container query), e não
+ * da janela: com a barra lateral e os recuos da página, um tablet de 768px sobra ~600px úteis,
+ * onde cabem dois cartões lado a lado.
+ */
+@container (min-width: 640px) {
+  .comparison-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(296px, 1fr));
+    align-items: start;
+    gap: 12px;
+  }
 }
 .comparison-product-card {
   border: 1px solid var(--line);
@@ -5593,9 +5595,12 @@ label small {
 }
 .comparison-offer-supplier strong {
   display: block;
+  overflow: hidden;
   color: var(--ink);
   font-size: 12px;
   line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .comparison-offer-supplier small {
   display: block;
@@ -5632,11 +5637,19 @@ label small {
   flex: none;
   color: #c08a3e;
 }
+/*
+ * Enquanto o comparativo é lista de cartões não há colunas para ajustar: o divisor vira uma
+ * quebra de linha, separando os fornecedores dos controles das ofertas em vez de deixar tudo
+ * amontoado na mesma faixa.
+ */
+@media (max-width: 1080px) {
+  .comparison-column-toggles-divider { width: 100%; height: 0; margin: 0; background: none; }
+  .comparison-column-toggles button { min-height: 36px; padding: 7px 13px; font-size: 12px; }
+  .comparison-offer-order button { min-height: 36px; font-size: 12px; }
+}
 @media (max-width: 760px) {
   .comparison-controls,
   .comparison-column-toggles { padding: 0 16px; }
-  /* Sem os ajustes de largura das colunas, o divisor sobra solto no fim de uma linha quebrada. */
-  .comparison-column-toggles-divider { display: none; }
   .comparison-controls { flex-direction: column; align-items: stretch; gap: 8px; }
   .comparison-controls .comparison-search,
   .comparison-controls > label,
@@ -5649,9 +5662,10 @@ label small {
   .comparison-controls > label select { flex: 1; min-width: 0; }
   .comparison-controls .comparison-filters-trigger { justify-content: center; }
   .comparison-controls > span { text-align: center; }
-  .comparison-column-toggles button { min-height: 36px; padding: 7px 13px; font-size: 12px; }
   .comparison-filters-modal .comparison-toggle-pair button { font-size: 10px; padding: 7px 6px; }
-  /* Em telas sem mouse não existe :hover, então os controles da coluna ficam sempre visíveis. */
+}
+/* Sem mouse não existe :hover, então os controles da coluna ficam sempre visíveis. */
+@media (hover: none) {
   .comparison-hide-button { opacity: 1; width: 26px; height: 26px; }
   .comparison-drag-handle { display: flex; width: 26px; height: 26px; padding: 4px; touch-action: none; }
   .comparison-move-button { display: grid; width: 26px; height: 26px; }
