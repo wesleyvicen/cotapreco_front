@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clipboard, Clock3, Download, Edit3, ExternalLink, Eye, EyeOff, FileImage, FileSpreadsheet, FileText, GripVertical, History, Link2, Lock, PackageCheck, Power, RefreshCw, RotateCcw, Save, Search, Send, Share2, ShoppingCart, SlidersHorizontal, Trophy, Users, X } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Clipboard, Clock3, Download, Edit3, ExternalLink, Eye, EyeOff, FileImage, FileSpreadsheet, FileText, FoldHorizontal, GripVertical, History, Link2, Lock, PackageCheck, Power, RefreshCw, RotateCcw, Save, Search, Send, Share2, ShoppingCart, SlidersHorizontal, Trophy, Users, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPonteiroReact } from 'react'
 import { api, apiArquivo, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
@@ -162,13 +162,31 @@ function Produtos({cotacao,podeEditar,ocupado,aoSalvar}:{cotacao:Cotacao;podeEdi
 function LinhaProduto({item,numero,podeEditar,ocupado,aoSalvar}:{item:Cotacao['items'][number];numero:number;podeEditar:boolean;ocupado:boolean;aoSalvar:(itemId:number,quantity:number,active:boolean)=>Promise<void>}){const[quantityInput,setQuantityInput]=useState(String(item.requestedQuantity));const[active,setActive]=useState(item.active);useEffect(()=>{setQuantityInput(String(item.requestedQuantity));setActive(item.active)},[item]);const quantity=quantityInput.trim()===''?null:Number(quantityInput);const quantidadeValida=quantity!==null&&Number.isInteger(quantity)&&quantity>=1;const mudou=(quantidadeValida&&quantity!==item.requestedQuantity)||active!==item.active;return <tr className={active?'':'inactive-row'}><td>{numero}</td><td><strong>{item.productName}</strong>{!active&&<small className="inactive-note">Fora da cotação</small>}</td><td>{item.ean??'—'}</td><td>{podeEditar?<input className="quotation-quantity-input" type="number" min="1" step="1" value={quantityInput} onChange={event=>setQuantityInput(event.target.value)}/>:<>{item.requestedQuantity} un.</>}</td><td><span className={active?'status-active':'status-inactive'}>{active?'Ativo':'Desativado'}</span></td>{podeEditar&&<td><div className="quotation-item-actions"><label className="active-toggle"><input type="checkbox" checked={active} onChange={event=>setActive(event.target.checked)}/><span>{active?'Ativo na cotação':'Inativo'}</span></label><button className="button button-secondary" disabled={ocupado||!mudou||!quantidadeValida} onClick={()=>{if(quantidadeValida)void aoSalvar(item.id,quantity,active)}}><Save/>Salvar</button></div></td>}</tr>}
 function ModalPreviaResposta({previa,aoFechar}:{previa:PreviaResposta;aoFechar:()=>void}){const[busca,setBusca]=useState('');const preenchido=(item:PreviaResposta['items'][number])=>item.available&&item.unitPrice!=null&&item.availableQuantity!=null&&item.availableQuantity>0;const cotados=previa.items.filter(preenchido);const termo=busca.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const itens=previa.items.filter(item=>!termo||`${item.productName} ${item.ean??''} ${item.laboratory??''}`.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(termo)).sort((a,b)=>(preenchido(a)?0:1)-(preenchido(b)?0:1));return <div className="modal-backdrop"><section className="modal response-preview-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-previa-resposta"><div className="modal-header modal-header-simple"><div><span className="eyebrow green">Prévia em preenchimento</span><h2 id="titulo-previa-resposta">{previa.supplierName}</h2><p>{previa.representativeName} · {cotados.length} de {previa.items.length} produtos respondidos</p></div><button className="icon-button" aria-label="Fechar" onClick={aoFechar}><X/></button></div><div className="response-preview-summary"><div><span>Produtos cotados</span><strong>{previa.quotedItems} de {previa.items.length}</strong></div><div><span>Total parcial</span><strong>{money(previa.total)}</strong></div><div><span>Pedido mínimo</span><strong>{previa.minimumOrderValue==null?'Sem mínimo':money(previa.minimumOrderValue)}</strong></div></div><div className="response-preview-search"><Search/><input type="search" autoFocus placeholder="Buscar produto, EAN ou laboratório" value={busca} onChange={event=>setBusca(event.target.value)}/>{busca&&<button type="button" onClick={()=>setBusca('')} aria-label="Limpar busca">×</button>}<span>{itens.length} de {previa.items.length}</span></div><div className="response-preview-items">{itens.length===0?<EstadoVazio title="Nenhum produto encontrado" description="Tente buscar por outro produto, EAN ou laboratório."/>:itens.map(item=>{const itemPreenchido=preenchido(item);return <article className={itemPreenchido?'quoted':'pending'} key={item.quotationItemId}><div><strong>{item.productName}</strong><span>{item.ean?`EAN ${item.ean} · `:''}Solicitado: {item.requestedQuantity} un.</span>{item.laboratory&&<small>{item.laboratory}</small>}</div>{itemPreenchido?<div className="response-preview-values"><span>{item.availableQuantity} un.</span><strong>{money(item.unitPrice!)}</strong>{item.note&&<small>{item.note}</small>}</div>:<span className="response-preview-pending">Ainda não respondido</span>}</article>})}</div><div className="modal-actions"><button className="button button-primary" onClick={aoFechar}>Fechar prévia</button></div></section></div>}
 function Respostas({respostas,total,podeEditar,ocupado,carregandoPrevia,aoEspiar,aoAlternar}:{respostas:RespostaCotacao[];total:number;podeEditar:boolean;ocupado:boolean;carregandoPrevia:boolean;aoEspiar:(resposta:RespostaCotacao)=>void;aoAlternar:(resposta:RespostaCotacao,active:boolean)=>void}){return <section className="card"><div className="card-header"><div><h2>Respostas dos representantes</h2><p>Abra as propostas em preenchimento para acompanhar o que cada distribuidora já informou.</p></div></div>{respostas.length===0?<EstadoVazio title="Nenhuma resposta ainda" description="Compartilhe o link com seus representantes."/>:<div className="table-wrap"><table><thead><tr><th>Distribuidora</th><th>Representante</th><th>Status</th><th>Envio</th><th>Itens</th><th>Total</th><th>Pedido mínimo</th>{podeEditar&&<th/>}</tr></thead><tbody>{respostas.map(r=><tr key={r.id} className={r.active?'':'inactive-row'}><td>{r.status==='IN_PROGRESS'?<button className="response-preview-trigger" disabled={carregandoPrevia} onClick={()=>aoEspiar(r)}><strong>{r.supplierName}</strong><small><Eye/>{carregandoPrevia?'Carregando prévia...':'Espiar preenchimento'}</small></button>:<><strong>{r.supplierName}</strong></>}{!r.active&&<small className="inactive-note">Ignorada nos cálculos</small>}{r.active&&!r.includedInSuggestedPurchase&&r.status==='SUBMITTED'&&<small className="inactive-note">Repassada para outras ofertas</small>}</td><td>{r.representativeName}</td><td><EtiquetaStatus status={r.status}/></td><td>{r.submittedAt?date(r.submittedAt):<Clock3/>}</td><td>{r.quotedItems} de {total}</td><td>{money(r.total)}</td><td>{r.minimumOrderValue==null?'Sem mínimo':money(r.minimumOrderValue)}</td>{podeEditar&&<td><button className={`button ${r.active?'button-danger-soft':'button-secondary'}`} disabled={ocupado} onClick={()=>aoAlternar(r,!r.active)}><Power/>{r.active?'Desativar':'Reativar'}</button></td>}</tr>)}</tbody></table></div>}</section>}
-interface PreferenciasColunasComparativo { ordem:number[]; ocultos:number[] }
+interface PreferenciasColunasComparativo { ordem:number[]; ocultos:number[]; larguras:Record<number,number>; escalaProdutoQtd:number; escalaResumo:number }
 const chaveColunasComparativo=(cotacaoId:string)=>`cotapreco:comparativo-colunas:${cotacaoId}`
+const LARGURA_COLUNA_FORNECEDOR_PADRAO=130
+const LARGURA_COLUNA_FORNECEDOR_MINIMA=70
+const LARGURA_COLUNA_FORNECEDOR_MAXIMA=320
+const LARGURA_BASE_PRODUTO=220
+const LARGURA_BASE_QTD=70
+const LARGURA_BASE_FAIXA=118
+const LARGURA_BASE_ECONOMIA=118
+const LARGURA_BASE_MELHOR=92
+const LARGURA_BASE_PRODUTO_MOBILE=140
+const LARGURA_BASE_QTD_MOBILE=46
+const ESCALA_GRUPO_MINIMA=0.6
+const ESCALA_GRUPO_MAXIMA=1.8
+function normalizarEscalaGrupo(valor:unknown):number{
+  const numero=Number(valor)
+  return Number.isFinite(numero)?Math.min(ESCALA_GRUPO_MAXIMA,Math.max(ESCALA_GRUPO_MINIMA,numero)):1
+}
 function lerPreferenciasColunasComparativo(cotacaoId:string):PreferenciasColunasComparativo{
   try{
     const bruto=JSON.parse(window.localStorage.getItem(chaveColunasComparativo(cotacaoId))||'{}')
-    return{ordem:Array.isArray(bruto.ordem)?bruto.ordem:[],ocultos:Array.isArray(bruto.ocultos)?bruto.ocultos:[]}
-  }catch{return{ordem:[],ocultos:[]}}
+    const larguras:Record<number,number>={}
+    if(bruto.larguras&&typeof bruto.larguras==='object')Object.entries(bruto.larguras).forEach(([chave,valor])=>{const id=Number(chave);const largura=Number(valor);if(Number.isFinite(id)&&Number.isFinite(largura))larguras[id]=largura})
+    return{ordem:Array.isArray(bruto.ordem)?bruto.ordem:[],ocultos:Array.isArray(bruto.ocultos)?bruto.ocultos:[],larguras,escalaProdutoQtd:normalizarEscalaGrupo(bruto.escalaProdutoQtd),escalaResumo:normalizarEscalaGrupo(bruto.escalaResumo)}
+  }catch{return{ordem:[],ocultos:[],larguras:{},escalaProdutoQtd:1,escalaResumo:1}}
 }
 
 function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotacaoId:string}){
@@ -185,8 +203,20 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
   const[colunaArrastada,setColunaArrastada]=useState<number|null>(null)
   const[colunaSobreposta,setColunaSobreposta]=useState<number|null>(null)
   const[filtrosAbertos,setFiltrosAbertos]=useState(false)
+  const[larguraJanela,setLarguraJanela]=useState(()=>typeof window==='undefined'?1024:window.innerWidth)
 
   useEffect(()=>{try{window.localStorage.setItem(chaveColunasComparativo(cotacaoId),JSON.stringify(preferenciasColunas))}catch{/* Preferência de colunas é opcional quando o navegador bloqueia armazenamento. */}},[cotacaoId,preferenciasColunas])
+  useEffect(()=>{
+    const aoRedimensionarJanela=()=>setLarguraJanela(window.innerWidth)
+    window.addEventListener('resize',aoRedimensionarJanela)
+    return()=>window.removeEventListener('resize',aoRedimensionarJanela)
+  },[])
+  const mobile=larguraJanela<=760
+  const larguraProduto=Math.round((mobile?LARGURA_BASE_PRODUTO_MOBILE:LARGURA_BASE_PRODUTO)*preferenciasColunas.escalaProdutoQtd)
+  const larguraQtd=Math.round((mobile?LARGURA_BASE_QTD_MOBILE:LARGURA_BASE_QTD)*preferenciasColunas.escalaProdutoQtd)
+  const larguraFaixa=Math.round(LARGURA_BASE_FAIXA*preferenciasColunas.escalaResumo)
+  const larguraEconomia=Math.round(LARGURA_BASE_ECONOMIA*preferenciasColunas.escalaResumo)
+  const larguraMelhor=Math.round(LARGURA_BASE_MELHOR*preferenciasColunas.escalaResumo)
 
   const normalizar=(valor:string)=>valor.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase()
   const termo=normalizar(busca.trim())
@@ -241,6 +271,45 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
     }
     window.addEventListener('pointermove',mover);window.addEventListener('pointerup',soltar)
   }
+  function larguraColuna(responseId:number):number{
+    return preferenciasColunas.larguras[responseId]??LARGURA_COLUNA_FORNECEDOR_PADRAO
+  }
+  function iniciarRedimensionamento(event:EventoPonteiroReact,responseId:number){
+    if(event.button!==0)return
+    event.preventDefault();event.stopPropagation()
+    const larguraInicial=larguraColuna(responseId);const xInicial=event.clientX
+    const mover=(moveEvent:PointerEvent)=>{
+      const novaLargura=Math.min(LARGURA_COLUNA_FORNECEDOR_MAXIMA,Math.max(LARGURA_COLUNA_FORNECEDOR_MINIMA,Math.round(larguraInicial+(moveEvent.clientX-xInicial))))
+      setPreferenciasColunas(atual=>({...atual,larguras:{...atual.larguras,[responseId]:novaLargura}}))
+    }
+    const soltar=()=>{window.removeEventListener('pointermove',mover);window.removeEventListener('pointerup',soltar)}
+    window.addEventListener('pointermove',mover);window.addEventListener('pointerup',soltar)
+  }
+  function iniciarRedimensionamentoGrupo(event:EventoPonteiroReact,grupo:'produtoQtd'|'resumo'){
+    if(event.button!==0)return
+    event.preventDefault();event.stopPropagation()
+    const escalaInicial=grupo==='produtoQtd'?preferenciasColunas.escalaProdutoQtd:preferenciasColunas.escalaResumo
+    const larguraBase=grupo==='produtoQtd'?((mobile?LARGURA_BASE_PRODUTO_MOBILE:LARGURA_BASE_PRODUTO)+(mobile?LARGURA_BASE_QTD_MOBILE:LARGURA_BASE_QTD)):(LARGURA_BASE_FAIXA+LARGURA_BASE_ECONOMIA+LARGURA_BASE_MELHOR)
+    const xInicial=event.clientX
+    const mover=(moveEvent:PointerEvent)=>{
+      const deltaX=grupo==='produtoQtd'?(moveEvent.clientX-xInicial):(xInicial-moveEvent.clientX)
+      const novaEscala=Math.min(ESCALA_GRUPO_MAXIMA,Math.max(ESCALA_GRUPO_MINIMA,escalaInicial+deltaX/larguraBase))
+      setPreferenciasColunas(atual=>grupo==='produtoQtd'?{...atual,escalaProdutoQtd:novaEscala}:{...atual,escalaResumo:novaEscala})
+    }
+    const soltar=()=>{window.removeEventListener('pointermove',mover);window.removeEventListener('pointerup',soltar)}
+    window.addEventListener('pointermove',mover);window.addEventListener('pointerup',soltar)
+  }
+  function compactarColunas(){
+    setPreferenciasColunas(atual=>{
+      const larguras={...atual.larguras}
+      fornecedoresVisiveis.forEach(s=>{larguras[s.responseId]=LARGURA_COLUNA_FORNECEDOR_MINIMA})
+      return{...atual,larguras}
+    })
+  }
+  function redefinirLargurasColunas(){
+    setPreferenciasColunas(atual=>({...atual,larguras:{},escalaProdutoQtd:1,escalaResumo:1}))
+  }
+  const larguraPersonalizada=Object.keys(preferenciasColunas.larguras).length>0||preferenciasColunas.escalaProdutoQtd!==1||preferenciasColunas.escalaResumo!==1
 
   const min=precoMinimo.trim()===''?null:Number(precoMinimo.replace(',','.'))
   const max=precoMaximo.trim()===''?null:Number(precoMaximo.replace(',','.'))
@@ -277,20 +346,29 @@ function Comparativo({comparacao,cotacaoId}:{comparacao:ComparacaoCotacao;cotaca
       <button type="button" className={`comparison-filters-trigger ${filtrosAtivos?'active':''}`} onClick={()=>setFiltrosAbertos(true)}><SlidersHorizontal size={15}/>Filtros{contagemFiltrosAtivos>0&&<span className="comparison-filters-badge">{contagemFiltrosAtivos}</span>}</button>
       <span>{detalhes.length} de {comparacao.products.length} produtos</span>
     </div>
-    <div className="comparison-column-toggles"><SlidersHorizontal/><span>Fornecedores no comparativo:</span>{fornecedoresOrdenados.map(s=>{const oculto=preferenciasColunas.ocultos.includes(s.responseId);return <button type="button" key={s.responseId} className={oculto?'hidden':''} title={oculto?`Mostrar ${s.supplierName} no comparativo`:`Ocultar ${s.supplierName} do comparativo`} onClick={()=>alternarVisibilidadeColuna(s.responseId)}>{oculto?<EyeOff/>:<Eye/>}{s.supplierName}</button>})}</div>
+    <div className="comparison-column-toggles"><SlidersHorizontal/><span>Fornecedores no comparativo:</span>{fornecedoresOrdenados.map(s=>{const oculto=preferenciasColunas.ocultos.includes(s.responseId);return <button type="button" key={s.responseId} className={oculto?'hidden':''} title={oculto?`Mostrar ${s.supplierName} no comparativo`:`Ocultar ${s.supplierName} do comparativo`} onClick={()=>alternarVisibilidadeColuna(s.responseId)}>{oculto?<EyeOff/>:<Eye/>}{s.supplierName}</button>})}<span className="comparison-column-toggles-divider"/><button type="button" title="Deixa as colunas dos fornecedores bem finas, pra caber mais na tela sem precisar rolar." onClick={compactarColunas}><FoldHorizontal size={14}/>Compactar colunas</button>{larguraPersonalizada&&<button type="button" title="Volta todas as colunas de fornecedor para a largura padrão." onClick={redefinirLargurasColunas}><RotateCcw size={14}/>Largura padrão</button>}</div>
     {detalhes.length===0?<EstadoVazio title="Nenhum produto encontrado" description="Tente buscar por outro nome ou EAN, ou ajuste os filtros ativos."/>:<div className="table-wrap"><table className="comparison-table"><thead><tr>
-      <th>Produto</th><th>Qtd.</th>
-      {fornecedoresVisiveis.map((s,indice)=>{const ordenandoPorEsta=ordemColuna?.responseId===s.responseId;const arrastando=colunaArrastada===s.responseId;const alvoDoArraste=colunaArrastada!==null&&colunaSobreposta===s.responseId&&colunaArrastada!==s.responseId;return <th key={s.responseId} data-coluna-fornecedor={s.responseId} className={`comparison-th-fornecedor ${arrastando?'dragging':''} ${alvoDoArraste?'drop-target':''}`}>
+      <th className="comparison-col-produto" style={{width:larguraProduto,minWidth:larguraProduto,maxWidth:larguraProduto}}>Produto</th>
+      <th className="comparison-col-qtd" style={{width:larguraQtd,minWidth:larguraQtd,maxWidth:larguraQtd,left:larguraProduto}}>Qtd.
+        <span className="comparison-resize-handle" role="separator" aria-orientation="vertical" aria-label="Redimensionar colunas de Produto e Qtd." title="Arraste para afinar ou alargar as colunas de Produto e Qtd. juntas" onPointerDown={event=>iniciarRedimensionamentoGrupo(event,'produtoQtd')}/>
+      </th>
+      {fornecedoresVisiveis.map((s,indice)=>{const ordenandoPorEsta=ordemColuna?.responseId===s.responseId;const arrastando=colunaArrastada===s.responseId;const alvoDoArraste=colunaArrastada!==null&&colunaSobreposta===s.responseId&&colunaArrastada!==s.responseId;const largura=larguraColuna(s.responseId);return <th key={s.responseId} data-coluna-fornecedor={s.responseId} className={`comparison-th-fornecedor ${arrastando?'dragging':''} ${alvoDoArraste?'drop-target':''}`} style={{width:largura,minWidth:largura,maxWidth:largura}}>
         <div className="comparison-th-controls">
           <span className="comparison-drag-handle" aria-hidden="true" onPointerDown={event=>iniciarArrasteColuna(event,s.responseId)}><GripVertical size={14}/></span>
           <button type="button" className="comparison-move-button" disabled={indice===0} aria-label={`Mover ${s.supplierName} para a esquerda`} onClick={()=>moverColuna(s.responseId,-1)}><ChevronLeft size={13}/></button>
           <button type="button" className="comparison-move-button" disabled={indice===fornecedoresVisiveis.length-1} aria-label={`Mover ${s.supplierName} para a direita`} onClick={()=>moverColuna(s.responseId,1)}><ChevronRight size={13}/></button>
-          <button type="button" className="comparison-sort-button" title={`Ordenar a tabela pelo preço de ${s.supplierName}`} onClick={()=>alternarOrdemColuna(s.responseId)}>{s.supplierName}{ordenandoPorEsta&&(ordemColuna?.direcao==='asc'?<ArrowUp size={12}/>:<ArrowDown size={12}/>)}</button>
+          <button type="button" className="comparison-sort-button" title={`Ordenar a tabela pelo preço de ${s.supplierName}`} onClick={()=>alternarOrdemColuna(s.responseId)}><span className="comparison-sort-label">{s.supplierName}</span>{ordenandoPorEsta&&(ordemColuna?.direcao==='asc'?<ArrowUp size={12}/>:<ArrowDown size={12}/>)}</button>
           <button type="button" className="comparison-hide-button" title={`Ocultar ${s.supplierName} do comparativo`} onClick={()=>alternarVisibilidadeColuna(s.responseId)}><EyeOff size={13}/></button>
         </div>
+        <span className="comparison-resize-handle" role="separator" aria-orientation="vertical" aria-label={`Redimensionar coluna de ${s.supplierName}`} title="Arraste para afinar ou alargar esta coluna" onPointerDown={event=>iniciarRedimensionamento(event,s.responseId)}/>
       </th>})}
-      <th>Faixa de preço</th><th>Economia</th><th>Melhor</th>
-    </tr></thead><tbody>{detalhes.map(({produto:p,menor,maior,economia})=><tr key={p.quotationItemId}><td><strong>{p.productName}</strong><small>{p.ean?`EAN ${p.ean}`:'Sem EAN'}</small></td><td>{p.requestedQuantity}</td>{fornecedoresVisiveis.map(s=>{const o=p.offers.find(x=>x.responseId===s.responseId);return <td key={s.responseId} className={o?.bestPrice?'best-cell':''}>{o?<><strong>{money(o.unitPrice)}</strong><small>{o.availableQuantity} un.</small></>:<>—</>}</td>})}<td>{menor===null?'—':<div className="comparison-metric"><strong>{money(menor)}</strong><small>menor · até {money(maior!)}</small></div>}</td><td>{economia>0?<div className="comparison-metric savings"><strong>{money(economia)}</strong><small>vs. 2ª melhor oferta</small></div>:'—'}</td><td>{p.winningSupplier??'Sem oferta'}</td></tr>)}</tbody></table></div>}
+      <th className={`comparison-col-faixa ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraFaixa,minWidth:larguraFaixa,maxWidth:larguraFaixa,right:larguraEconomia+larguraMelhor}}>
+        <span className="comparison-resize-handle comparison-resize-handle-esquerda" role="separator" aria-orientation="vertical" aria-label="Redimensionar colunas de Faixa de preço, Economia e Melhor" title="Arraste para afinar ou alargar as colunas de resumo juntas" onPointerDown={event=>iniciarRedimensionamentoGrupo(event,'resumo')}/>
+        Faixa de preço
+      </th>
+      <th className={`comparison-col-economia ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraEconomia,minWidth:larguraEconomia,maxWidth:larguraEconomia,right:larguraMelhor}}>Economia</th>
+      <th className={`comparison-col-melhor ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraMelhor,minWidth:larguraMelhor,maxWidth:larguraMelhor,right:0}}>Melhor</th>
+    </tr></thead><tbody>{detalhes.map(({produto:p,menor,maior,economia})=><tr key={p.quotationItemId}><td className="comparison-col-produto" style={{width:larguraProduto,minWidth:larguraProduto,maxWidth:larguraProduto}}><strong>{p.productName}</strong><small>{p.ean?`EAN ${p.ean}`:'Sem EAN'}</small></td><td className="comparison-col-qtd" style={{width:larguraQtd,minWidth:larguraQtd,maxWidth:larguraQtd,left:larguraProduto}}>{p.requestedQuantity}</td>{fornecedoresVisiveis.map(s=>{const o=p.offers.find(x=>x.responseId===s.responseId);const largura=larguraColuna(s.responseId);return <td key={s.responseId} className={o?.bestPrice?'best-cell':''} style={{width:largura,minWidth:largura,maxWidth:largura}}>{o?<><strong>{money(o.unitPrice)}</strong><small>{o.availableQuantity} un.</small></>:<>—</>}</td>})}<td className={`comparison-col-faixa ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraFaixa,minWidth:larguraFaixa,maxWidth:larguraFaixa,right:larguraEconomia+larguraMelhor}}>{menor===null?'—':<div className="comparison-metric"><strong>{money(menor)}</strong><small>menor · até {money(maior!)}</small></div>}</td><td className={`comparison-col-economia ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraEconomia,minWidth:larguraEconomia,maxWidth:larguraEconomia,right:larguraMelhor}}>{economia>0?<div className="comparison-metric savings"><strong>{money(economia)}</strong><small>vs. 2ª melhor oferta</small></div>:'—'}</td><td className={`comparison-col-melhor ${mobile?'comparison-col-resumo-scroll':''}`} style={{width:larguraMelhor,minWidth:larguraMelhor,maxWidth:larguraMelhor,right:0}}>{p.winningSupplier??'Sem oferta'}</td></tr>)}</tbody></table></div>}
   </>}{filtrosAbertos&&<ModalFiltrosComparativo fornecedores={comparacao.supplierTotals} filtroFornecedorId={filtroFornecedorId} setFiltroFornecedorId={setFiltroFornecedorId} filtroFornecedorModo={filtroFornecedorModo} setFiltroFornecedorModo={setFiltroFornecedorModo} fornecedorFiltro={fornecedorFiltro} somenteSemOferta={somenteSemOferta} setSomenteSemOferta={setSomenteSemOferta} somenteComEconomia={somenteComEconomia} setSomenteComEconomia={setSomenteComEconomia} precoMinimo={precoMinimo} setPrecoMinimo={setPrecoMinimo} precoMaximo={precoMaximo} setPrecoMaximo={setPrecoMaximo} contagemFiltrosAtivos={contagemFiltrosAtivos} aoLimpar={limparFiltros} aoFechar={()=>setFiltrosAbertos(false)}/>}</section>
 }
 
