@@ -1277,6 +1277,9 @@ label small {
   inset: 0;
   background: rgba(8, 38, 30, 0.48);
   display: grid;
+  /* Trava a coluna do grid na largura da tela: sem isso, conteúdo largo (como a
+     prévia da planilha importada) estica a trilha e joga o modal para a direita. */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 20px;
 }
@@ -2495,7 +2498,51 @@ label small {
   margin-top: 12px;
 }
 .import-table table {
-  min-width: 850px;
+  min-width: 950px;
+}
+
+/* Revisão: cada linha vira formulário no lugar, sem tirar o usuário da tabela. */
+.review-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.review-row-actions .icon-button {
+  width: 32px;
+  height: 32px;
+}
+.review-row-actions .icon-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.icon-button.primary {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.icon-button.primary:hover {
+  background: #cfe9de;
+}
+.editing-row {
+  background: #f4faf7;
+}
+.editing-row > td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.review-cell-input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d7e1dd;
+  border-radius: 9px;
+  padding: 8px 10px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+}
+.review-cell-input:focus {
+  border-color: #74b39d;
+  box-shadow: 0 0 0 3px rgba(25, 131, 95, 0.1);
 }
 
 @media (max-width: 900px) {
@@ -4136,38 +4183,6 @@ label small {
   font-size: 11px;
   color: var(--muted);
 }
-.review-extra-list {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-top: 13px;
-}
-.review-extra-list > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 11px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-}
-.review-extra-list > div > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.review-extra-list strong {
-  font-size: 12px;
-}
-.review-extra-list span {
-  font-size: 10px;
-  color: var(--muted);
-}
-.review-extra-list .icon-button {
-  color: var(--danger);
-  border: 1px solid #efd2d2;
-}
 .review-extra-form {
   display: grid;
   grid-template-columns: 1fr 2fr 0.75fr 1.2fr;
@@ -4223,9 +4238,6 @@ label small {
   }
   .review-extra-actions .button {
     width: 100%;
-  }
-  .review-extra-list > div {
-    align-items: flex-start;
   }
 }
 
@@ -6144,7 +6156,7 @@ label small {
 .ol-match-locked { margin-right: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--green); font-size: 10px; font-weight: 800; }
 .ol-match-locked.danger { color: var(--danger); }
 .ol-match-empty { border: 1px dashed var(--line); border-radius: 12px; padding: 22px; color: var(--muted); font-size: 11px; line-height: 1.55; text-align: center; }
-.ol-mapping { width: min(100%, 640px); }
+.ol-mapping { width: min(100%, 900px); }
 .ol-status { display: inline-block; border-radius: 999px; padding: 4px 9px; font-size: 10px; font-weight: 800; }
 .ol-status.success { background: var(--green-soft); color: var(--green); }
 .ol-status.danger { background: #fff0f0; color: var(--danger); }

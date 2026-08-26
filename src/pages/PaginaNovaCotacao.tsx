@@ -17,7 +17,9 @@ function dataHoraLocal(data = new Date()) {
 
 type ModoProdutos = 'planilha' | 'manual'
 type CampoMapeamento = keyof MapeamentoColunas
+type OrigemItem = 'planilha' | 'manual'
 interface ItemManual { id:string; ean:string; productName:string; quantity:string; laboratory:string }
+interface ItemRevisao extends ItemManual { origem:OrigemItem }
 
 const novoItemManual = ():ItemManual => ({ id:crypto.randomUUID(), ean:'', productName:'', quantity:'', laboratory:'' })
 const normalizar = (valor:string) => valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -46,10 +48,11 @@ export default function PaginaNovaCotacao() {
   const [itensManuais, setItensManuais] = useState<ItemManual[]>([novoItemManual()])
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [previa, setPrevia] = useState<PreviaImportacao|null>(null)
-  const [previaBase, setPreviaBase] = useState<PreviaImportacao|null>(null)
-  const [itensExtras, setItensExtras] = useState<ItemManual[]>([])
+  const [itensRevisao, setItensRevisao] = useState<ItemRevisao[]>([])
   const [adicionandoExtra, setAdicionandoExtra] = useState(false)
   const [itemExtra, setItemExtra] = useState<ItemManual>(novoItemManual())
+  const [editandoId, setEditandoId] = useState('')
+  const [rascunho, setRascunho] = useState<ItemManual|null>(null)
   const [cotacao, setCotacao] = useState<Cotacao|null>(null)
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
@@ -65,7 +68,7 @@ export default function PaginaNovaCotacao() {
   }, [mapeamento])
 
   const analisarArquivo = async (selecionado:File) => {
-    setErro(''); setOcupado(true); setArquivo(selecionado); setAnalise(null); setPrevia(null); setPreviaBase(null); setItensExtras([])
+    setErro(''); setOcupado(true); setArquivo(selecionado); setAnalise(null); setPrevia(null); setItensRevisao([])
     const corpo = new FormData(); corpo.append('file', selecionado)
     try {
       const resultado = await api<AnaliseArquivoImportacao>('/quotations/import/analyze', { method:'POST', body:corpo })
@@ -85,7 +88,7 @@ export default function PaginaNovaCotacao() {
     corpo.append('mapping', new Blob([JSON.stringify(mapeamento)], { type:'application/json' }), 'mapping.json')
     try {
       const resultado = await api<PreviaImportacao>('/quotations/import/preview', { method:'POST', body:corpo })
-      setPrevia(resultado); setPreviaBase(resultado); setItensExtras([]); setAdicionandoExtra(false); setEtapa(3)
+      iniciarRevisao(resultado, 'planilha')
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Falha ao conferir os produtos.') }
     finally { setOcupado(false) }
   }
@@ -97,7 +100,7 @@ export default function PaginaNovaCotacao() {
         row:index + 1, ean:item.ean, productName:item.productName, quantity:item.quantity, laboratory:item.laboratory,
       }))
       const resultado = await api<PreviaImportacao>('/quotations/items/preview', { method:'POST', body:JSON.stringify({ items }) })
-      setPrevia(resultado); setPreviaBase(resultado); setItensExtras([]); setAdicionandoExtra(false); setEtapa(3)
+      iniciarRevisao(resultado, 'manual')
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Falha ao conferir os produtos.') }
     finally { setOcupado(false) }
   }
@@ -119,36 +122,65 @@ export default function PaginaNovaCotacao() {
     }))
   }
 
-  const validarComExtras = async (extras:ItemManual[]) => {
-    if (!previaBase) throw new Error('Prévia original indisponível.')
-    const items = [
-      ...previaBase.lines.map(linha => ({
-        ean:linha.ean ?? '', productName:linha.productName, quantity:linha.quantity?.toString() ?? '', laboratory:linha.laboratory ?? '',
-      })),
-      ...extras.map(extra => ({ ean:extra.ean, productName:extra.productName, quantity:extra.quantity, laboratory:extra.laboratory })),
-    ].map((item, index) => ({ row:index + 1, ...item }))
-    return api<PreviaImportacao>('/quotations/items/preview', { method:'POST', body:JSON.stringify({ items }) })
+  const iniciarRevisao = (resultado:PreviaImportacao, origem:OrigemItem) => {
+    setPrevia(resultado)
+    setItensRevisao(resultado.lines.map(linha => ({
+      id:crypto.randomUUID(), origem, ean:linha.ean ?? '', productName:linha.productName,
+      quantity:linha.quantity?.toString() ?? '', laboratory:linha.laboratory ?? '',
+    })))
+    setAdicionandoExtra(false); setEditandoId(''); setRascunho(null); setEtapa(3)
   }
+
+  /* A revisão é sempre reconferida no servidor: a lista local é a fonte, e a prévia exibida é o retorno dela. */
+  const validarItens = (itens:ItemRevisao[]) => api<PreviaImportacao>('/quotations/items/preview', {
+    method:'POST',
+    body:JSON.stringify({ items:itens.map((item, index) => ({
+      row:index + 1, ean:item.ean, productName:item.productName, quantity:item.quantity, laboratory:item.laboratory,
+    })) }),
+  })
 
   const adicionarProdutoRevisao = async (event:FormEvent) => {
     event.preventDefault(); setErro(''); setOcupado(true)
-    const proximos = [...itensExtras, itemExtra]
+    const proximos:ItemRevisao[] = [...itensRevisao, { ...itemExtra, origem:'manual' }]
     try {
-      const resultado = await validarComExtras(proximos)
+      const resultado = await validarItens(proximos)
       const ultimaLinha = resultado.lines.at(-1)
       if (!ultimaLinha?.valid) { setErro(ultimaLinha?.errors.join(' ') || 'Confira o produto informado.'); return }
-      setItensExtras(proximos); setPrevia(resultado); setItemExtra(novoItemManual()); setAdicionandoExtra(false)
+      setItensRevisao(proximos); setPrevia(resultado); setItemExtra(novoItemManual()); setAdicionandoExtra(false)
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível adicionar o produto.') }
     finally { setOcupado(false) }
   }
 
   const removerProdutoRevisao = async (id:string) => {
-    const proximos = itensExtras.filter(item => item.id !== id)
+    const proximos = itensRevisao.filter(item => item.id !== id)
+    if (!proximos.length) { setErro('A cotação precisa de pelo menos um produto.'); return }
     setErro(''); setOcupado(true)
     try {
-      setPrevia(proximos.length ? await validarComExtras(proximos) : previaBase)
-      setItensExtras(proximos)
+      setPrevia(await validarItens(proximos)); setItensRevisao(proximos)
+      if (editandoId === id) { setEditandoId(''); setRascunho(null) }
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível remover o produto.') }
+    finally { setOcupado(false) }
+  }
+
+  const abrirEdicaoRevisao = (item:ItemRevisao) => {
+    setErro(''); setAdicionandoExtra(false); setEditandoId(item.id)
+    setRascunho({ id:item.id, ean:item.ean, productName:item.productName, quantity:item.quantity, laboratory:item.laboratory })
+  }
+
+  const cancelarEdicaoRevisao = () => { setEditandoId(''); setRascunho(null); setErro('') }
+
+  const salvarEdicaoRevisao = async () => {
+    if (!rascunho) return
+    const indice = itensRevisao.findIndex(item => item.id === editandoId)
+    if (indice < 0) return
+    const proximos = itensRevisao.map(item => item.id === editandoId ? { ...item, ...rascunho, id:item.id } : item)
+    setErro(''); setOcupado(true)
+    try {
+      const resultado = await validarItens(proximos)
+      const linha = resultado.lines[indice]
+      if (!linha?.valid) { setErro(linha?.errors.join(' ') || 'Confira os dados do produto.'); return }
+      setItensRevisao(proximos); setPrevia(resultado); setEditandoId(''); setRascunho(null)
+    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar o produto.') }
     finally { setOcupado(false) }
   }
 
@@ -232,12 +264,11 @@ export default function PaginaNovaCotacao() {
       </div>}
 
       {etapa === 3 && previa && <div>
-        <div className="wizard-heading"><span>Etapa 3 de 5</span><h2>Revise os produtos</h2><p>Nenhum produto ou cotação foi salvo até aqui.</p></div>
+        <div className="wizard-heading"><span>Etapa 3 de 5</span><h2>Revise os produtos</h2><p>Edite, remova ou acrescente itens direto aqui. Nenhum produto ou cotação foi salvo até este ponto.</p></div>
         <div className="review-extra-panel">
           <datalist id="revisao-produtos-nomes">{produtos.map(produto => <option key={produto.id} value={produto.name}>{produto.ean ? `EAN ${produto.ean}` : 'Sem EAN'}</option>)}</datalist>
           <datalist id="revisao-produtos-eans">{produtos.filter(produto => produto.ean).map(produto => <option key={produto.id} value={produto.ean ?? ''}>{produto.name}</option>)}</datalist>
           <div className="review-extra-heading"><div><strong>Esqueceu algum produto?</strong><span>Adicione agora sem precisar alterar e importar a planilha novamente.</span></div>{!adicionandoExtra && <button type="button" className="button button-secondary" onClick={() => { setItemExtra(novoItemManual()); setAdicionandoExtra(true); setErro('') }}><Plus/>Adicionar produto</button>}</div>
-          {itensExtras.length > 0 && <div className="review-extra-list">{itensExtras.map(item => <div key={item.id}><div><strong>{item.productName}</strong><span>{item.quantity} un.{item.ean ? ` · EAN ${item.ean}` : ''}{item.laboratory ? ` · ${item.laboratory}` : ''}</span></div><button type="button" className="icon-button" disabled={ocupado} title="Remover produto adicionado" aria-label={`Remover ${item.productName}`} onClick={() => void removerProdutoRevisao(item.id)}><Trash2/></button></div>)}</div>}
           {adicionandoExtra && <form className="review-extra-form" onSubmit={adicionarProdutoRevisao}>
             <label>EAN <small>Opcional</small><input list="revisao-produtos-eans" inputMode="numeric" maxLength={14} placeholder="789..." value={itemExtra.ean} onChange={event => setItemExtra(atual => completarPeloCatalogo(atual, 'ean', event.target.value.replace(/\D/g, ''), produtos))}/></label>
             <label className="review-extra-description">Descrição <small>Obrigatório</small><input autoFocus required maxLength={240} list="revisao-produtos-nomes" placeholder="Nome ou descrição do produto" value={itemExtra.productName} onChange={event => setItemExtra(atual => completarPeloCatalogo(atual, 'productName', event.target.value, produtos))}/></label>
@@ -247,9 +278,21 @@ export default function PaginaNovaCotacao() {
           </form>}
         </div>
         <div className="import-summary"><div><CheckCircle2/><strong>{previa.validRows}</strong><span>linhas válidas</span></div><div className={previa.invalidRows ? 'danger' : ''}><XCircle/><strong>{previa.invalidRows}</strong><span>com problema</span></div><div><Clipboard/><strong>{previa.lines.filter(linha => !linha.productExists && linha.valid).length}</strong><span>novos produtos</span></div></div>
-        <div className="table-wrap import-table"><table><thead><tr><th>Linha</th><th>EAN</th><th>Produto</th><th>Laboratório</th><th>Qtd.</th><th>Cadastro</th></tr></thead><tbody>{previa.lines.map(linha => <tr key={linha.row} className={!linha.valid ? 'invalid-row' : ''}><td>{linha.row}</td><td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">Sem EAN</span>}</td><td><strong>{linha.productName || 'Sem nome'}</strong>{linha.errors.map(mensagemErro => <small className="field-error" key={mensagemErro}>{mensagemErro}</small>)}</td><td>{linha.laboratory || <span className="muted">—</span>}</td><td>{linha.quantity ?? '—'}</td><td>{linha.valid ? <span className={`mini-tag ${linha.productExists ? '' : 'new'}`}>{linha.productExists ? 'Encontrado' : 'Será cadastrado'}</span> : <span className="mini-tag error">Corrigir</span>}</td></tr>)}</tbody></table></div>
-        {previa.invalidRows > 0 && <div className="alert alert-warning">Corrija os itens destacados e faça a conferência novamente.</div>}
-        <div className="wizard-actions"><button className="button button-ghost" onClick={voltarProdutos}><ArrowLeft/>Corrigir produtos</button><button className="button button-primary" disabled={previa.invalidRows > 0 || ocupado || adicionandoExtra} onClick={() => setEtapa(4)}>Revisar criação <ArrowRight/></button></div>
+        <div className="table-wrap import-table"><table><thead><tr><th>Linha</th><th>EAN</th><th>Produto</th><th>Laboratório</th><th>Qtd.</th><th>Cadastro</th><th aria-label="Ações"/></tr></thead><tbody>{itensRevisao.map((item, indice) => {
+          const linha = previa.lines[indice]
+          if (!linha) return null
+          if (editandoId === item.id && rascunho) return <tr key={item.id} className="editing-row"><td>{linha.row}</td>
+            <td><input className="review-cell-input" list="revisao-produtos-eans" inputMode="numeric" maxLength={14} placeholder="Sem EAN" aria-label="EAN" value={rascunho.ean} onChange={event => setRascunho(atual => atual && completarPeloCatalogo(atual, 'ean', event.target.value.replace(/\D/g, ''), produtos))}/></td>
+            <td><input className="review-cell-input" list="revisao-produtos-nomes" maxLength={240} placeholder="Nome ou descrição" aria-label="Descrição do produto" autoFocus value={rascunho.productName} onChange={event => setRascunho(atual => atual && completarPeloCatalogo(atual, 'productName', event.target.value, produtos))}/></td>
+            <td><input className="review-cell-input" maxLength={160} placeholder="Fabricante" aria-label="Laboratório" value={rascunho.laboratory} onChange={event => setRascunho(atual => atual && ({ ...atual, laboratory:event.target.value }))}/></td>
+            <td><input className="review-cell-input" type="number" min="1" step="1" placeholder="0" aria-label="Quantidade" value={rascunho.quantity} onChange={event => setRascunho(atual => atual && ({ ...atual, quantity:event.target.value }))} onKeyDown={event => { if (event.key === 'Enter') void salvarEdicaoRevisao() }}/></td>
+            <td><span className="mini-tag">Editando</span></td>
+            <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado} title="Cancelar edição" aria-label="Cancelar edição" onClick={cancelarEdicaoRevisao}><XCircle/></button><button type="button" className="icon-button primary" disabled={ocupado} title="Salvar produto" aria-label="Salvar produto" onClick={() => void salvarEdicaoRevisao()}><Check/></button></div></td></tr>
+          return <tr key={item.id} className={!linha.valid ? 'invalid-row' : ''}><td>{linha.row}</td><td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">Sem EAN</span>}</td><td><strong>{linha.productName || 'Sem nome'}</strong>{linha.errors.map(mensagemErro => <small className="field-error" key={mensagemErro}>{mensagemErro}</small>)}</td><td>{linha.laboratory || <span className="muted">—</span>}</td><td>{linha.quantity ?? '—'}</td><td>{linha.valid ? <span className={`mini-tag ${linha.productExists ? '' : 'new'}`}>{linha.productExists ? 'Encontrado' : 'Será cadastrado'}</span> : <span className="mini-tag error">Corrigir</span>}</td>
+            <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId)} title="Editar produto" aria-label={`Editar ${linha.productName || 'produto'}`} onClick={() => abrirEdicaoRevisao(item)}><PenLine/></button><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId) || itensRevisao.length === 1} title={itensRevisao.length === 1 ? 'A cotação precisa de pelo menos um produto' : 'Remover produto'} aria-label={`Remover ${linha.productName || 'produto'}`} onClick={() => void removerProdutoRevisao(item.id)}><Trash2/></button></div></td></tr>
+        })}</tbody></table></div>
+        {previa.invalidRows > 0 && <div className="alert alert-warning">Corrija os itens destacados usando o lápis na própria linha, ou remova o que não faz mais sentido.</div>}
+        <div className="wizard-actions"><button className="button button-ghost" onClick={voltarProdutos}><ArrowLeft/>Corrigir produtos</button><button className="button button-primary" disabled={previa.invalidRows > 0 || ocupado || adicionandoExtra || Boolean(editandoId)} onClick={() => setEtapa(4)}>Revisar criação <ArrowRight/></button></div>
       </div>}
 
       {etapa === 4 && previa && <div><div className="wizard-heading"><span>Etapa 4 de 5</span><h2>Tudo pronto para abrir</h2><p>Ao confirmar, produtos novos serão cadastrados e o link público será gerado.</p></div><div className="review-box"><div><span>Nome</span><strong>{nome}</strong></div><div><span>Prazo</span><strong>{prazo ? new Date(prazo).toLocaleString('pt-BR') : 'Sem prazo definido'}</strong></div><div><span>Produtos</span><strong>{previa.validRows} itens</strong></div><div><span>Novos cadastros</span><strong>{previa.lines.filter(linha => !linha.productExists).length} produtos</strong></div></div><div className="wizard-actions"><button className="button button-ghost" onClick={() => setEtapa(3)}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={ocupado} onClick={() => void criar()}>{ocupado ? 'Criando...' : 'Criar e abrir cotação'} <Check/></button></div></div>}
