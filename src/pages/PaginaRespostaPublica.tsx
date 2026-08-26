@@ -74,6 +74,15 @@ function ordenarItensPorProduto<T extends { nomeProduto: string }>(
   );
 }
 
+function propostaEmAndamentoUnica(
+  respostas: readonly ResumoRespostaPublica[],
+) {
+  const propostasEmAndamento = respostas.filter(
+    (resposta) => resposta.status === "IN_PROGRESS",
+  );
+  return propostasEmAndamento.length === 1 ? propostasEmAndamento[0] : null;
+}
+
 export default function PaginaRespostaPublica() {
   const { token = "" } = usarParametros();
   const [cotacao, setCotacao] = useState<CotacaoPublica | null>(null);
@@ -140,7 +149,20 @@ export default function PaginaRespostaPublica() {
           const propostas = await apiRepresentante<ResumoRespostaPublica[]>(
             `/publico/cotacoes/${token}/minhas-respostas`,
           );
-          if (ativo) setRespostas(propostas);
+          if (!ativo) return;
+          setRespostas(propostas);
+          const rascunho = propostaEmAndamentoUnica(propostas);
+          if (rascunho) {
+            try {
+              const proposta = await apiRepresentante<RespostaPublica>(
+                `/publico/cotacoes/${token}/respostas/${rascunho.id}`,
+              );
+              if (ativo) setResposta(proposta);
+            } catch (e) {
+              if (ativo)
+                setErro(mensagemErro(e, "Não foi possível abrir a proposta."));
+            }
+          }
         } catch (e) {
           if (!ativo) return;
           if (!possuiTokenRepresentante()) {
@@ -165,12 +187,13 @@ export default function PaginaRespostaPublica() {
     setErro("");
     setMensagem("");
   };
-  const carregarRespostas = async () =>
-    setRespostas(
-      await apiRepresentante<ResumoRespostaPublica[]>(
-        `/publico/cotacoes/${token}/minhas-respostas`,
-      ),
+  const carregarRespostas = async () => {
+    const propostas = await apiRepresentante<ResumoRespostaPublica[]>(
+      `/publico/cotacoes/${token}/minhas-respostas`,
     );
+    setRespostas(propostas);
+    return propostas;
+  };
   const autenticar = async (event: FormEvent) => {
     event.preventDefault();
     setOcupado(true);
@@ -188,7 +211,9 @@ export default function PaginaRespostaPublica() {
       );
       salvarTokenRepresentante(resultado.token);
       setRepresentante(resultado.representante);
-      await carregarRespostas();
+      const propostas = await carregarRespostas();
+      const rascunho = propostaEmAndamentoUnica(propostas);
+      if (rascunho) await abrirResposta(rascunho.id);
     } catch (e) {
       setErro(mensagemErro(e, "Não foi possível entrar."));
     } finally {
