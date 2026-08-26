@@ -3207,6 +3207,11 @@ label small {
   border-bottom: 1px solid #dce6e2;
   box-shadow: 0 5px 12px rgba(23, 61, 49, 0.08);
 }
+@media (max-width: 760px) {
+  .supplier-purchase-card.expanded .supplier-toggle {
+    top: 62px;
+  }
+}
 .supplier-toggle:hover {
   background: #f8fbfa;
 }
