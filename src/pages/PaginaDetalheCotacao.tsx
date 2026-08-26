@@ -26,8 +26,10 @@ function lerAchadosAberto(){
   try{return window.localStorage.getItem(CHAVE_ACHADOS_ABERTO)!=='false'}catch{return true}
 }
 const CORTE_PADRAO=15
-/* 100% seria preço zero: o corte útil vai de 0 (mostra qualquer diferença) a 99. */
-const corteValido=(valor:number)=>Number.isFinite(valor)&&valor>=0&&valor<=99
+/* Fora da faixa se ajusta ao limite, nunca cai para zero: um corte inválido virando "sem corte"
+   alargaria o filtro justamente quando o usuário pediu para apertá-lo. */
+const limitarCorte=(valor:number)=>Math.min(100,Math.max(0,Math.round(valor)))
+const corteValido=(valor:number)=>Number.isFinite(valor)&&valor>=0&&valor<=100
 function lerCorte(){
   try{const salvo=Number(window.localStorage.getItem(CHAVE_CORTE));return corteValido(salvo)?salvo:CORTE_PADRAO}catch{return CORTE_PADRAO}
 }
@@ -79,7 +81,11 @@ export default function PaginaDetalheCotacao(){
   const abrirProrrogacao=()=>{if(!cotacao)return;setNovoPrazo(prazoLocalMais24Horas(cotacao.expiresAt));setProrrogando(true)}
   const prorrogar=async()=>{const data=new Date(novoPrazo);if(!novoPrazo||Number.isNaN(data.getTime())){setErro('Informe uma nova data e hora para o prazo.');return}setOcupado(true);setErro('');try{const atualizada=await api<Cotacao>(`/quotations/${id}/expiration`,{method:'PUT',body:JSON.stringify({expiresAt:data.toISOString()})});setProrrogando(false);setLinkProrrogado(true);await carregar();setMensagem(`Cotação prorrogada até ${date(atualizada.expiresAt)}. Reenvie o link para atualizar a prévia no WhatsApp.`)}catch(e){setErro(mensagemErro(e,'Não foi possível prorrogar a cotação.'))}finally{setOcupado(false)}}
   const alternarDistribuidora=(chave:string)=>setExpandidas(a=>{const n=new Set(a);if(n.has(chave))n.delete(chave);else n.add(chave);return n})
-  const corte=useMemo(()=>{const valor=Number(corteTexto);return corteTexto.trim()!==''&&corteValido(valor)?valor:0},[corteTexto])
+  const corte=useMemo(()=>{
+    if(corteTexto.trim()==='')return 0
+    const valor=Number(corteTexto)
+    return Number.isFinite(valor)?limitarCorte(valor):0
+  },[corteTexto])
   /* Enquanto a cotação está aberta, o único referencial disponível é a própria concorrência:
      o que a melhor oferta economiza contra a segunda melhor, no volume que ela consegue cobrir.
      Ordena por dinheiro, não por percentual — 40% num item de R$ 1,00 não move nada. */
@@ -111,8 +117,8 @@ export default function PaginaDetalheCotacao(){
   const alterarCorte=(texto:string)=>{
     setCorteTexto(texto)
     const valor=Number(texto)
-    if(texto.trim()===''||!corteValido(valor))return
-    try{window.localStorage.setItem(CHAVE_CORTE,String(valor))}catch{/* Preferência é opcional quando o navegador bloqueia armazenamento. */}
+    if(texto.trim()===''||!Number.isFinite(valor))return
+    try{window.localStorage.setItem(CHAVE_CORTE,String(limitarCorte(valor)))}catch{/* Preferência é opcional quando o navegador bloqueia armazenamento. */}
   }
   const alternarAchados=()=>setAchadosAberto(atual=>{
     const proximo=!atual
@@ -138,7 +144,7 @@ export default function PaginaDetalheCotacao(){
       <div className="achados-heading"><Sparkles/>
         <div className="achados-titulo"><strong>Vale olhar agora</strong><span>{achadosAberto?'Com as respostas recebidas até agora. Enquanto a cotação está aberta, uma resposta nova pode mudar qualquer um destes.':resumoAchados}</span></div>
         <div className="achados-controles">
-          {achadosAberto&&<label className="achados-corte">Diferença mínima<span className="achados-corte-campo"><input type="number" min={0} max={99} step={1} inputMode="numeric" value={corteTexto} onChange={event=>alterarCorte(event.target.value)} onBlur={()=>setCorteTexto(String(corte))}/><em>%</em></span></label>}
+          {achadosAberto&&<label className="achados-corte">Diferença mínima<span className="achados-corte-campo"><input type="number" min={0} max={100} step={1} inputMode="numeric" value={corteTexto} onChange={event=>alterarCorte(event.target.value)} onBlur={()=>setCorteTexto(String(corte))}/><em>%</em></span></label>}
           <button type="button" className="icon-button" aria-expanded={achadosAberto} title={achadosAberto?'Minimizar':'Expandir'} aria-label={achadosAberto?'Minimizar achados':'Expandir achados'} onClick={alternarAchados}>{achadosAberto?<ChevronUp/>:<ChevronDown/>}</button>
         </div>
       </div>
