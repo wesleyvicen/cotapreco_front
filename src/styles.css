@@ -728,6 +728,46 @@ tbody tr:hover {
 .comparison-detail .card-header { align-items: flex-start; }
 .comparison-detail tfoot td { background: #f4f8f6; border-top: 2px solid #dce8e3; }
 .comparison-detail tfoot strong { font-size: 14px; }
+/* Achados da cotação aberta: fica no caminho de quem acompanha, sem inventar tela nova. */
+.achados-strip { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border: 1px solid #f0d59a; border-radius: 15px; background: #fffdf6; }
+.achados-heading { display: flex; align-items: flex-start; gap: 11px; }
+.achados-heading svg { width: 21px; flex: none; color: #a97918; }
+.achados-heading { align-items: center; }
+.achados-titulo { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.achados-controles { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.achados-controles .icon-button { width: 34px; height: 34px; color: #8a7333; }
+.achados-controles .icon-button:hover { background: rgba(169, 121, 24, 0.1); }
+.achados-corte { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.achados-corte-campo { display: inline-flex; align-items: center; gap: 2px; padding: 0 9px 0 0; border: 1px solid #e6d9b4; border-radius: 9px; background: #fff; }
+.achados-corte-campo input { width: 52px; border: 0; padding: 7px 0 7px 9px; background: transparent; color: var(--ink); font: inherit; font-weight: 700; outline: none; text-align: right; }
+.achados-corte-campo em { color: var(--muted); font-style: normal; font-weight: 700; }
+.achados-vazio { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.achados-ver-todos { align-self: flex-start; }
+.achados-modal { width: min(900px, calc(100vw - 32px)); max-height: min(88vh, 860px); display: flex; flex-direction: column; }
+.achados-modal > .modal-header, .achados-modal > .achados-modal-busca, .achados-modal > .modal-actions { flex: 0 0 auto; }
+.achados-modal-busca { margin-bottom: 12px; }
+.achados-modal-filtros { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+.achados-modal-filtros button { border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; background: #fff; color: #526a62; font-size: 12px; font-weight: 800; cursor: pointer; }
+.achados-modal-filtros button:hover { border-color: #b9cfc6; }
+.achados-modal-filtros button.ativo { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.achados-modal-corpo { display: flex; flex: 1 1 auto; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px; }
+.achados-heading span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.achados-grupo { display: flex; flex-direction: column; gap: 8px; }
+.achados-rotulo { color: #8a7333; font-size: 10px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.achado-risco { border-color: #e6d3cf; }
+.achado-risco > b { color: #a4441b; }
+.achado-risco > small { color: #a4441b; }
+.achados-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.achado { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid #ecdcb4; border-radius: 12px; background: #fff; text-align: left; cursor: pointer; color: var(--ink); }
+.achado:hover { border-color: #d8b96f; box-shadow: 0 4px 14px rgba(120, 88, 20, 0.08); }
+.achado > strong { font-size: 13px; line-height: 1.3; }
+.achado > span { color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+.achado > b { color: #12634a; font-size: 15px; }
+.achado > small { display: flex; align-items: flex-start; gap: 6px; margin-top: 2px; color: #9b5712; font-size: 11px; line-height: 1.35; }
+.achado > small svg { width: 14px; flex: none; margin-top: 1px; }
+.achado-suspeito { border-color: #f0d59a; background: #fff9ed; }
+.linha-destacada > td { background: #fff6e2 !important; }
+
 .comparison-detail table { min-width: 1180px; }
 .comparison-col-trajetoria { min-width: 96px; }
 .sparkline { display: block; overflow: visible; }
