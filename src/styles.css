@@ -505,6 +505,7 @@ tbody tr:hover {
 }
 .stat-icon {
   display: grid;
+  flex: none;
   place-items: center;
   width: 43px;
   height: 43px;
@@ -713,9 +714,17 @@ tbody tr:hover {
 .chart-card .card-header > div:first-child { min-width: 0; }
 .chart-card .card-header h2 { white-space: nowrap; }
 .chart-card .card-header select { flex: 0 1 auto; min-width: 0; max-width: 58%; }
+.chart-card .card-header select.chart-top-select { flex: none; min-width: 92px; }
 /* A série principal (preço pago) vem primeiro na legenda; o recharts monta na ordem inversa. */
 .chart-card .recharts-default-legend { display: flex; flex-direction: row-reverse; justify-content: center; gap: 14px; }
 .chart-area { padding: 13px 14px 8px; }
+.chart-note { margin: 0; padding: 0 16px 14px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.chart-area-scroll { height: 292px; padding-bottom: 0; overflow-y: auto; overscroll-behavior: contain; }
+/* Régua desenhada em HTML na mesma geometria do gráfico (eixo Y 138px + margens 5/25),
+   porque o eixo do recharts vive dentro do SVG que rola. */
+.chart-axis-fixed { padding: 0 14px 12px; border-top: 1px solid #eef3f1; }
+.chart-axis-track { position: relative; height: 24px; margin: 0 25px 0 143px; }
+.chart-axis-track > span { position: absolute; top: 6px; transform: translateX(-50%); color: #61756e; font-size: 11px; white-space: nowrap; }
 .comparison-detail .card-header { align-items: flex-start; }
 .comparison-detail table { min-width: 1080px; }
 .comparison-detail td { vertical-align: top; min-width: 145px; }
