@@ -45,7 +45,7 @@ export default function PaginaDetalheCotacao(){
   const carregarComparacao=useCallback(async()=>{if(!id)return null;if(comparacao)return comparacao;try{const dados=await api<ComparacaoCotacao>(`/quotations/${id}/comparison`);setComparacao(dados);return dados}catch(e){setErro(mensagemErro(e,'Não foi possível carregar o comparativo.'));return null}},[id,comparacao])
   const carregarPedidos=useCallback(async()=>{if(!id||pedidosCarregados)return;try{setPedidos(await api<PedidoCompra[]>(`/quotations/${id}/orders`));setPedidosCarregados(true)}catch(e){setErro(mensagemErro(e,'Não foi possível carregar os pedidos.'))}},[id,pedidosCarregados])
   const carregarHistorico=useCallback(async()=>{if(!id||historicoCarregado)return;try{setHistorico(await api<HistoricoPlano>(`/quotations/${id}/purchase-plan/history`));setHistoricoCarregado(true)}catch(e){setErro(mensagemErro(e,'Não foi possível carregar o histórico.'))}},[id,historicoCarregado])
-  useEffect(()=>{if(cotacao?.status==='OPEN')void carregarComparacao();if(aba==='responses')void carregarRespostas();if(aba==='comparison')void carregarComparacao();if(aba==='purchase'){void carregarComparacao();void carregarPedidos();if(cotacao?.status==='CLOSED'&&['ADMIN','BUYER'].includes(user?.role??''))void carregarHistorico()}},[aba,carregarComparacao,carregarHistorico,carregarPedidos,carregarRespostas,cotacao?.status,user?.role])
+  useEffect(()=>{if(cotacao?.status==='OPEN'||cotacao?.status==='CLOSED')void carregarComparacao();if(aba==='responses')void carregarRespostas();if(aba==='comparison')void carregarComparacao();if(aba==='purchase'){void carregarComparacao();void carregarPedidos();if(cotacao?.status==='CLOSED'&&['ADMIN','BUYER'].includes(user?.role??''))void carregarHistorico()}},[aba,carregarComparacao,carregarHistorico,carregarPedidos,carregarRespostas,cotacao?.status,user?.role])
   useEffect(()=>{if(aba!=='purchase'||pedidoComProblema==null||!pedidosCarregados)return;const timer=window.setTimeout(()=>{document.querySelector<HTMLElement>('.supplier-purchase-card:has(.status-desatualizado),.supplier-purchase-card:has(.status-cancelado),.supplier-purchase-card:has(.status-novo)')?.scrollIntoView({behavior:'smooth',block:'end'});setPedidoComProblema(null)},120);return()=>window.clearTimeout(timer)},[aba,pedidoComProblema,pedidosCarregados])
   const atualizarCompra=async()=>{if(!id)return;const[c,o,h]=await Promise.all([api<ComparacaoCotacao>(`/quotations/${id}/comparison`),api<PedidoCompra[]>(`/quotations/${id}/orders`),api<HistoricoPlano>(`/quotations/${id}/purchase-plan/history`)]);setComparacao(c);setPedidos(o);setPedidosCarregados(true);setHistorico(h);setHistoricoCarregado(true)}
   const acao=async(tipo:'open'|'close')=>{setOcupado(true);try{await api(`/quotations/${id}/${tipo}`,{method:'POST'});invalidarCompra();await carregar()}catch(e){setErro(mensagemErro(e,'Operação não concluída.'))}finally{setOcupado(false)}}
@@ -81,6 +81,7 @@ export default function PaginaDetalheCotacao(){
   const abrirProrrogacao=()=>{if(!cotacao)return;setNovoPrazo(prazoLocalMais24Horas(cotacao.expiresAt));setProrrogando(true)}
   const prorrogar=async()=>{const data=new Date(novoPrazo);if(!novoPrazo||Number.isNaN(data.getTime())){setErro('Informe uma nova data e hora para o prazo.');return}setOcupado(true);setErro('');try{const atualizada=await api<Cotacao>(`/quotations/${id}/expiration`,{method:'PUT',body:JSON.stringify({expiresAt:data.toISOString()})});setProrrogando(false);setLinkProrrogado(true);await carregar();setMensagem(`Cotação prorrogada até ${date(atualizada.expiresAt)}. Reenvie o link para atualizar a prévia no WhatsApp.`)}catch(e){setErro(mensagemErro(e,'Não foi possível prorrogar a cotação.'))}finally{setOcupado(false)}}
   const alternarDistribuidora=(chave:string)=>setExpandidas(a=>{const n=new Set(a);if(n.has(chave))n.delete(chave);else n.add(chave);return n})
+  const cotacaoEmAnalise=cotacao?.status==='OPEN'||cotacao?.status==='CLOSED'
   const corte=useMemo(()=>{
     if(corteTexto.trim()==='')return 0
     const valor=Number(corteTexto)
@@ -90,7 +91,7 @@ export default function PaginaDetalheCotacao(){
      o que a melhor oferta economiza contra a segunda melhor, no volume que ela consegue cobrir.
      Ordena por dinheiro, não por percentual — 40% num item de R$ 1,00 não move nada. */
   const todosAchados=useMemo(()=>{
-    if(cotacao?.status!=='OPEN'||!comparacao)return []
+    if(!cotacaoEmAnalise||!comparacao)return []
     return comparacao.products.flatMap(produto=>{
       const ofertas=[...produto.offers].sort((a,b)=>a.unitPrice-b.unitPrice)
       const[melhor,segunda]=ofertas
@@ -101,17 +102,18 @@ export default function PaginaDetalheCotacao(){
       if(percentual<corte)return []
       return [{produto,melhor,segunda,volume,economia:(segunda.unitPrice-melhor.unitPrice)*volume,percentual}]
     }).sort((a,b)=>b.economia-a.economia)
-  },[cotacao?.status,comparacao,corte])
-  /* Oferta única só significa escassez se as outras distribuidoras responderam e não cotaram.
-     Com poucas respostas ainda na mesa, o silêncio é falta de resposta, não falta de mercado. */
+  },[cotacaoEmAnalise,comparacao,corte])
+  /* Com a cotação aberta, oferta única só significa escassez se várias distribuidoras já responderam:
+     senão o silêncio é falta de resposta, não falta de mercado. Fechada, a lista de respostas é final
+     e a ausência vale por si, com quantas respostas houver. */
   const todaEscassez=useMemo(()=>{
-    if(cotacao?.status!=='OPEN'||!comparacao)return []
+    if(!cotacaoEmAnalise||!comparacao)return []
     const distribuidoras=comparacao.supplierTotals.length
-    if(distribuidoras<3)return []
+    if(cotacao?.status==='OPEN'&&distribuidoras<3)return []
     return comparacao.products.filter(produto=>produto.offers.length<=1)
       .map(produto=>({produto,ofertas:produto.offers.length,distribuidoras}))
       .sort((a,b)=>a.ofertas-b.ofertas||b.produto.requestedQuantity-a.produto.requestedQuantity)
-  },[cotacao?.status,comparacao])
+  },[cotacaoEmAnalise,cotacao?.status,comparacao])
   const achados=todosAchados.slice(0,3),escassez=todaEscassez.slice(0,3)
   const excedentes=(todosAchados.length-achados.length)+(todaEscassez.length-escassez.length)
   const alterarCorte=(texto:string)=>{
@@ -127,7 +129,7 @@ export default function PaginaDetalheCotacao(){
   })
   /* A faixa aparece sempre que a cotação aberta já tem resposta, mesmo sem achados: senão o corte
      alto esconderia o próprio controle e não daria para voltar atrás. */
-  const mostrarAchados=cotacao?.status==='OPEN'&&(comparacao?.supplierTotals.length??0)>0
+  const mostrarAchados=cotacaoEmAnalise&&(comparacao?.supplierTotals.length??0)>0
   const resumoAchados=[todosAchados.length&&`${todosAchados.length} de oportunidade`,todaEscassez.length&&`${todaEscassez.length} de ruptura`]
     .filter(Boolean).join(' · ')||`Nada fora da curva com o corte de ${corte}%`
   const abrirNoComparativo=(quotationItemId:number)=>{setAba('comparison');setProdutoDestacado(quotationItemId)}
@@ -142,7 +144,7 @@ export default function PaginaDetalheCotacao(){
   return <div className="page"><div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div><div className="detail-header"><div><div className="title-line"><h1>{cotacao.name}</h1><EtiquetaStatus status={cotacao.status}/></div><p>Criada em {date(cotacao.createdAt)} · {itensAtivos.length} produtos ativos{itensAtivos.length!==cotacao.items.length?` de ${cotacao.items.length}`:''} · Prazo: {date(cotacao.expiresAt)}</p></div><div className="header-actions"><button className="button button-ghost" onClick={()=>void carregar()}><RefreshCw/>Atualizar</button>{cotacao.status==='DRAFT'&&<button className="button button-primary" disabled={ocupado} onClick={()=>void acao('open')}><Send/>Abrir cotação</button>}{(cotacao.status==='OPEN'||cotacao.status==='CLOSED')&&<button className="button button-secondary" disabled={ocupado} onClick={abrirProrrogacao}><Clock3/>Prorrogar</button>}{cotacao.status==='OPEN'&&<button className="button button-danger-soft" disabled={ocupado} onClick={()=>void acao('close')}><Lock/>Fechar cotação</button>}{cotacao.status==='CLOSED'&&<button className="button button-primary" disabled={ocupado} onClick={()=>void abrirConferencia()}><CheckCircle2/>Finalizar compra</button>}</div></div>{erro&&<AvisoErro message={erro}/>} {mensagem&&<div className="alert alert-success">{mensagem}</div>}{cotacao.publicUrl&&<section className="share-strip"><div><div className="share-strip-icon"><Link2/></div><div><strong>Link para representantes</strong><span>{cotacao.publicUrl}</span></div></div><div>{linkProrrogado&&<button className="button button-primary" onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(mensagemLink)}`,'_blank','noopener,noreferrer')}><Share2/>Reenviar no WhatsApp</button>}<button className="button button-secondary" onClick={()=>void copiar(cotacao.publicUrl!,'link')}><Clipboard/>{copiado==='link'?'Copiado!':'Copiar link'}</button><button className="button button-ghost" onClick={()=>void copiar(mensagemLink,'message')}>{copiado==='message'?'Copiada!':'Copiar mensagem'}</button><a className="icon-button" title="Abrir link" href={cotacao.publicUrl} target="_blank"><ExternalLink/></a></div></section>}
     {mostrarAchados&&<section className="achados-strip">
       <div className="achados-heading"><Sparkles/>
-        <div className="achados-titulo"><strong>Vale olhar agora</strong><span>{achadosAberto?'Com as respostas recebidas até agora. Enquanto a cotação está aberta, uma resposta nova pode mudar qualquer um destes.':resumoAchados}</span></div>
+        <div className="achados-titulo"><strong>Vale olhar agora</strong><span>{achadosAberto?(cotacao.status==='OPEN'?'Com as respostas recebidas até agora. Enquanto a cotação está aberta, uma resposta nova pode mudar qualquer um destes.':'Respostas encerradas: esta é a base final para montar a compra.'):resumoAchados}</span></div>
         <div className="achados-controles">
           {achadosAberto&&<label className="achados-corte">Diferença mínima<span className="achados-corte-campo"><input type="number" min={0} max={100} step={1} inputMode="numeric" value={corteTexto} onChange={event=>alterarCorte(event.target.value)} onBlur={()=>setCorteTexto(String(corte))}/><em>%</em></span></label>}
           <button type="button" className="icon-button" aria-expanded={achadosAberto} title={achadosAberto?'Minimizar':'Expandir'} aria-label={achadosAberto?'Minimizar achados':'Expandir achados'} onClick={alternarAchados}>{achadosAberto?<ChevronUp/>:<ChevronDown/>}</button>
@@ -159,7 +161,7 @@ export default function PaginaDetalheCotacao(){
     {aba==='purchase'&&podeEditar&&historicoCarregado&&historico.canUndo&&<div className="plan-undo-strip"><div><RotateCcw/><span><strong>Plano alterado</strong>{historico.versions[0]?.description}</span></div><div><button className="button button-secondary" disabled={ocupado} onClick={()=>void desfazerPlano()}>Desfazer última alteração</button><button className="button button-ghost" onClick={()=>void abrirHistorico()}><History/>Ver histórico</button></div></div>}
     {aba==='products'&&<Produtos cotacao={cotacao} podeEditar={podeGerenciar} ocupado={ocupado} aoSalvar={atualizarItem}/>} {aba==='responses'&&(respostasCarregadas?<Respostas respostas={respostas} total={itensAtivos.length} podeEditar={podeGerenciar} ocupado={ocupado} carregandoPrevia={carregandoPreviaResposta} aoEspiar={resposta=>void espiarResposta(resposta)} aoAlternar={(resposta,active)=>void atualizarRespostaAtiva(resposta,active)}/>:<Carregando/>)} {aba==='comparison'&&(comparacao?<Comparativo comparacao={comparacao} cotacaoId={id!} destacado={produtoDestacado}/>:<Carregando/>)} {aba==='purchase'&&(comparacao&&pedidosCarregados?<CompraSugerida comparacao={comparacao} pedidos={pedidos} expandidas={expandidas} podeEditar={podeEditar} podeExportar={!!user&&['ADMIN','BUYER'].includes(user.role)} ocupado={ocupado} aoAlternar={alternarDistribuidora} aoTrocar={setProdutoTroca} aoEditarPlano={abrirPlano} aoEditarProduto={abrirProdutoPlano} aoGerar={id=>void gerarPedido(id)} aoBaixar={(p,f)=>void baixar(p,f)} aoBaixarRelatorio={(formato,tipo)=>void baixarRelatorioConferencia(formato,tipo)} aoCompartilhar={(p,f)=>void compartilhar(p,f)} aoVerMinimo={id=>void abrirOpcoesPedidoMinimo(id)} aoReincluir={id=>void reincluirDistribuidora(id)} aoHistorico={()=>void abrirHistorico()}/>:<Carregando/>)} {previaResposta&&<ModalPreviaResposta previa={previaResposta} aoFechar={()=>setPreviaResposta(null)}/>} {conferencia&&<ModalConferencia pedidos={conferencia} ocupado={ocupado} aoAlterar={setConferencia} aoPedidoConferido={sincronizarPedidoConferido} aoConcluir={sincronizarConclusaoConferencia} aoFechar={()=>setConferencia(null)} aoFinalizar={()=>void finalizar()}/>} {produtoTroca&&<ModalTroca produto={produtoTroca} ocupado={ocupado} aoFechar={()=>setProdutoTroca(null)} aoEscolher={r=>void escolherCampeao(produtoTroca.quotationItemId,r)} aoAutomatico={()=>void voltarAutomatico(produtoTroca.quotationItemId)}/>} {edicoes&&comparacao&&<ModalPlano produtos={produtoPlano==null?comparacao.products:comparacao.products.filter(p=>p.quotationItemId===produtoPlano)} edicoes={edicoes} setEdicoes={setEdicoes} erros={errosPlano} ocupado={ocupado} focado={produtoPlano!=null} aoFechar={()=>{setEdicoes(null);setProdutoPlano(null)}} aoSalvar={()=>void salvarPlano()}/>} {prorrogando&&<ModalProrrogar prazo={novoPrazo} ocupado={ocupado} aoAlterar={setNovoPrazo} aoFechar={()=>setProrrogando(false)} aoSalvar={()=>void prorrogar()}/>} {opcoesMinimo&&<ModalPedidoMinimo opcoes={opcoesMinimo} ocupado={ocupado} aoFechar={()=>setOpcoesMinimo(null)} aoAplicar={strategy=>void aplicarOpcaoPedidoMinimo(strategy)} aoManual={abrirAjusteManual}/>} {ajusteManual&&comparacao&&<ModalAjusteMinimoManual cotacaoId={id!} opcoes={ajusteManual} comparacao={comparacao} baseVersionId={historico.currentVersionId} ocupado={ocupado} aoFechar={()=>setAjusteManual(null)} aoSalvar={(itens,base)=>void salvarAjusteManual(itens,base)}/>} {historicoAberto&&historicoCarregado&&<ModalHistorico historico={historico} ocupado={ocupado} aoFechar={()=>setHistoricoAberto(false)} aoRestaurar={v=>void restaurarVersao(v)}/>} {/* fim dos modais */}
     {confirmacaoCoberturaAberta&&<ModalCoberturaParcial ocupado={ocupado} aoFechar={()=>setConfirmacaoCoberturaAberta(false)} aoContinuar={()=>{setConfirmacaoCoberturaAberta(false);void abrirConferencia(true)}}/>}
-    {todosAbertos&&<ModalAchados achados={todosAchados} escassez={todaEscassez} aoAbrirProduto={quotationItemId=>{setTodosAbertos(false);abrirNoComparativo(quotationItemId)}} aoFechar={()=>setTodosAbertos(false)}/>}
+    {todosAbertos&&<ModalAchados aberta={cotacao.status==='OPEN'} achados={todosAchados} escassez={todaEscassez} aoAbrirProduto={quotationItemId=>{setTodosAbertos(false);abrirNoComparativo(quotationItemId)}} aoFechar={()=>setTodosAbertos(false)}/>}
   </div>
 }
 
@@ -301,14 +303,14 @@ function CartaoRisco({item,aoAbrir}:{item:AchadoRisco;aoAbrir:(quotationItemId:n
   </button>
 }
 
-function ModalAchados({achados,escassez,aoAbrirProduto,aoFechar}:{achados:AchadoPreco[];escassez:AchadoRisco[];aoAbrirProduto:(quotationItemId:number)=>void;aoFechar:()=>void}){
+function ModalAchados({aberta,achados,escassez,aoAbrirProduto,aoFechar}:{aberta:boolean;achados:AchadoPreco[];escassez:AchadoRisco[];aoAbrirProduto:(quotationItemId:number)=>void;aoFechar:()=>void}){
   const[busca,setBusca]=useState('');const[tipo,setTipo]=useState<'todos'|'oportunidade'|'ruptura'>('todos')
   const termo=semAcento(busca.trim())
   const combina=(produto:ComparacaoProduto,extra:string)=>!termo||semAcento(`${produto.productName} ${produto.ean??''} ${extra}`).includes(termo)
   const precos=achados.filter(achado=>combina(achado.produto,`${achado.melhor.supplierName} ${achado.segunda.supplierName}`))
   const riscos=escassez.filter(item=>combina(item.produto,item.produto.offers[0]?.supplierName??''))
   return <div className="modal-backdrop"><section className="modal achados-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-achados">
-    <div className="modal-header modal-header-simple"><div><span className="eyebrow green">Cotação aberta</span><h2 id="titulo-achados">Tudo que vale olhar</h2><p>{achados.length} oportunidade{achados.length===1?'':'s'} de preço e {escassez.length} com risco de ruptura, com as respostas recebidas até agora.</p></div><button type="button" className="icon-button" aria-label="Fechar" onClick={aoFechar}><X/></button></div>
+    <div className="modal-header modal-header-simple"><div><span className="eyebrow green">{aberta?'Cotação aberta':'Cotação fechada'}</span><h2 id="titulo-achados">Tudo que vale olhar</h2><p>{achados.length} oportunidade{achados.length===1?'':'s'} de preço e {escassez.length} com risco de ruptura, {aberta?'com as respostas recebidas até agora':'nas respostas recebidas'}.</p></div><button type="button" className="icon-button" aria-label="Fechar" onClick={aoFechar}><X/></button></div>
     <label className="search achados-modal-busca"><Search/><input autoFocus type="search" placeholder="Buscar produto, EAN ou distribuidora" value={busca} onChange={event=>setBusca(event.target.value)}/>{busca&&<button type="button" onClick={()=>setBusca('')} aria-label="Limpar busca">×</button>}</label>
     <div className="achados-modal-filtros" role="group" aria-label="Tipo de achado">
       <button type="button" className={tipo==='todos'?'ativo':''} onClick={()=>setTipo('todos')}>Tudo · {precos.length+riscos.length}</button>
