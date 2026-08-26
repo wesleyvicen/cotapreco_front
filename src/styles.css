@@ -1541,6 +1541,9 @@ label small {
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 18px;
 }
+.purchase-layout > .card {
+  overflow: visible;
+}
 .supplier-cards {
   padding: 6px 22px;
 }
@@ -2128,9 +2131,13 @@ label small {
     max-width: 1580px;
   }
   .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     height: 62px;
     background: #fff;
     border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 12px rgba(23, 61, 49, 0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -3193,6 +3200,13 @@ label small {
   cursor: pointer;
   padding: 16px 22px;
 }
+.supplier-purchase-card.expanded .supplier-toggle {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  border-bottom: 1px solid #dce6e2;
+  box-shadow: 0 5px 12px rgba(23, 61, 49, 0.08);
+}
 .supplier-toggle:hover {
   background: #f8fbfa;
 }
@@ -3572,6 +3586,11 @@ label small {
   flex-wrap: wrap;
   padding: 14px 0 4px;
   border-top: 1px solid #dce6e2;
+}
+.supplier-collapse-action {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 0 4px;
 }
 .supplier-purchase-card.below-minimum {
   box-shadow: inset 3px 0 #d99a27;
@@ -4090,6 +4109,9 @@ label small {
   }
   .order-actions .button {
     flex: 1 1 calc(50% - 8px);
+  }
+  .supplier-collapse-action .button {
+    width: 100%;
   }
   .supplier-toggle {
     grid-template-columns: 38px minmax(0, 1fr) 16px;
