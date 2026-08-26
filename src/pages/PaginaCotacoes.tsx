@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, date, money } from '../api'
 import { EstadoVazio, AvisoErro, Carregando, EtiquetaStatus } from '../components/ComponentesUI'
-import type { ComparativoCompra, ProdutoHistoricoCompra, ResumoCotacao, SituacaoPrecoCompra, StatusCotacao } from '../types'
+import type { ComparativoCompra, PontoHistoricoCompra, ProdutoHistoricoCompra, ResumoCotacao, SituacaoPrecoCompra, StatusCotacao } from '../types'
 import { nomeDeArquivo, salvarBlob } from '../lib/arquivos'
 import { LinkInterno, usarParametrosBusca } from '../roteamento'
 
@@ -193,6 +193,7 @@ function ComparativoCotacoes({cotacoes,listaCarregando,aoVoltar}:{cotacoes:Resum
         <section className="card table-card comparison-detail"><div className="card-header"><div><h2>Produtos comparados</h2><p>O histórico usa o pedido gerado, não o preço atual da proposta.{ordem?' Clique de novo no mesmo cabeçalho para inverter, e uma terceira vez para voltar à ordem original.':' Clique em um cabeçalho para ordenar.'}</p></div><button className="button button-secondary" disabled={!produtos.length||exportando} title="Baixa uma planilha com exatamente o que está na tela, no filtro e na ordem atuais." onClick={()=>void exportarComparativo()}><Download/>{exportando?'Gerando...':'Exportar Excel'}</button></div><div className="table-wrap"><table><thead><tr>
           <CabecalhoOrdenavel campo="produto" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar por nome do produto">Produto</CabecalhoOrdenavel>
           {colunas.map(q=><CabecalhoOrdenavel key={q.id} campo={`cotacao:${q.id}`} ordem={ordem} aoOrdenar={alternarOrdem} titulo={`Ordenar pelo preço pago em ${q.name}`}>{q.name}</CabecalhoOrdenavel>)}
+          <th>Trajetória</th>
           <CabecalhoOrdenavel campo="oscilacao" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar pela variação percentual entre a primeira e a última compra">Oscilação</CabecalhoOrdenavel>
           <CabecalhoOrdenavel campo="impacto" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar pelo valor pago acima do melhor cenário">Impacto</CabecalhoOrdenavel>
           <CabecalhoOrdenavel campo="resultado" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar pelo resultado da compra">Resultado</CabecalhoOrdenavel>
@@ -200,6 +201,7 @@ function ComparativoCotacoes({cotacoes,listaCarregando,aoVoltar}:{cotacoes:Resum
           {produtos.length>0&&<tfoot><tr>
             <td><strong>Total exibido</strong><small className="product-meta">{produtos.length} produto{produtos.length===1?'':'s'}{totais.parciais>0?` · ${totais.parciais} sem compra em todas as cotações`:''}</small></td>
             {colunas.map(cotacao=><td key={cotacao.id}><strong>{money(totais.porCotacao.get(cotacao.id)??0)}</strong><small className="product-meta">gasto total</small></td>)}
+            <td/>
             <td className={totais.diferenca>0?'variation-up':totais.diferenca<0?'variation-down':''}>{totais.diferenca>0?<ArrowUp/>:totais.diferenca<0?<ArrowDown/>:null}<strong>{money(totais.diferenca)}</strong><small>{porcentagem(totais.percentual)} · mesmo volume</small></td>
             <td><strong>{money(totais.impacto)}</strong><small className="product-meta">acima do melhor</small></td>
             <td/>
@@ -207,10 +209,29 @@ function ComparativoCotacoes({cotacoes,listaCarregando,aoVoltar}:{cotacoes:Resum
     </>}</div>
 }
 
+/* Sparkline em SVG puro: normalizada por linha, mostra a forma do preço, não o nível.
+   Cada cotação ocupa uma posição fixa no eixo X, então produto não comprado vira lacuna. */
+function Trajetoria({produto,cotacoes}:{produto:ProdutoHistoricoCompra;cotacoes:ResumoCotacao[]}){
+  const largura=78,altura=26,margem=4
+  const pontos=new Map(produto.points.map(ponto=>[ponto.quotationId,ponto]))
+  const serie=cotacoes.map((cotacao,indice)=>({indice,ponto:pontos.get(cotacao.id)})).filter((item):item is {indice:number;ponto:PontoHistoricoCompra}=>Boolean(item.ponto))
+  if(serie.length<2)return <span className="muted">—</span>
+  const valores=serie.map(item=>item.ponto.actualUnitPrice)
+  const minimo=Math.min(...valores),maximo=Math.max(...valores)
+  const eixoX=(indice:number)=>cotacoes.length<2?largura/2:margem+(indice/(cotacoes.length-1))*(largura-margem*2)
+  const eixoY=(valor:number)=>maximo===minimo?altura/2:altura-margem-((valor-minimo)/(maximo-minimo))*(altura-margem*2)
+  const primeiro=valores[0],ultimo=valores[valores.length-1]
+  const cor=ultimo>primeiro?'#b46a28':ultimo<primeiro?'#12634a':'#8a9a94'
+  const descricao=serie.map(item=>`${item.ponto.quotationName}: ${money(item.ponto.actualUnitPrice)}`).join(' → ')
+  return <svg className="sparkline" width={largura} height={altura} viewBox={`0 0 ${largura} ${altura}`} role="img" aria-label={`Trajetória do preço. ${descricao}`}><title>{descricao}</title>
+    <polyline fill="none" stroke={cor} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" points={serie.map(item=>`${eixoX(item.indice)},${eixoY(item.ponto.actualUnitPrice)}`).join(' ')}/>
+    {serie.map(item=><circle key={item.indice} cx={eixoX(item.indice)} cy={eixoY(item.ponto.actualUnitPrice)} r={item.indice===serie[serie.length-1].indice?2.6:1.7} fill={cor}/>)}
+  </svg>
+}
 function CabecalhoOrdenavel({campo,ordem,aoOrdenar,titulo,children}:{campo:CampoOrdem;ordem:{campo:CampoOrdem;direcao:'asc'|'desc'}|null;aoOrdenar:(campo:CampoOrdem)=>void;titulo:string;children:ReactNode}){
   const ativa=ordem?.campo===campo
   return <th aria-sort={ativa?(ordem.direcao==='asc'?'ascending':'descending'):'none'}><button type="button" className="comparison-sort-button" title={titulo} onClick={()=>aoOrdenar(campo)}><span className="comparison-sort-label">{children}</span>{ativa&&(ordem.direcao==='asc'?<ArrowUp size={12}/>:<ArrowDown size={12}/>)}</button></th>
 }
 function ResumoCard({icon,label,value,detail,tone}:{icon:ReactNode;label:string;value:string;detail:string;tone:string}){return <article className="stat-card"><div className={`stat-icon ${tone}`}>{icon}</div><div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></article>}
-function LinhaProduto({produto,cotacoes}:{produto:ProdutoHistoricoCompra;cotacoes:ResumoCotacao[]}){const pontos=new Map(produto.points.map(p=>[p.quotationId,p]));return <tr><td><strong>{produto.productName}</strong><small className="product-meta">{produto.ean?`EAN ${produto.ean}`:produto.laboratory??'Identificado por nome e laboratório'}</small></td>{cotacoes.map(c=>{const ponto=pontos.get(c.id);return <td key={c.id}>{ponto?<div className="price-cell"><strong>{money(ponto.actualUnitPrice)}</strong><small>{ponto.quantity} un. · {ponto.supplierName}</small>{ponto.bestAvailableUnitPrice!=null&&<span>Melhor: {money(ponto.bestAvailableUnitPrice)}</span>}</div>:<span className="muted">Não comprado</span>}</td>})}<td className={produto.priceVariation>0?'variation-up':produto.priceVariation<0?'variation-down':''}>{produto.priceVariation>0?<ArrowUp/>:produto.priceVariation<0?<ArrowDown/>:null}<strong>{money(produto.priceVariation)}</strong><small>{porcentagem(produto.priceVariationPercent)}</small></td><td><strong>{money(produto.financialDifference)}</strong></td><td><EtiquetaSituacao situacao={produto.latestPriceSituation}/></td></tr>}
+function LinhaProduto({produto,cotacoes}:{produto:ProdutoHistoricoCompra;cotacoes:ResumoCotacao[]}){const pontos=new Map(produto.points.map(p=>[p.quotationId,p]));return <tr><td><strong>{produto.productName}</strong><small className="product-meta">{produto.ean?`EAN ${produto.ean}`:produto.laboratory??'Identificado por nome e laboratório'}</small></td>{cotacoes.map(c=>{const ponto=pontos.get(c.id);return <td key={c.id}>{ponto?<div className="price-cell"><strong>{money(ponto.actualUnitPrice)}</strong><small>{ponto.quantity} un. · {ponto.supplierName}</small>{ponto.bestAvailableUnitPrice!=null&&<span>Melhor: {money(ponto.bestAvailableUnitPrice)}</span>}</div>:<span className="muted">Não comprado</span>}</td>})}<td className="comparison-col-trajetoria"><Trajetoria produto={produto} cotacoes={cotacoes}/></td><td className={produto.priceVariation>0?'variation-up':produto.priceVariation<0?'variation-down':''}>{produto.priceVariation>0?<ArrowUp/>:produto.priceVariation<0?<ArrowDown/>:null}<strong>{money(produto.priceVariation)}</strong><small>{porcentagem(produto.priceVariationPercent)}</small></td><td><strong>{money(produto.financialDifference)}</strong></td><td><EtiquetaSituacao situacao={produto.latestPriceSituation}/></td></tr>}
 function EtiquetaSituacao({situacao}:{situacao:SituacaoPrecoCompra}){const texto=TEXTO_SITUACAO;return <span className={`comparison-status comparison-status-${situacao.toLowerCase()}`}>{situacao==='MELHOR_PRECO'?<CheckCircle2/>:situacao==='REFERENCIA_INCOMPLETA'?<AlertTriangle/>:<CircleDollarSign/>}{texto[situacao]}</span>}

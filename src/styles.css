@@ -728,7 +728,9 @@ tbody tr:hover {
 .comparison-detail .card-header { align-items: flex-start; }
 .comparison-detail tfoot td { background: #f4f8f6; border-top: 2px solid #dce8e3; }
 .comparison-detail tfoot strong { font-size: 14px; }
-.comparison-detail table { min-width: 1080px; }
+.comparison-detail table { min-width: 1180px; }
+.comparison-col-trajetoria { min-width: 96px; }
+.sparkline { display: block; overflow: visible; }
 .comparison-detail td { vertical-align: top; min-width: 145px; }
 .product-meta,.price-cell small,.price-cell span { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
 .price-cell span { color: #6c8179; }
