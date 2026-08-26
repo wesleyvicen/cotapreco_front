@@ -1,7 +1,11 @@
 export function salvarBlob(blob:Blob, filename:string) {
   const url = URL.createObjectURL(blob)
-  Object.assign(document.createElement('a'), { href: url, download: filename }).click()
-  URL.revokeObjectURL(url)
+  const link = Object.assign(document.createElement('a'), { href: url, download: filename, rel: 'noopener' })
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  /* O navegador lê o blob depois que o clique retorna: revogar na hora cancela o download. */
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
 export const nomeDeArquivo = (texto:string, alternativa:string) =>
