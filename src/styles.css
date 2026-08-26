@@ -730,14 +730,19 @@ tbody tr:hover {
 .comparison-detail tfoot strong { font-size: 14px; }
 /* Achados da cotação aberta: fica no caminho de quem acompanha, sem inventar tela nova. */
 .achados-strip { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border: 1px solid #f0d59a; border-radius: 15px; background: #fffdf6; }
-.achados-heading { display: flex; align-items: flex-start; gap: 11px; }
-.achados-heading svg { width: 21px; flex: none; color: #a97918; }
-.achados-heading { align-items: center; }
-.achados-titulo { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.achados-controles { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.achados-controles .icon-button { width: 34px; height: 34px; color: #8a7333; }
-.achados-controles .icon-button:hover { background: rgba(169, 121, 24, 0.1); }
+/* O controle de corte não encolhe (nowrap), então precisa poder cair para a linha de baixo:
+   sem isso ele espremia o título e a descrição a ponto de quebrar palavra por palavra. */
+.achados-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; }
+.achados-heading > svg { width: 21px; flex: none; color: #a97918; }
+.achados-titulo { display: flex; min-width: 0; flex: 1 1 220px; flex-direction: column; gap: 3px; }
+.achados-toggle { flex: none; width: 34px; height: 34px; color: #8a7333; }
+.achados-toggle:hover { background: rgba(169, 121, 24, 0.1); }
 .achados-corte { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 700; white-space: nowrap; }
+@media (max-width: 720px) {
+  /* Botão sobe para a primeira linha; o corte ocupa a de baixo inteira. */
+  .achados-toggle { order: 2; }
+  .achados-corte { order: 3; flex: 1 1 100%; justify-content: space-between; }
+}
 .achados-corte-campo { display: inline-flex; align-items: center; gap: 2px; padding: 0 9px 0 0; border: 1px solid #e6d9b4; border-radius: 9px; background: #fff; }
 .achados-corte-campo input { width: 52px; border: 0; padding: 7px 0 7px 9px; background: transparent; color: var(--ink); font: inherit; font-weight: 700; outline: none; text-align: right; }
 .achados-corte-campo em { color: var(--muted); font-style: normal; font-weight: 700; }

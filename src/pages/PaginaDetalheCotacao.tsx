@@ -145,10 +145,8 @@ export default function PaginaDetalheCotacao(){
     {mostrarAchados&&<section className="achados-strip">
       <div className="achados-heading"><Sparkles/>
         <div className="achados-titulo"><strong>Vale olhar agora</strong><span>{achadosAberto?(cotacao.status==='OPEN'?'Com as respostas recebidas até agora. Enquanto a cotação está aberta, uma resposta nova pode mudar qualquer um destes.':'Respostas encerradas: esta é a base final para montar a compra.'):resumoAchados}</span></div>
-        <div className="achados-controles">
-          {achadosAberto&&<label className="achados-corte">Diferença mínima<span className="achados-corte-campo"><input type="number" min={0} max={100} step={1} inputMode="numeric" value={corteTexto} onChange={event=>alterarCorte(event.target.value)} onBlur={()=>setCorteTexto(String(corte))}/><em>%</em></span></label>}
-          <button type="button" className="icon-button" aria-expanded={achadosAberto} title={achadosAberto?'Minimizar':'Expandir'} aria-label={achadosAberto?'Minimizar achados':'Expandir achados'} onClick={alternarAchados}>{achadosAberto?<ChevronUp/>:<ChevronDown/>}</button>
-        </div>
+        {achadosAberto&&<label className="achados-corte">Diferença mínima<span className="achados-corte-campo"><input type="number" min={0} max={100} step={1} inputMode="numeric" value={corteTexto} onChange={event=>alterarCorte(event.target.value)} onBlur={()=>setCorteTexto(String(corte))}/><em>%</em></span></label>}
+        <button type="button" className="icon-button achados-toggle" aria-expanded={achadosAberto} title={achadosAberto?'Minimizar':'Expandir'} aria-label={achadosAberto?'Minimizar achados':'Expandir achados'} onClick={alternarAchados}>{achadosAberto?<ChevronUp/>:<ChevronDown/>}</button>
       </div>
       {achadosAberto&&achados.length>0&&<div className="achados-grupo"><span className="achados-rotulo">Oportunidade de preço</span>
         <div className="achados-lista">{achados.map(achado=><CartaoAchado key={achado.produto.quotationItemId} achado={achado} aoAbrir={abrirNoComparativo}/>)}</div></div>}
