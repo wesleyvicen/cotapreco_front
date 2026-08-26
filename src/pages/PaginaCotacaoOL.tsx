@@ -6,6 +6,7 @@ import {
   useEffect, useMemo, useRef, useState, type ReactNode,
 } from 'react'
 import { EstadoVazio } from '../components/ComponentesUI'
+import { salvarBlob } from '../lib/arquivos'
 import {
   ARMAZENAMENTO_COTACAO_OL, autoMapColumns, buildProductSignature, calculateOrder, compareProductNames,
   createOrderLineId, detectHeaderRow, ensureOrderLineIds, evaluatePriceOpportunity, findPriceHistoryReference,
@@ -59,12 +60,6 @@ function baixarCsv(data:Record<string, unknown>[], name:string) {
   const rows = [headers.join(';'), ...data.map((row) => headers.map((header) => `"${String(row[header] ?? '').replace(/"/g, '""')}"`).join(';'))]
   const url = URL.createObjectURL(new Blob(['﻿', rows.join('\n')], { type: 'text/csv;charset=utf-8' }))
   Object.assign(document.createElement('a'), { href: url, download: name }).click()
-  URL.revokeObjectURL(url)
-}
-
-function salvarBlob(blob:Blob, filename:string) {
-  const url = URL.createObjectURL(blob)
-  Object.assign(document.createElement('a'), { href: url, download: filename }).click()
   URL.revokeObjectURL(url)
 }
 

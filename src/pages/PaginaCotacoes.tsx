@@ -1,9 +1,10 @@
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BarChart3, CheckCircle2, CircleDollarSign, Plus, Search, ShoppingCart, SlidersHorizontal, Trophy } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BarChart3, CheckCircle2, CircleDollarSign, Download, Plus, Search, ShoppingCart, SlidersHorizontal, Trophy } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, date, money } from '../api'
 import { EstadoVazio, AvisoErro, Carregando, EtiquetaStatus } from '../components/ComponentesUI'
 import type { ComparativoCompra, ProdutoHistoricoCompra, ResumoCotacao, SituacaoPrecoCompra, StatusCotacao } from '../types'
+import { nomeDeArquivo, salvarBlob } from '../lib/arquivos'
 import { LinkInterno, usarParametrosBusca } from '../roteamento'
 
 const MAX_COTACOES=8
@@ -17,6 +18,7 @@ const porcentagem=(valor:number|null|undefined)=>valor==null?'—':`${valor>0?'+
 const eixoBRL=(valor:number)=>`R$ ${Number(valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}`
 /* Ordena primeiro o que exige atenção: acima do melhor preço, depois referência incompleta. */
 const PESO_SITUACAO:Record<SituacaoPrecoCompra,number>={ACIMA_DO_MELHOR_PRECO:2,REFERENCIA_INCOMPLETA:1,MELHOR_PRECO:0}
+const TEXTO_SITUACAO:Record<SituacaoPrecoCompra,string>={MELHOR_PRECO:'Melhor preço',ACIMA_DO_MELHOR_PRECO:'Acima do melhor',REFERENCIA_INCOMPLETA:'Referência incompleta'}
 const valorDaOrdem=(produto:ProdutoHistoricoCompra,campo:CampoOrdem):number|string|null=>{
   if(campo==='produto')return produto.productName
   if(campo==='oscilacao')return produto.priceVariationPercent
@@ -83,7 +85,7 @@ export default function PaginaCotacoes(){
 }
 
 function ComparativoCotacoes({cotacoes,listaCarregando,aoVoltar}:{cotacoes:ResumoCotacao[];listaCarregando:boolean;aoVoltar:()=>void}){
-  const[comparativo,setComparativo]=useState<ComparativoCompra|null>(null);const[loading,setLoading]=useState(true);const[error,setError]=useState('');const[search,setSearch]=useState('');const[tendencia,setTendencia]=useState<Tendencia>('ALL');const[situacao,setSituacao]=useState<FiltroSituacao>('ALL');const[impacto,setImpacto]=useState<'ALL'|'ABOVE_ZERO'>('ALL');const[produtoAtivo,setProdutoAtivo]=useState('');const[ordem,setOrdem]=useState<{campo:CampoOrdem;direcao:'asc'|'desc'}|null>(null);const[topN,setTopN]=useState(8)
+  const[comparativo,setComparativo]=useState<ComparativoCompra|null>(null);const[loading,setLoading]=useState(true);const[error,setError]=useState('');const[search,setSearch]=useState('');const[tendencia,setTendencia]=useState<Tendencia>('ALL');const[situacao,setSituacao]=useState<FiltroSituacao>('ALL');const[impacto,setImpacto]=useState<'ALL'|'ABOVE_ZERO'>('ALL');const[produtoAtivo,setProdutoAtivo]=useState('');const[ordem,setOrdem]=useState<{campo:CampoOrdem;direcao:'asc'|'desc'}|null>(null);const[topN,setTopN]=useState(8);const[exportando,setExportando]=useState(false)
   const ids=cotacoes.map(q=>q.id).join(',')
   useEffect(()=>{if(listaCarregando)return;if(cotacoes.length<2){setError('As cotações deste link não estão mais disponíveis ou não têm pedido gerado. Volte e selecione ao menos duas cotações com compra realizada.');setLoading(false);return}setLoading(true);setError('');api<ComparativoCompra>(`/quotations/purchase-comparison?ids=${encodeURIComponent(ids)}`).then(resultado=>{setComparativo(resultado);setProdutoAtivo(resultado.products[0]?.key??'')}).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[ids,cotacoes.length,listaCarregando])
   const produtos=useMemo(()=>{
@@ -114,6 +116,70 @@ function ComparativoCotacoes({cotacoes,listaCarregando,aoVoltar}:{cotacoes:Resum
   const dadosImpacto=useMemo(()=>comVariacao.slice(0,topN).map(({produto,valor})=>({chave:produto.key,name:produto.productName,valor})),[comVariacao,topN])
   const semVariacao=produtos.length-comVariacao.length
   const escala=useMemo(()=>escalaDeValores(dadosImpacto.map(item=>item.valor)),[dadosImpacto])
+  /* Totais do que está exibido: seguem filtro e ordenação, e somam quantidade × preço (actualTotal). */
+  const exportarComparativo=async()=>{
+    if(!produtos.length)return
+    setExportando(true); setError('')
+    try{
+      const {default:ExcelJS}=await import('exceljs')
+      const workbook=new ExcelJS.Workbook(); const sheet=workbook.addWorksheet('Comparativo')
+      sheet.columns=[
+        {header:'Produto',key:'produto',width:42},{header:'EAN',key:'ean',width:16},{header:'Laboratório',key:'laboratorio',width:22},
+        ...colunas.flatMap(cotacao=>[
+          {header:`${cotacao.name} · preço`,key:`p${cotacao.id}`,width:14},
+          {header:`${cotacao.name} · qtd.`,key:`q${cotacao.id}`,width:12},
+          {header:`${cotacao.name} · total`,key:`t${cotacao.id}`,width:14},
+        ]),
+        {header:'Oscilação (R$)',key:'oscilacao',width:15},{header:'Oscilação (%)',key:'oscilacaoPercentual',width:14},
+        {header:'Impacto (R$)',key:'impacto',width:14},{header:'Resultado',key:'resultado',width:22},
+      ]
+      produtos.forEach(produto=>{
+        const pontos=new Map(produto.points.map(ponto=>[ponto.quotationId,ponto]))
+        sheet.addRow({
+          produto:produto.productName,ean:produto.ean??'',laboratorio:produto.laboratory??'',
+          ...Object.fromEntries(colunas.flatMap(cotacao=>{const ponto=pontos.get(cotacao.id)
+            return [[`p${cotacao.id}`,ponto?.actualUnitPrice??null],[`q${cotacao.id}`,ponto?.quantity??null],[`t${cotacao.id}`,ponto?.actualTotal??null]]})),
+          oscilacao:produto.priceVariation,oscilacaoPercentual:produto.priceVariationPercent,
+          impacto:produto.financialDifference,resultado:TEXTO_SITUACAO[produto.latestPriceSituation],
+        })
+      })
+      const linhaTotal=sheet.addRow({produto:`TOTAL · ${produtos.length} produto${produtos.length===1?'':'s'} · oscilação calculada no mesmo volume`,
+        ...Object.fromEntries(colunas.map(cotacao=>[`t${cotacao.id}`,totais.porCotacao.get(cotacao.id)??0])),
+        oscilacao:totais.diferenca,oscilacaoPercentual:totais.percentual,impacto:totais.impacto})
+      linhaTotal.font={bold:true}
+      sheet.getRow(1).font={bold:true,color:{argb:'FFFFFFFF'}}
+      sheet.getRow(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF12634A'}}
+      sheet.views=[{state:'frozen',ySplit:1,xSplit:1}]
+      colunas.forEach(cotacao=>{sheet.getColumn(`p${cotacao.id}`).numFmt='R$ #,##0.00';sheet.getColumn(`t${cotacao.id}`).numFmt='R$ #,##0.00'})
+      sheet.getColumn('oscilacao').numFmt='R$ #,##0.00'; sheet.getColumn('impacto').numFmt='R$ #,##0.00'
+      sheet.getColumn('oscilacaoPercentual').numFmt='0.0"%"'
+      /* O arquivo sai igual à tela, então precisa dizer que filtro estava valendo. */
+      if(produtos.length<(comparativo?.products.length??0))sheet.addRow({produto:`Exportado com filtros ativos: ${produtos.length} de ${comparativo?.products.length} produtos.`}).font={italic:true}
+      const nome=nomeDeArquivo(`comparativo ${colunas.map(cotacao=>cotacao.name).join(' ')}`,'comparativo-cotacoes')
+      salvarBlob(new Blob([await workbook.xlsx.writeBuffer()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),`${nome}.xlsx`)
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível gerar a planilha.')}
+    finally{setExportando(false)}
+  }
+  const totais=useMemo(()=>{
+    const porCotacao=new Map<number,number>()
+    produtos.forEach(produto=>produto.points.forEach(ponto=>porCotacao.set(ponto.quotationId,(porCotacao.get(ponto.quotationId)??0)+ponto.actualTotal)))
+    /* Total contra total mediria volume, não preço: uma cotação pode ter comprado 200 un. e a outra 2.
+       A diferença usa o volume da última compra nas duas pontas, igual ao card de variação ponderada. */
+    let base=0,atual=0
+    produtos.forEach(produto=>{
+      const par=extremos(produto)
+      if(!par)return
+      base+=par.ultimo.quantity*par.primeiro.actualUnitPrice
+      atual+=par.ultimo.quantity*par.ultimo.actualUnitPrice
+    })
+    return {
+      porCotacao,
+      impacto:produtos.reduce((soma,produto)=>soma+produto.financialDifference,0),
+      diferenca:atual-base,
+      percentual:base>0?((atual-base)/base)*100:null,
+      parciais:produtos.filter(produto=>produto.points.length<colunas.length).length,
+    }
+  },[produtos,colunas])
   const ponderada=useMemo(()=>comparativo?variacaoPonderada(comparativo.products):null,[comparativo])
   return <div className="page purchase-comparison-page"><div className="comparison-header"><button className="text-link" onClick={aoVoltar}><ArrowLeft/>Voltar às cotações</button><div className="page-header"><div><span className="eyebrow green">Análise de compras</span><h1>Comparativo de cotações</h1><p>Preços efetivamente comprados comparados com a melhor composição viável e o histórico selecionado.</p></div><div className="comparison-chips">{colunas.map(q=><span key={q.id}>{q.name}</span>)}</div></div></div>
     {error&&<AvisoErro message={error}/>} {loading?<Carregando/>:comparativo&&<><section className="stats-grid comparison-stats"><ResumoCard icon={<ShoppingCart/>} label="Produtos em comum" value={String(comparativo.summary.commonProducts)} detail="Comprados em pelo menos duas cotações" tone="green"/><ResumoCard icon={<Trophy/>} label="No melhor preço" value={comparativo.summary.evaluatedPurchases?`${Math.round(comparativo.summary.bestPricePurchases/comparativo.summary.evaluatedPurchases*100)}%`:'—'} detail={`${comparativo.summary.bestPricePurchases} de ${comparativo.summary.evaluatedPurchases} compras com referência completa`} tone="blue"/><ResumoCard icon={<CircleDollarSign/>} label="Acima do melhor cenário" value={money(comparativo.summary.amountAboveBestScenario)} detail="Oportunidade identificada nas cotações" tone="amber"/><ResumoCard icon={ponderada!=null&&ponderada<0?<ArrowDown/>:<ArrowUp/>} label="Variação ponderada" value={porcentagem(ponderada)} detail="Mesmo volume da última compra, pelos preços da primeira e da última" tone={ponderada==null?'purple':ponderada>0.05?'amber':ponderada<-0.05?'green':'blue'}/></section>
@@ -124,13 +190,20 @@ function ComparativoCotacoes({cotacoes,listaCarregando,aoVoltar}:{cotacoes:Resum
             {dadosImpacto.length>0&&<div className="chart-axis-fixed"><div className="chart-axis-track">{escala.ticks.map(valor=><span key={valor} style={{left:`${((valor-escala.dominio[0])/(escala.dominio[1]-escala.dominio[0]||1))*100}%`}}>{eixoBRL(valor)}</span>)}</div></div>}
             {dadosImpacto.length>0&&(comVariacao.length>dadosImpacto.length||semVariacao>0)&&<p className="chart-note">{comVariacao.length>dadosImpacto.length?`Mostrando as ${dadosImpacto.length} maiores variações de ${comVariacao.length} produtos com diferença. `:''}{semVariacao>0?`${semVariacao} ${semVariacao===1?'produto manteve':'produtos mantiveram'} o mesmo preço.`:''}</p>}</article>
         </section>
-        <section className="card table-card comparison-detail"><div className="card-header"><div><h2>Produtos comparados</h2><p>O histórico usa o pedido gerado, não o preço atual da proposta.{ordem?' Clique de novo no mesmo cabeçalho para inverter, e uma terceira vez para voltar à ordem original.':' Clique em um cabeçalho para ordenar.'}</p></div></div><div className="table-wrap"><table><thead><tr>
+        <section className="card table-card comparison-detail"><div className="card-header"><div><h2>Produtos comparados</h2><p>O histórico usa o pedido gerado, não o preço atual da proposta.{ordem?' Clique de novo no mesmo cabeçalho para inverter, e uma terceira vez para voltar à ordem original.':' Clique em um cabeçalho para ordenar.'}</p></div><button className="button button-secondary" disabled={!produtos.length||exportando} title="Baixa uma planilha com exatamente o que está na tela, no filtro e na ordem atuais." onClick={()=>void exportarComparativo()}><Download/>{exportando?'Gerando...':'Exportar Excel'}</button></div><div className="table-wrap"><table><thead><tr>
           <CabecalhoOrdenavel campo="produto" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar por nome do produto">Produto</CabecalhoOrdenavel>
           {colunas.map(q=><CabecalhoOrdenavel key={q.id} campo={`cotacao:${q.id}`} ordem={ordem} aoOrdenar={alternarOrdem} titulo={`Ordenar pelo preço pago em ${q.name}`}>{q.name}</CabecalhoOrdenavel>)}
           <CabecalhoOrdenavel campo="oscilacao" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar pela variação percentual entre a primeira e a última compra">Oscilação</CabecalhoOrdenavel>
           <CabecalhoOrdenavel campo="impacto" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar pelo valor pago acima do melhor cenário">Impacto</CabecalhoOrdenavel>
           <CabecalhoOrdenavel campo="resultado" ordem={ordem} aoOrdenar={alternarOrdem} titulo="Ordenar pelo resultado da compra">Resultado</CabecalhoOrdenavel>
-        </tr></thead><tbody>{produtos.map(produto=><LinhaProduto key={produto.key} produto={produto} cotacoes={colunas}/>)}</tbody></table></div>{produtos.length===0&&<EstadoVazio title="Nenhum produto encontrado" description="Tente remover algum filtro."/>}</section></>}
+        </tr></thead><tbody>{produtos.map(produto=><LinhaProduto key={produto.key} produto={produto} cotacoes={colunas}/>)}</tbody>
+          {produtos.length>0&&<tfoot><tr>
+            <td><strong>Total exibido</strong><small className="product-meta">{produtos.length} produto{produtos.length===1?'':'s'}{totais.parciais>0?` · ${totais.parciais} sem compra em todas as cotações`:''}</small></td>
+            {colunas.map(cotacao=><td key={cotacao.id}><strong>{money(totais.porCotacao.get(cotacao.id)??0)}</strong><small className="product-meta">gasto total</small></td>)}
+            <td className={totais.diferenca>0?'variation-up':totais.diferenca<0?'variation-down':''}>{totais.diferenca>0?<ArrowUp/>:totais.diferenca<0?<ArrowDown/>:null}<strong>{money(totais.diferenca)}</strong><small>{porcentagem(totais.percentual)} · mesmo volume</small></td>
+            <td><strong>{money(totais.impacto)}</strong><small className="product-meta">acima do melhor</small></td>
+            <td/>
+          </tr></tfoot>}</table></div>{produtos.length===0&&<EstadoVazio title="Nenhum produto encontrado" description="Tente remover algum filtro."/>}</section></>}
     </>}</div>
 }
 
@@ -140,4 +213,4 @@ function CabecalhoOrdenavel({campo,ordem,aoOrdenar,titulo,children}:{campo:Campo
 }
 function ResumoCard({icon,label,value,detail,tone}:{icon:ReactNode;label:string;value:string;detail:string;tone:string}){return <article className="stat-card"><div className={`stat-icon ${tone}`}>{icon}</div><div><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></article>}
 function LinhaProduto({produto,cotacoes}:{produto:ProdutoHistoricoCompra;cotacoes:ResumoCotacao[]}){const pontos=new Map(produto.points.map(p=>[p.quotationId,p]));return <tr><td><strong>{produto.productName}</strong><small className="product-meta">{produto.ean?`EAN ${produto.ean}`:produto.laboratory??'Identificado por nome e laboratório'}</small></td>{cotacoes.map(c=>{const ponto=pontos.get(c.id);return <td key={c.id}>{ponto?<div className="price-cell"><strong>{money(ponto.actualUnitPrice)}</strong><small>{ponto.quantity} un. · {ponto.supplierName}</small>{ponto.bestAvailableUnitPrice!=null&&<span>Melhor: {money(ponto.bestAvailableUnitPrice)}</span>}</div>:<span className="muted">Não comprado</span>}</td>})}<td className={produto.priceVariation>0?'variation-up':produto.priceVariation<0?'variation-down':''}>{produto.priceVariation>0?<ArrowUp/>:produto.priceVariation<0?<ArrowDown/>:null}<strong>{money(produto.priceVariation)}</strong><small>{porcentagem(produto.priceVariationPercent)}</small></td><td><strong>{money(produto.financialDifference)}</strong></td><td><EtiquetaSituacao situacao={produto.latestPriceSituation}/></td></tr>}
-function EtiquetaSituacao({situacao}:{situacao:SituacaoPrecoCompra}){const texto:Record<SituacaoPrecoCompra,string>={MELHOR_PRECO:'Melhor preço',ACIMA_DO_MELHOR_PRECO:'Acima do melhor',REFERENCIA_INCOMPLETA:'Referência incompleta'};return <span className={`comparison-status comparison-status-${situacao.toLowerCase()}`}>{situacao==='MELHOR_PRECO'?<CheckCircle2/>:situacao==='REFERENCIA_INCOMPLETA'?<AlertTriangle/>:<CircleDollarSign/>}{texto[situacao]}</span>}
+function EtiquetaSituacao({situacao}:{situacao:SituacaoPrecoCompra}){const texto=TEXTO_SITUACAO;return <span className={`comparison-status comparison-status-${situacao.toLowerCase()}`}>{situacao==='MELHOR_PRECO'?<CheckCircle2/>:situacao==='REFERENCIA_INCOMPLETA'?<AlertTriangle/>:<CircleDollarSign/>}{texto[situacao]}</span>}
