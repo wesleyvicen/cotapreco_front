@@ -1,6 +1,6 @@
 export type StatusCotacao = 'DRAFT' | 'OPEN' | 'CLOSED' | 'COMPLETED' | 'CANCELLED'
 export type StatusResposta = 'IN_PROGRESS' | 'SUBMITTED'
-export interface Usuario { id:number; name:string; email:string; role:string; companyId:number; companyName:string }
+export interface Usuario { id:number; name:string; email:string; role:string; companyId:number; companyName:string; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null }
 export interface UsuarioAdministracao { id:number; name:string; email:string; role:'ADMIN'|'BUYER'|'VIEWER'; active:boolean; createdAt:string }
 export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null }
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }

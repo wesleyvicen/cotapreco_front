@@ -296,6 +296,26 @@ code {
 .app-shell-sidebar-recolhida .main-area main {
   max-width: none;
 }
+/* Aviso de teste e assinatura: fica acima de qualquer página do sistema. */
+.faixa-assinatura {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid #f0d59a;
+  border-radius: 14px;
+  background: #fff9ed;
+}
+.faixa-assinatura > svg { width: 21px; flex: none; color: #a97918; }
+.faixa-assinatura > div { display: flex; min-width: 200px; flex: 1; flex-direction: column; gap: 2px; }
+.faixa-assinatura strong { font-size: 14px; color: var(--ink); }
+.faixa-assinatura span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.faixa-assinatura .button { flex: none; }
+.faixa-assinatura-vencida { border-color: #efd2d2; background: #fdf3f2; }
+.faixa-assinatura-vencida > svg { color: var(--danger); }
+
 .page {
   display: flex;
   flex-direction: column;

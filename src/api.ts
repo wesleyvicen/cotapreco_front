@@ -3,7 +3,9 @@ import { invalidarCachePainel, limparCachePainel } from './cache/cachePainel'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
-export class ErroApi extends Error { fields: Record<string,string>; constructor(message:string, fields:Record<string,string>={}) { super(message); this.fields=fields } }
+export class ErroApi extends Error { fields: Record<string,string>; status: number; constructor(message:string, fields:Record<string,string>={}, status=0) { super(message); this.fields=fields; this.status=status } }
+/* 402 é a resposta do backend quando o teste venceu: a escrita para, a leitura continua. */
+export const assinaturaExpirada=(erro:unknown)=>erro instanceof ErroApi&&erro.status===402
 
 type Sessao='farmacia'|'representante'
 type RespostaToken={token:string}
@@ -54,7 +56,7 @@ async function executar(path:string,options:RequestInit,sessao:Sessao|null,tenta
 async function requisicao<T>(path:string,options:RequestInit,sessao:Sessao|null,aoNaoAutorizado?:()=>void):Promise<T> {
   const response=await executar(path,options,sessao)
   if(response.status===401)aoNaoAutorizado?.()
-  if(!response.ok){const body=await response.json().catch(()=>({}));throw new ErroApi(body.message??'Não foi possível concluir a operação.',body.fields??{})}
+  if(!response.ok){const body=await response.json().catch(()=>({}));throw new ErroApi(body.message??'Não foi possível concluir a operação.',body.fields??{},response.status)}
   if(response.status===204)return undefined as T
   const texto=await response.text()
   return texto?JSON.parse(texto) as T:undefined as T
@@ -69,7 +71,7 @@ export async function api<T>(path:string,options:RequestInit={}):Promise<T>{
 export async function apiArquivo(path:string):Promise<Blob>{
   const response=await executar(path,{},'farmacia')
   if(response.status===401){limparSessao('farmacia');window.location.href='/login'}
-  if(!response.ok){const body=await response.json().catch(()=>({}));throw new ErroApi(body.message??'Não foi possível baixar o arquivo.',body.fields??{})}
+  if(!response.ok){const body=await response.json().catch(()=>({}));throw new ErroApi(body.message??'Não foi possível baixar o arquivo.',body.fields??{},response.status)}
   return response.blob()
 }
 

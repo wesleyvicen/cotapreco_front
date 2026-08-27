@@ -1,5 +1,6 @@
 import { BarChart3, Boxes, Building2, ChevronRight, ClipboardList, KeyRound, LogOut, Menu, PackageSearch, PanelLeftClose, PanelLeftOpen, Users, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
+import FaixaAssinatura from './FaixaAssinatura'
 import { LinkNavegacao } from '../roteamento'
 import { usarAutenticacao } from '../autenticacao'
 
@@ -22,6 +23,6 @@ export default function LayoutSistema({children}:{children:ReactNode}){
       <div className="account"><div className="avatar">{user?.name.slice(0,2).toUpperCase()}</div><div><strong>{user?.name}</strong><span>{user?.companyName}</span></div><button className="icon-button" title="Sair" onClick={()=>void logout()}><LogOut size={19}/></button></div>
     </aside>
     {open&&<button aria-label="Fechar menu" className="sidebar-backdrop" onClick={()=>setOpen(false)}/>} 
-    <div className="main-area"><header className="mobile-header"><button className="icon-button" onClick={()=>setOpen(true)}><Menu/></button><div className="brand compact"><div className="brand-mark"><img src="/cotapreco-icon.png" alt=""/></div><strong>CotaPreço</strong></div><div className="avatar small">{user?.name[0]}</div></header><main>{children}</main></div>
+    <div className="main-area"><header className="mobile-header"><button className="icon-button" onClick={()=>setOpen(true)}><Menu/></button><div className="brand compact"><div className="brand-mark"><img src="/cotapreco-icon.png" alt=""/></div><strong>CotaPreço</strong></div><div className="avatar small">{user?.name[0]}</div></header><main><FaixaAssinatura/>{children}</main></div>
   </div>
 }
