@@ -4,4 +4,5 @@ import { ProvedorAutenticacao } from './autenticacao'
 import App from './App'
 import { ProvedorRoteamento } from './roteamento'
 import './styles.css'
+import './landing.css'
 createRoot(document.getElementById('root')!).render(<StrictMode><ProvedorRoteamento><ProvedorAutenticacao><App/></ProvedorAutenticacao></ProvedorRoteamento></StrictMode>)

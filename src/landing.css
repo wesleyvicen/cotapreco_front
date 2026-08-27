@@ -1,0 +1,362 @@
+/*
+ * Landing page pública (raiz do domínio para quem não está logado).
+ * Escrita mobile-first: o padrão é uma coluna, e os breakpoints só acrescentam.
+ * Prefixo lp- para não colidir com o CSS do sistema logado.
+ */
+
+.lp {
+  --lp-verde: #0e4d3b;
+  --lp-verde-claro: #e5f4ee;
+  --lp-tinta: #12211d;
+  --lp-suave: #5c716a;
+  --lp-linha: #e2eae7;
+  background: #fff;
+  color: var(--lp-tinta);
+}
+
+.lp-container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.lp-pular:focus {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  width: auto;
+  height: auto;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--lp-verde);
+  color: #fff;
+  clip: auto;
+}
+
+/* Topo -------------------------------------------------------------- */
+.lp-topo {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  border-bottom: 1px solid var(--lp-linha);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+}
+.lp-topo-interno {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 62px;
+}
+.lp-marca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: "Manrope", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--lp-verde);
+}
+.lp-marca img { border-radius: 9px; }
+.lp-topo-acoes { display: flex; align-items: center; gap: 8px; }
+.lp-link-entrar {
+  padding: 9px 10px;
+  color: var(--lp-verde);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.lp-link-entrar:hover { text-decoration: underline; }
+
+/* Botões ------------------------------------------------------------ */
+.lp-botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.lp-botao svg { width: 18px; height: 18px; }
+.lp-botao:hover { transform: translateY(-1px); }
+.lp-botao-primario {
+  background: var(--lp-verde);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(14, 77, 59, 0.22);
+}
+.lp-botao-secundario {
+  border: 1px solid var(--lp-linha);
+  background: #fff;
+  color: var(--lp-verde);
+}
+.lp-botao-claro { background: #fff; color: var(--lp-verde); }
+.lp-botao-compacto { min-height: 40px; padding: 0 14px; font-size: 14px; }
+
+/* Hero -------------------------------------------------------------- */
+.lp-hero {
+  padding: 34px 0 4px;
+  background: linear-gradient(180deg, #f2f8f5 0%, #fff 78%);
+  text-align: center;
+}
+.lp-selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 18px;
+  padding: 7px 14px;
+  border: 1px solid #bfe0d1;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--lp-verde);
+  font-size: 13px;
+  font-weight: 800;
+}
+.lp-selo svg { width: 16px; height: 16px; }
+.lp-hero h1 {
+  margin: 0 0 16px;
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+  color: var(--lp-verde);
+}
+.lp-subtitulo {
+  max-width: 620px;
+  margin: 0 auto 26px;
+  color: var(--lp-suave);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.lp-hero-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.lp-hero-provas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 20px;
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+  color: var(--lp-suave);
+  font-size: 13px;
+  font-weight: 600;
+}
+.lp-hero-provas li { display: flex; align-items: center; gap: 7px; }
+.lp-hero-provas svg { width: 16px; height: 16px; color: var(--lp-verde); }
+.lp-hero-imagem, .lp-diferencial-imagem { margin: 0; }
+.lp-hero-imagem img, .lp-diferencial-imagem img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--lp-linha);
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(12, 58, 45, 0.14);
+}
+
+/* Seções ------------------------------------------------------------ */
+.lp-secao { padding: 42px 0; }
+.lp-secao h2 {
+  margin: 0 0 24px;
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  color: var(--lp-verde);
+  text-align: center;
+}
+
+/* Passos ------------------------------------------------------------ */
+.lp-passos { background: #f6faf8; }
+.lp-passos-lista {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-passos-lista li {
+  position: relative;
+  padding: 22px 20px 20px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 15px;
+  background: #fff;
+}
+.lp-passo-numero {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 12px;
+  border-radius: 9px;
+  background: var(--lp-verde-claro);
+  color: var(--lp-verde);
+  font-size: 14px;
+  font-weight: 800;
+}
+.lp-passos-lista h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 7px;
+  font-size: 17px;
+  color: var(--lp-tinta);
+}
+.lp-passos-lista h3 svg { width: 19px; height: 19px; flex: none; color: var(--lp-verde); }
+.lp-passos-lista p { margin: 0; color: var(--lp-suave); font-size: 14px; line-height: 1.55; }
+
+/* Tempo — contraste antes/depois em vez de lista. -------------------- */
+.lp-tempo { background: #fff; }
+.lp-tempo-interno { max-width: 900px; }
+.lp-antes-depois { display: grid; gap: 12px; align-items: stretch; }
+.lp-antes, .lp-depois {
+  padding: 20px 20px 22px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 15px;
+}
+.lp-antes { background: #f7f8f8; }
+.lp-depois { border-color: #bfe0d1; background: var(--lp-verde-claro); }
+.lp-etiqueta {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.lp-antes .lp-etiqueta { color: #8d9a95; }
+.lp-depois .lp-etiqueta { color: var(--lp-verde); }
+.lp-antes p, .lp-depois p { margin: 0; font-size: 15px; line-height: 1.55; }
+.lp-antes p { color: var(--lp-suave); }
+.lp-depois p { color: var(--lp-tinta); font-weight: 600; }
+.lp-seta { display: grid; place-items: center; color: #9fb5ac; }
+.lp-seta svg { width: 22px; height: 22px; transform: rotate(90deg); }
+.lp-tempo-fecho {
+  max-width: 640px;
+  margin: 22px auto 0;
+  color: var(--lp-tinta);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Diferenciais ------------------------------------------------------ */
+.lp-diferenciais { display: grid; gap: 28px; }
+.lp-diferencial { display: grid; gap: 18px; }
+.lp-diferencial-icone {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 13px;
+  border-radius: 12px;
+  background: var(--lp-verde-claro);
+  color: var(--lp-verde);
+}
+.lp-diferencial-icone svg { width: 21px; height: 21px; }
+.lp-diferencial h3 {
+  margin: 0 0 9px;
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+}
+.lp-diferencial p { margin: 0; color: var(--lp-suave); font-size: 15px; line-height: 1.6; }
+.lp-diferencial-reforco {
+  margin-top: 12px !important;
+  padding-left: 13px;
+  border-left: 3px solid var(--lp-verde-claro);
+  color: var(--lp-tinta) !important;
+  font-weight: 600;
+}
+
+/* Oferta ------------------------------------------------------------ */
+.lp-oferta { background: var(--lp-verde); }
+.lp-oferta-interno { text-align: center; }
+.lp-oferta h2 { color: #fff; }
+.lp-oferta p {
+  max-width: 580px;
+  margin: 0 auto 24px;
+  color: #cde5da;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.lp-oferta-nota { margin: 18px auto 0 !important; font-size: 14px; }
+.lp-oferta-nota a { color: #fff; font-weight: 700; }
+
+/* FAQ --------------------------------------------------------------- */
+.lp-faq { max-width: 760px; }
+.lp-faq details {
+  border-bottom: 1px solid var(--lp-linha);
+  padding: 4px 0;
+}
+.lp-faq summary {
+  padding: 16px 0;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.lp-faq summary::-webkit-details-marker { display: none; }
+.lp-faq summary::after {
+  float: right;
+  margin-left: 12px;
+  color: var(--lp-verde);
+  content: "+";
+  font-size: 20px;
+  line-height: 1;
+}
+.lp-faq details[open] summary::after { content: "–"; }
+.lp-faq p { margin: 0 0 18px; color: var(--lp-suave); font-size: 15px; line-height: 1.6; }
+
+/* Rodapé ------------------------------------------------------------ */
+.lp-rodape { padding: 34px 0; border-top: 1px solid var(--lp-linha); background: #f6faf8; }
+.lp-rodape-interno { display: grid; gap: 12px; text-align: center; justify-items: center; }
+.lp-rodape p { margin: 0; color: var(--lp-suave); font-size: 14px; }
+.lp-rodape nav { display: flex; gap: 18px; }
+.lp-rodape nav a { color: var(--lp-verde); font-size: 14px; font-weight: 700; text-decoration: none; }
+.lp-rodape nav a:hover { text-decoration: underline; }
+
+/* A partir do tablet ------------------------------------------------ */
+@media (min-width: 700px) {
+  .lp-hero { padding: 52px 0 8px; }
+  .lp-hero h1 { font-size: 46px; }
+  .lp-subtitulo { font-size: 18px; }
+  .lp-hero-acoes { flex-direction: row; justify-content: center; }
+  .lp-secao { padding: 58px 0; }
+  .lp-secao h2 { font-size: 32px; margin-bottom: 34px; }
+  .lp-passos-lista { grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .lp-antes-depois { grid-template-columns: 1fr auto 1fr; gap: 18px; }
+  .lp-seta svg { transform: none; }
+  .lp-diferenciais { gap: 42px; }
+  .lp-diferencial { grid-template-columns: 1fr 1.25fr; align-items: center; gap: 40px; }
+  .lp-diferencial:nth-child(even) .lp-diferencial-texto { order: 2; }
+  .lp-diferencial-estreito { grid-template-columns: 1fr 0.6fr; }
+  .lp-rodape-interno { grid-template-columns: auto 1fr auto; align-items: center; text-align: left; }
+}
+
+@media (min-width: 1000px) {
+  .lp-hero h1 { font-size: 54px; max-width: 900px; margin-inline: auto; }
+}
+
+/* Diferencial sem imagem ocupa a largura toda para não deixar buraco. */
+.lp-diferencial:not(:has(.lp-diferencial-imagem)) {
+  grid-template-columns: 1fr;
+  padding: 26px 22px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 16px;
+  background: #f6faf8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-botao { transition: none; }
+  .lp-botao:hover { transform: none; }
+}

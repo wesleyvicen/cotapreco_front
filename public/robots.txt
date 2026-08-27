@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /cadastro
+Disallow: /cotacoes
+Disallow: /cotacao-ol
+Disallow: /produtos
+Disallow: /usuarios
+Disallow: /dados-farmacia
+Disallow: /alterar-senha
+Disallow: /redefinir-senha
+Disallow: /esqueci-senha
+Disallow: /representante/
+Disallow: /cotacao/responder/
+
+Sitemap: https://cotapreco.com/sitemap.xml

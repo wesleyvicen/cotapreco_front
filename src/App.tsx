@@ -1,10 +1,11 @@
-import { RotaProtegida } from './autenticacao'
+import { RotaProtegida, usarAutenticacao } from './autenticacao'
 import { lazy, Suspense, useEffect, type ReactNode } from 'react'
 import LayoutSistema from './components/LayoutSistema'
 import PaginaPainel from './pages/PaginaPainel'
 import PaginaLogin from './pages/PaginaLogin'
 import { Redirecionar, ProvedorParametros, usarLocalizacao } from './roteamento'
 
+const PaginaLanding=lazy(()=>import('./pages/PaginaLanding'))
 const PaginaEsqueciSenha=lazy(()=>import('./pages/PaginaEsqueciSenha'))
 const PaginaCadastroFarmacia=lazy(()=>import('./pages/PaginaCadastroFarmacia'))
 const PaginaNovaCotacao=lazy(()=>import('./pages/PaginaNovaCotacao'))
@@ -22,9 +23,10 @@ const PaginaCotacaoOL=lazy(()=>import('./pages/PaginaCotacaoOL'))
 
 export default function App(){
   const{pathname}=usarLocalizacao()
+  const{user,loading}=usarAutenticacao()
   useEffect(()=>{
     const titulo={
-      '/':'Painel',
+      '/':user?'Painel':null,
       '/login':'Entrar',
       '/cadastro':'Cadastrar farmácia',
       '/esqueci-senha':'Recuperar senha',
@@ -38,9 +40,12 @@ export default function App(){
       '/dados-farmacia':'Dados da farmácia',
       '/usuarios':'Usuários',
       '/alterar-senha':'Alterar senha',
-    }[pathname] ?? (pathname.startsWith('/cotacao/responder/') ? 'Responder cotação' : pathname.startsWith('/cotacoes/') ? 'Cotação' : 'CotaPreço')
-    document.title=`${titulo} | CotaPreço`
-  },[pathname])
+    }[pathname]
+    if(titulo===null)return
+    const resolvido=titulo ?? (pathname.startsWith('/cotacao/responder/') ? 'Responder cotação' : pathname.startsWith('/cotacoes/') ? 'Cotação' : 'CotaPreço')
+    document.title=`${resolvido} | CotaPreço`
+  },[pathname,user])
+  if(pathname==='/'&&!user&&!loading)return <ConteudoAssincrono><PaginaLanding/></ConteudoAssincrono>
   if(pathname==='/login')return <PaginaLogin/>
   if(pathname==='/esqueci-senha')return <ConteudoAssincrono><PaginaEsqueciSenha/></ConteudoAssincrono>
   if(pathname==='/redefinir-senha')return <ConteudoAssincrono><PaginaRedefinirSenha/></ConteudoAssincrono>
