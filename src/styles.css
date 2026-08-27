@@ -2467,7 +2467,7 @@ label small {
 
 .product-source-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
   gap: 12px;
   margin-bottom: 22px;
 }
@@ -2515,6 +2515,161 @@ label small {
 .source-card.template > svg {
   color: #8a6716;
   background: #fff7de;
+}
+.colar-modal {
+  width: min(1240px, 100%);
+  max-height: min(90vh, 880px);
+  display: flex;
+  flex-direction: column;
+}
+.colar-modal > .modal-header,
+.colar-modal > .modal-actions {
+  flex: 0 0 auto;
+}
+.colar-modal > .modal-header {
+  margin-bottom: 16px;
+}
+.colar-corpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px;
+}
+.colar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.colar-campo {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #425c54;
+}
+.colar-campo-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+.colar-campo-topo label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.colar-mover {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+.colar-mover button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: #6b8378;
+  cursor: pointer;
+}
+.colar-mover button:hover:not(:disabled) {
+  border-color: #78b7a0;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.colar-mover button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.colar-mover svg {
+  width: 15px;
+  height: 15px;
+}
+.colar-campo-contagem {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+.colar-campo-contagem.alerta {
+  color: #96650a;
+}
+.colar-campo textarea {
+  width: 100%;
+  min-width: 0;
+  /* Sem quebra de linha: uma linha da caixa precisa ser um produto, senão o alinhamento
+     que a pessoa está conferindo com o olho deixa de bater. */
+  border: 1px solid #d7e1dd;
+  border-radius: 9px;
+  padding: 10px 11px;
+  outline: none;
+  background: #fbfcfc;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  resize: vertical;
+  white-space: pre;
+  overflow-wrap: normal;
+}
+.colar-campo textarea:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(18, 99, 74, 0.1);
+}
+.colar-campo textarea::placeholder {
+  color: #b3c0bb;
+}
+.colar-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0;
+  color: #425c54;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.colar-cabecalho input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+.colar-modal .alert {
+  margin-bottom: 12px;
+}
+.colar-previa {
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 15px 0 0;
+  overflow: hidden;
+}
+.colar-previa .section-caption {
+  padding: 0 17px;
+}
+.colar-previa .table-wrap {
+  max-height: 240px;
+}
+.colar-previa th,
+.colar-previa td {
+  max-width: 260px;
+  padding: 9px 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.colar-previa-resto {
+  display: block;
+  padding: 10px 17px;
+  color: var(--muted);
+  font-size: 10.5px;
 }
 .product-source-panel {
   border-top: 1px solid #edf1ef;
@@ -2655,20 +2810,53 @@ label small {
   font-size: 11px;
   color: var(--muted);
 }
+/* O gabarito das colunas mora na variável para a legenda e as linhas não terem como divergir.
+   A classe .manual-product-fields não serve aqui: ela também é usada no modal de pedido
+   mínimo, com outra grade, e a definição de lá vence por vir depois no arquivo. */
 .manual-items {
+  --manual-colunas: 27px 1.1fr 2.5fr 0.75fr 1.3fr 34px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
+.manual-legenda,
 .manual-item {
   display: grid;
-  grid-template-columns: 28px 1fr 34px;
+  grid-template-columns: var(--manual-colunas);
   gap: 10px;
-  align-items: end;
+  align-items: center;
+}
+.manual-legenda {
+  padding: 0 13px 2px;
+  color: #425c54;
+  font-size: 11px;
+  font-weight: 700;
+}
+.manual-legenda small {
+  color: #94a19d;
+  font-weight: 500;
+}
+.manual-item {
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 13px;
+  padding: 10px 13px;
   background: #fbfcfc;
+}
+.manual-item > input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d7e1dd;
+  border-radius: 9px;
+  padding: 9px 11px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+.manual-item > input:focus {
+  border-color: #74b39d;
+  box-shadow: 0 0 0 3px rgba(25, 131, 95, 0.1);
 }
 .manual-number {
   align-self: center;
@@ -2689,7 +2877,6 @@ label small {
   min-width: 0;
 }
 .remove-manual {
-  margin-bottom: 1px;
   border-color: #efd2d2;
   color: var(--danger);
   background: #fff;
@@ -2745,6 +2932,11 @@ label small {
   box-shadow: 0 0 0 3px rgba(25, 131, 95, 0.1);
 }
 
+@media (max-width: 1120px) {
+  .colar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 @media (max-width: 900px) {
   .product-source-actions {
     grid-template-columns: 1fr;
@@ -2755,25 +2947,32 @@ label small {
   .manual-product-fields {
     grid-template-columns: 1fr 1fr;
   }
-  .manual-name {
-    grid-column: span 1;
-  }
 }
 @media (max-width: 760px) {
   .mapping-grid,
-  .manual-product-fields {
+  .manual-product-fields,
+  .colar-grid {
     grid-template-columns: 1fr;
+  }
+  .colar-modal {
+    width: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
   }
   .manual-header {
     align-items: stretch;
     flex-direction: column;
   }
-  .manual-item {
-    grid-template-columns: 28px 1fr;
+  .manual-legenda {
+    display: none;
   }
-  .remove-manual {
+  .manual-item {
+    grid-template-columns: 27px 1fr 34px;
+    align-items: start;
+    row-gap: 8px;
+  }
+  .manual-item > input {
     grid-column: 2;
-    width: 100%;
   }
   .file-loaded {
     align-items: flex-start;

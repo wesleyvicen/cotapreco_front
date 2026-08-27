@@ -1,10 +1,12 @@
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, Columns3, Download, Lock, MailWarning,
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, Lock, MailWarning,
   FileSpreadsheet, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
 } from 'lucide-react'
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { api, apiArquivo, ErroApi } from '../api'
 import { AvisoErro } from '../components/ComponentesUI'
+import ModalColarColunas from '../components/ModalColarColunas'
+import { colunasColadasVazias, type ColunasColadas, type LinhaColada } from '../lib/colunasColadas'
 import { usarAutenticacao } from '../autenticacao'
 import { acessoBloqueado, emailPendente, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
 import type {
@@ -19,7 +21,7 @@ function dataHoraLocal(data = new Date()) {
 
 type ModoProdutos = 'planilha' | 'manual'
 type CampoMapeamento = keyof MapeamentoColunas
-type OrigemItem = 'planilha' | 'manual'
+type OrigemItem = 'planilha' | 'manual' | 'colado'
 interface ItemManual { id:string; ean:string; productName:string; quantity:string; laboratory:string }
 interface ItemRevisao extends ItemManual { origem:OrigemItem }
 
@@ -50,6 +52,10 @@ export default function PaginaNovaCotacao() {
   const [mapeamento, setMapeamento] = useState<MapeamentoColunas>({ ean:null, productName:null, quantity:null, laboratory:null })
   const [itensManuais, setItensManuais] = useState<ItemManual[]>([novoItemManual()])
   const [produtos, setProdutos] = useState<Produto[]>([])
+  const [colarAberto, setColarAberto] = useState(false)
+  const [colunasColadas, setColunasColadas] = useState<ColunasColadas>(colunasColadasVazias)
+  const [ignorarCabecalho, setIgnorarCabecalho] = useState(false)
+  const [origemPrevia, setOrigemPrevia] = useState<OrigemItem>('planilha')
   const [previa, setPrevia] = useState<PreviaImportacao|null>(null)
   const [itensRevisao, setItensRevisao] = useState<ItemRevisao[]>([])
   const [adicionandoExtra, setAdicionandoExtra] = useState(false)
@@ -108,6 +114,18 @@ export default function PaginaNovaCotacao() {
     finally { setOcupado(false) }
   }
 
+  const gerarPreviaColada = async (linhas:LinhaColada[]) => {
+    setErro(''); setOcupado(true)
+    try {
+      const items = linhas.map((linha, index) => ({
+        row:index + 1, ean:linha.ean, productName:linha.productName, quantity:linha.quantity, laboratory:linha.laboratory,
+      }))
+      const resultado = await api<PreviaImportacao>('/quotations/items/preview', { method:'POST', body:JSON.stringify({ items }) })
+      setColarAberto(false); iniciarRevisao(resultado, 'colado')
+    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Falha ao conferir os produtos.') }
+    finally { setOcupado(false) }
+  }
+
   const baixarModelo = async () => {
     setErro(''); setOcupado(true)
     try {
@@ -126,7 +144,7 @@ export default function PaginaNovaCotacao() {
   }
 
   const iniciarRevisao = (resultado:PreviaImportacao, origem:OrigemItem) => {
-    setPrevia(resultado)
+    setPrevia(resultado); setOrigemPrevia(origem)
     setItensRevisao(resultado.lines.map(linha => ({
       id:crypto.randomUUID(), origem, ean:linha.ean ?? '', productName:linha.productName,
       quantity:linha.quantity?.toString() ?? '', laboratory:linha.laboratory ?? '',
@@ -206,7 +224,9 @@ export default function PaginaNovaCotacao() {
     await navigator.clipboard.writeText(valor); setCopiado(tipo); setTimeout(() => setCopiado(''), 1800)
   }
   const mensagem = cotacao?.publicUrl ? `Olá! Estamos realizando uma nova cotação.\nVocê pode enviar seus preços através do link abaixo:\n${cotacao.publicUrl}\nObrigado!` : ''
-  const voltarProdutos = () => { setErro(''); setEtapa(2) }
+  /* Quem chegou à revisão colando colunas volta para a colagem, não para o painel de planilha
+     que nunca chegou a usar. */
+  const voltarProdutos = () => { setErro(''); setEtapa(2); if (origemPrevia === 'colado') setColarAberto(true) }
 
   if (emailPendente(user?.emailConfirmed)) return <div className="page narrow">
     <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>
@@ -256,6 +276,7 @@ export default function PaginaNovaCotacao() {
         <div className="product-source-actions">
           <button type="button" className={`source-card ${modo === 'planilha' ? 'selected' : ''}`} onClick={() => { setModo('planilha'); setErro('') }}><FileSpreadsheet/><span><strong>Importar planilha</strong><small>CSV ou XLSX, com conferência das colunas</small></span></button>
           <button type="button" className={`source-card ${modo === 'manual' ? 'selected' : ''}`} onClick={() => { setModo('manual'); setErro('') }}><PenLine/><span><strong>Preencher manualmente</strong><small>Adicione e pesquise produtos linha por linha</small></span></button>
+          <button type="button" className="source-card" onClick={() => { setErro(''); setColarAberto(true) }}><ClipboardPaste/><span><strong>Colar de uma planilha</strong><small>Cole coluna por coluna, sem precisar de arquivo</small></span></button>
           <button type="button" className="source-card template" disabled={ocupado} onClick={() => void baixarModelo()}><Download/><span><strong>Baixar modelo Excel</strong><small>Arquivo vazio com os cabeçalhos corretos</small></span></button>
         </div>
 
@@ -280,12 +301,21 @@ export default function PaginaNovaCotacao() {
           <datalist id="produtos-nomes">{produtos.map(produto => <option key={produto.id} value={produto.name}>{produto.ean ? `EAN ${produto.ean}` : 'Sem EAN'}</option>)}</datalist>
           <datalist id="produtos-eans">{produtos.filter(produto => produto.ean).map(produto => <option key={produto.id} value={produto.ean ?? ''}>{produto.name}</option>)}</datalist>
           <div className="manual-header"><div><strong>Produtos da cotação</strong><span>EAN e laboratório são opcionais. Produtos já cadastrados completam os dados automaticamente.</span></div><button type="button" className="button button-secondary" onClick={() => setItensManuais(atuais => [...atuais, novoItemManual()])}><Plus/>Adicionar produto</button></div>
-          <div className="manual-items">{itensManuais.map((item, index) => <div className="manual-item" key={item.id}><span className="manual-number">{index + 1}</span><div className="manual-product-fields">
-            <label>EAN <small>Opcional</small><input list="produtos-eans" inputMode="numeric" maxLength={14} placeholder="789..." value={item.ean} onChange={event => alterarItemManual(item.id, 'ean', event.target.value.replace(/\D/g, ''))}/></label>
-            <label className="manual-name">Produto<input list="produtos-nomes" required maxLength={240} placeholder="Nome ou descrição do produto" value={item.productName} onChange={event => alterarItemManual(item.id, 'productName', event.target.value)}/></label>
-            <label>Quantidade<input required type="number" min="1" step="1" placeholder="0" value={item.quantity} onChange={event => alterarItemManual(item.id, 'quantity', event.target.value)}/></label>
-            <label>Laboratório <small>Opcional</small><input maxLength={160} placeholder="Fabricante" value={item.laboratory} onChange={event => alterarItemManual(item.id, 'laboratory', event.target.value)}/></label>
-          </div><button type="button" className="icon-button remove-manual" title="Remover produto" aria-label={`Remover produto ${index + 1}`} disabled={itensManuais.length === 1} onClick={() => setItensManuais(atuais => atuais.filter(atual => atual.id !== item.id))}><Trash2/></button></div>)}</div>
+          {/* Legenda e linhas dividem o mesmo gabarito de colunas: repetir o rótulo em cada
+              linha desalinhava os campos assim que um deles quebra em duas linhas. */}
+          <div className="manual-items">
+            <div className="manual-legenda" aria-hidden="true">
+              <span/><span>EAN <small>Opcional</small></span><span>Produto</span><span>Quantidade</span><span>Laboratório <small>Opcional</small></span><span/>
+            </div>
+            {itensManuais.map((item, index) => <div className="manual-item" key={item.id}>
+              <span className="manual-number">{index + 1}</span>
+              <input list="produtos-eans" inputMode="numeric" maxLength={14} placeholder="EAN" aria-label={`EAN do produto ${index + 1}`} value={item.ean} onChange={event => alterarItemManual(item.id, 'ean', event.target.value.replace(/\D/g, ''))}/>
+              <input list="produtos-nomes" required maxLength={240} placeholder="Nome ou descrição do produto" aria-label={`Produto ${index + 1}`} value={item.productName} onChange={event => alterarItemManual(item.id, 'productName', event.target.value)}/>
+              <input required type="number" min="1" step="1" placeholder="Qtd." aria-label={`Quantidade do produto ${index + 1}`} value={item.quantity} onChange={event => alterarItemManual(item.id, 'quantity', event.target.value)}/>
+              <input maxLength={160} placeholder="Laboratório" aria-label={`Laboratório do produto ${index + 1}`} value={item.laboratory} onChange={event => alterarItemManual(item.id, 'laboratory', event.target.value)}/>
+              <button type="button" className="icon-button remove-manual" title="Remover produto" aria-label={`Remover produto ${index + 1}`} disabled={itensManuais.length === 1} onClick={() => setItensManuais(atuais => atuais.filter(atual => atual.id !== item.id))}><Trash2/></button>
+            </div>)}
+          </div>
           <button type="button" className="button button-ghost add-manual-bottom" onClick={() => setItensManuais(atuais => [...atuais, novoItemManual()])}><Plus/>Adicionar outra linha</button>
         </div>}
 
@@ -328,6 +358,10 @@ export default function PaginaNovaCotacao() {
 
       {etapa === 5 && cotacao?.publicUrl && <div className="share-success"><div className="success-icon"><CheckCircle2/></div><span className="eyebrow green">Cotação aberta</span><h2>Agora é só compartilhar!</h2><p>Envie este link para os representantes. Eles entram ou criam uma conta para responder.</p><div className="copy-box"><Link2/><span>{cotacao.publicUrl}</span><button className="button button-secondary" onClick={() => void copiar(cotacao.publicUrl!, 'link')}>{copiado === 'link' ? 'Copiado!' : 'Copiar link'}</button></div><div className="message-preview"><p>{mensagem}</p><button className="button button-ghost" onClick={() => void copiar(mensagem, 'mensagem')}><Clipboard/>{copiado === 'mensagem' ? 'Mensagem copiada!' : 'Copiar mensagem'}</button></div><div className="wizard-actions centered"><button className="button button-primary" onClick={() => navegar(`/cotacoes/${cotacao.id}`)}>Acompanhar cotação <ArrowRight/></button></div></div>}
     </section>
+    {colarAberto && <ModalColarColunas colunas={colunasColadas} setColunas={setColunasColadas}
+      ignorarCabecalho={ignorarCabecalho} setIgnorarCabecalho={setIgnorarCabecalho}
+      erro={erro} ocupado={ocupado} aoFechar={() => { setColarAberto(false); setErro('') }}
+      aoRevisar={linhas => void gerarPreviaColada(linhas)}/>}
   </div>
 }
 
