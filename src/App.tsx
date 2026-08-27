@@ -6,6 +6,8 @@ import PaginaLogin from './pages/PaginaLogin'
 import { Redirecionar, ProvedorParametros, usarLocalizacao } from './roteamento'
 
 const PaginaLanding=lazy(()=>import('./pages/PaginaLanding'))
+const PaginaConfirmarEmail=lazy(()=>import('./pages/PaginaConfirmarEmail'))
+const PaginaAssinatura=lazy(()=>import('./pages/PaginaAssinatura'))
 const PaginaEsqueciSenha=lazy(()=>import('./pages/PaginaEsqueciSenha'))
 const PaginaCadastroFarmacia=lazy(()=>import('./pages/PaginaCadastroFarmacia'))
 const PaginaNovaCotacao=lazy(()=>import('./pages/PaginaNovaCotacao'))
@@ -30,6 +32,7 @@ export default function App(){
       '/login':'Entrar',
       '/cadastro':'Cadastrar farmácia',
       '/esqueci-senha':'Recuperar senha',
+      '/confirmar-email':'Confirmar e-mail',
       '/redefinir-senha':'Redefinir senha',
       '/representante/redefinir-senha':'Redefinir senha',
       '/representante/alterar-senha':'Minha conta',
@@ -40,12 +43,14 @@ export default function App(){
       '/dados-farmacia':'Dados da farmácia',
       '/usuarios':'Usuários',
       '/alterar-senha':'Alterar senha',
+      '/assinatura':'Assinatura',
     }[pathname]
     if(titulo===null)return
     const resolvido=titulo ?? (pathname.startsWith('/cotacao/responder/') ? 'Responder cotação' : pathname.startsWith('/cotacoes/') ? 'Cotação' : 'CotaPreço')
     document.title=`${resolvido} | CotaPreço`
   },[pathname,user])
   if(pathname==='/'&&!user&&!loading)return <ConteudoAssincrono><PaginaLanding/></ConteudoAssincrono>
+  if(pathname==='/confirmar-email')return <ConteudoAssincrono><PaginaConfirmarEmail/></ConteudoAssincrono>
   if(pathname==='/login')return <PaginaLogin/>
   if(pathname==='/esqueci-senha')return <ConteudoAssincrono><PaginaEsqueciSenha/></ConteudoAssincrono>
   if(pathname==='/redefinir-senha')return <ConteudoAssincrono><PaginaRedefinirSenha/></ConteudoAssincrono>
@@ -63,6 +68,7 @@ export default function App(){
   else if(pathname==='/dados-farmacia')page=<PaginaConfiguracoes/>
   else if(pathname==='/usuarios')page=<PaginaUsuarios/>
   else if(pathname==='/alterar-senha')page=<PaginaAlterarSenha/>
+  else if(pathname==='/assinatura')page=<PaginaAssinatura/>
   else if(pathname==='/configuracoes')page=<Redirecionar to="/dados-farmacia" replace/>
   else {const match=pathname.match(/^\/cotacoes\/(\d+)$/);page=match?<ProvedorParametros params={{id:match[1]}}><PaginaDetalheCotacao/></ProvedorParametros>:<Redirecionar to="/" replace/>}
   return <RotaProtegida><LayoutSistema><ConteudoAssincrono>{page}</ConteudoAssincrono></LayoutSistema></RotaProtegida>

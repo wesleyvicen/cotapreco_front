@@ -296,6 +296,99 @@ code {
 .app-shell-sidebar-recolhida .main-area main {
   max-width: none;
 }
+/* Tela de assinatura --------------------------------------------------- */
+.assinatura-estado { display: flex; align-items: center; gap: 16px; padding: 22px 24px; }
+.assinatura-estado-icone { display: grid; place-items: center; width: 52px; height: 52px; flex: none; border-radius: 15px; }
+.assinatura-estado-icone svg { width: 25px; height: 25px; }
+.assinatura-estado-texto { display: flex; flex-direction: column; gap: 3px; }
+.assinatura-etiqueta { font-size: 10px; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; }
+.assinatura-estado strong { font-family: "Manrope", sans-serif; font-size: 22px; }
+.assinatura-estado small { color: var(--muted); font-size: 13px; }
+.assinatura-estado-teste .assinatura-estado-icone { background: #fff4d9; color: #a97918; }
+.assinatura-estado-teste .assinatura-etiqueta { color: #a97918; }
+.assinatura-estado-ativa .assinatura-estado-icone,
+.assinatura-estado-sem-prazo .assinatura-estado-icone { background: var(--green-soft); color: var(--green); }
+.assinatura-estado-ativa .assinatura-etiqueta,
+.assinatura-estado-sem-prazo .assinatura-etiqueta { color: var(--green); }
+.assinatura-estado-vencida { border-color: #efd2d2; background: #fdf7f6; }
+.assinatura-estado-vencida .assinatura-estado-icone { background: #fdeceb; color: var(--danger); }
+.assinatura-estado-vencida .assinatura-etiqueta { color: var(--danger); }
+
+.assinatura-progresso { padding: 18px 24px 22px; }
+.assinatura-progresso-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.assinatura-progresso-topo strong { font-size: 14px; }
+.assinatura-progresso-topo span { color: var(--muted); font-size: 12px; }
+.assinatura-barra { height: 8px; border-radius: 999px; background: #eef2f0; overflow: hidden; }
+.assinatura-barra span { display: block; height: 100%; border-radius: 999px; background: #e2a640; }
+
+.assinatura-listas { display: grid; gap: 20px; padding: 20px 24px 24px; }
+.assinatura-lista-titulo { display: block; margin-bottom: 9px; font-size: 10px; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; }
+.assinatura-lista-mantem { color: var(--green); }
+.assinatura-lista-pausa { color: #a4441b; }
+.assinatura-listas ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13.5px; line-height: 1.7; }
+
+.assinatura-acao { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; padding: 24px; }
+.assinatura-acao > div:first-child { flex: 1; min-width: 240px; }
+.assinatura-acao h2 { margin-bottom: 6px; font-size: 18px; }
+.assinatura-acao p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+.assinatura-acao-botoes { display: flex; flex-wrap: wrap; gap: 10px; }
+.assinatura-rodape { color: var(--muted); font-size: 13px; text-align: center; }
+.assinatura-rodape a { color: var(--green); font-weight: 700; }
+
+@media (min-width: 760px) { .assinatura-listas { grid-template-columns: 1fr 1fr; gap: 28px; } }
+
+.aviso-email-confirmado { display: flex; align-items: center; gap: 9px; margin-bottom: 18px; }
+.aviso-email-confirmado svg { width: 18px; flex: none; }
+
+/* Confirmação de e-mail: o aviso precisa dizer onde procurar, não só que falta confirmar. */
+.faixa-confirmacao {
+  margin-bottom: 20px;
+  padding: 15px 18px;
+  border: 1px solid #cfe0f2;
+  border-radius: 14px;
+  background: #f4f9fe;
+}
+.faixa-confirmacao-topo { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.faixa-confirmacao-topo > svg { width: 21px; flex: none; color: #3475ad; }
+.faixa-confirmacao-topo > div { display: flex; min-width: 200px; flex: 1; flex-direction: column; gap: 2px; }
+.faixa-confirmacao strong { font-size: 14px; color: var(--ink); }
+.faixa-confirmacao-topo span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.faixa-confirmacao-spam {
+  margin: 11px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  color: #4a6076;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.faixa-confirmacao-aviso { margin: 10px 0 0; color: #2f6a4f; font-size: 12px; font-weight: 600; }
+.assinatura-bloqueio-spam {
+  max-width: 520px;
+  margin: 14px auto 0 !important;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #f6f9fb;
+}
+.confirmacao-pagina { min-height: 70vh; justify-content: center; }
+.confirmacao-card { padding: 44px 28px; text-align: center; }
+.confirmacao-card h1 { margin-bottom: 10px; font-size: 24px; }
+.confirmacao-card p { max-width: 460px; margin: 0 auto 22px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.confirmacao-icone {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  border-radius: 16px;
+}
+.confirmacao-icone svg { width: 26px; height: 26px; }
+.confirmacao-icone-ok { background: var(--green-soft); color: var(--green); }
+.confirmacao-icone-erro { background: #fdf3f2; color: var(--danger); }
+.confirmacao-icone-neutro { background: #f4f9fe; color: #3475ad; }
+.girando { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+
 /* Tela de bloqueio: aparece no lugar da funcionalidade, não depois de preenchê-la. */
 .assinatura-bloqueio { padding: 40px 28px; text-align: center; }
 .assinatura-bloqueio-icone {

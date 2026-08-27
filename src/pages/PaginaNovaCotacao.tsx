@@ -1,12 +1,12 @@
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, Columns3, Download, Lock,
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, Columns3, Download, Lock, MailWarning,
   FileSpreadsheet, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
 } from 'lucide-react'
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { api, apiArquivo, ErroApi } from '../api'
 import { AvisoErro } from '../components/ComponentesUI'
 import { usarAutenticacao } from '../autenticacao'
-import { acessoBloqueado, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
+import { acessoBloqueado, emailPendente, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
 import type {
   AnaliseArquivoImportacao, Cotacao, MapeamentoColunas, PreviaImportacao, Produto,
 } from '../types'
@@ -207,6 +207,19 @@ export default function PaginaNovaCotacao() {
   }
   const mensagem = cotacao?.publicUrl ? `Olá! Estamos realizando uma nova cotação.\nVocê pode enviar seus preços através do link abaixo:\n${cotacao.publicUrl}\nObrigado!` : ''
   const voltarProdutos = () => { setErro(''); setEtapa(2) }
+
+  if (emailPendente(user?.emailConfirmed)) return <div className="page narrow">
+    <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>
+    <section className="card assinatura-bloqueio">
+      <div className="assinatura-bloqueio-icone confirmacao-icone-neutro"><MailWarning/></div>
+      <h1>Confirme seu e-mail primeiro</h1>
+      <p>Enviamos um link de confirmação para <b>{user?.email}</b>. Clique nele e volte aqui — leva menos de um minuto.</p>
+      <p className="assinatura-bloqueio-spam"><b>Não achou?</b> Procure por “CotaPreço” na caixa de spam ou lixo eletrônico e marque como <b>não é spam</b>. Use o botão “Reenviar e-mail” no aviso do topo se precisar de um link novo.</p>
+      <div className="assinatura-bloqueio-acoes">
+        <LinkInterno className="button button-ghost" to="/cotacoes">Ver minhas cotações</LinkInterno>
+      </div>
+    </section>
+  </div>
 
   if (acessoBloqueado(user?.accessAllowed)) return <div className="page narrow">
     <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>

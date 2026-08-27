@@ -8,7 +8,7 @@ import { Redirecionar } from './roteamento'
 import type { Usuario } from './types'
 
 interface DadosCadastroFarmacia { nomeUsuario:string; nomeFarmacia:string; cnpj:string; email:string; senha:string }
-interface ContextoAutenticacao { user:Usuario|null; loading:boolean; revalidating:boolean; login:(email:string,password:string)=>Promise<void>; cadastrarFarmacia:(dados:DadosCadastroFarmacia)=>Promise<void>; logout:()=>Promise<void> }
+interface ContextoAutenticacao { user:Usuario|null; loading:boolean; revalidating:boolean; recarregarUsuario:()=>Promise<void>; login:(email:string,password:string)=>Promise<void>; cadastrarFarmacia:(dados:DadosCadastroFarmacia)=>Promise<void>; logout:()=>Promise<void> }
 const AuthContext=createContext<ContextoAutenticacao|null>(null)
 
 let validacaoEmAndamento:Promise<Usuario>|null=null
@@ -80,7 +80,13 @@ export function ProvedorAutenticacao({children}:{children:ReactNode}) {
       setRevalidating(false)
     }
   }
-  return <AuthContext.Provider value={{user,loading,revalidating,login,cadastrarFarmacia,logout}}>{children}</AuthContext.Provider>
+  /* Depois de confirmar o e-mail o usuário em memória ainda diz que falta confirmar;
+     sem recarregar, a faixa e o bloqueio continuariam na tela até um refresh manual. */
+  const recarregarUsuario=async()=>{
+    try{const usuario=await validarUsuarioAtual();salvarUsuarioFarmacia(usuario);setUser(usuario)}
+    catch{/* Sessão inválida já é tratada pelo fluxo de autenticação. */}
+  }
+  return <AuthContext.Provider value={{user,loading,revalidating,recarregarUsuario,login,cadastrarFarmacia,logout}}>{children}</AuthContext.Provider>
 }
 export const usarAutenticacao=()=>{ const value=useContext(AuthContext); if(!value) throw new Error('ProvedorAutenticacao ausente'); return value }
 export function RotaProtegida({children}:{children:ReactNode}) { const {user,loading}=usarAutenticacao(); if(loading) return <div className="page-loader"><span className="spinner"/>Carregando...</div>; return user?children:<Redirecionar to="/login" replace/> }
