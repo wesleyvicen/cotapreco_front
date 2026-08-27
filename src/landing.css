@@ -360,3 +360,168 @@
   .lp-botao { transition: none; }
   .lp-botao:hover { transform: none; }
 }
+
+/* Cadastro ----------------------------------------------------------
+ * Reaproveita os tokens e os botões da landing (a página inteira vive dentro de .lp),
+ * porque quem chega aqui vem de lá e a troca de linguagem visual faz duvidar do caminho.
+ * Mobile-first: a ordem natural do documento é apresentação, formulário e provas — quem
+ * clicou em "testar grátis" já decidiu, e o formulário tem que aparecer sem rolagem longa.
+ */
+.cad-main { padding: 26px 0 44px; background: linear-gradient(180deg, #f2f8f5 0%, #fff 60%); }
+.cad-apresentacao { text-align: center; }
+.cad-apresentacao h1 {
+  margin: 0 0 12px;
+  font-size: 27px;
+  line-height: 1.15;
+  letter-spacing: -0.6px;
+  color: var(--lp-verde);
+}
+.cad-subtitulo {
+  max-width: 520px;
+  margin: 0 auto 22px;
+  color: var(--lp-suave);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.cad-card {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px 18px 22px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 38px rgba(12, 58, 45, 0.09);
+}
+.cad-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--lp-tinta);
+  font-size: 14px;
+  font-weight: 700;
+}
+.cad-campo input {
+  width: 100%;
+  /* 16px é o mínimo que evita o zoom automático do iOS ao focar o campo. */
+  min-height: 50px;
+  padding: 0 14px;
+  border: 1px solid #d3e0da;
+  border-radius: 12px;
+  background: #fbfdfc;
+  color: var(--lp-tinta);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  outline: none;
+}
+.cad-campo input::placeholder { color: #9fb1aa; font-weight: 400; }
+.cad-campo input:focus {
+  border-color: var(--lp-verde);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(14, 77, 59, 0.12);
+}
+.cad-campo input[aria-invalid="true"] { border-color: #c0453c; background: #fffafa; }
+.cad-dica { color: var(--lp-suave); font-size: 12px; font-weight: 500; line-height: 1.45; }
+.cad-erro-campo { color: #c0453c; font-size: 12px; font-weight: 700; }
+
+.cad-senha { position: relative; display: block; }
+.cad-senha input { padding-right: 52px; }
+.cad-senha button {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--lp-suave);
+  cursor: pointer;
+}
+.cad-senha button:hover { background: var(--lp-verde-claro); color: var(--lp-verde); }
+.cad-senha button svg { width: 19px; height: 19px; }
+.cad .password-strength small { color: var(--lp-suave); font-size: 12px; font-weight: 500; }
+
+.cad-conferencia:empty { display: none; }
+.cad-conferencia > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.cad-conferencia svg { flex: 0 0 auto; width: 15px; height: 15px; }
+.cad-conferencia .confere { color: #1c7a58; }
+.cad-conferencia .diverge { color: #c0453c; }
+
+.cad-enviar { width: 100%; margin-top: 3px; min-height: 52px; border: 0; cursor: pointer; }
+.cad-enviar:disabled { opacity: 0.65; cursor: progress; transform: none; }
+.cad-garantia {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--lp-suave);
+  font-size: 12.5px;
+  line-height: 1.4;
+  text-align: left;
+}
+.cad-garantia svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; color: var(--lp-verde); }
+.cad-alternativa { margin: 16px 0 0; color: var(--lp-suave); font-size: 14px; text-align: center; }
+.cad-alternativa a { color: var(--lp-verde); font-weight: 700; }
+
+.cad-provas {
+  display: grid;
+  gap: 12px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cad-provas li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 16px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 14px;
+  background: #fff;
+}
+.cad-prova-icone {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--lp-verde-claro);
+  color: var(--lp-verde);
+}
+.cad-prova-icone svg { width: 18px; height: 18px; }
+.cad-provas div { display: flex; flex-direction: column; gap: 3px; }
+.cad-provas strong { font-size: 14px; }
+.cad-provas span { color: var(--lp-suave); font-size: 13px; line-height: 1.5; }
+
+/* A partir do tablet o argumento e o formulário passam a caber lado a lado. */
+@media (min-width: 900px) {
+  .cad-main { padding: 46px 0 64px; }
+  .cad-grid {
+    display: grid;
+    grid-template-areas: "apresentacao formulario" "provas formulario";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    column-gap: 52px;
+  }
+  .cad-apresentacao { grid-area: apresentacao; text-align: left; }
+  .cad-apresentacao h1 { font-size: 38px; }
+  .cad-subtitulo { margin-left: 0; font-size: 16px; }
+  .cad-formulario { grid-area: formulario; }
+  .cad-provas { grid-area: provas; margin-top: 6px; }
+  .cad-card { gap: 17px; padding: 26px 26px 28px; }
+}

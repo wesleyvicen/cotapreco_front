@@ -30,7 +30,7 @@ export default function App(){
     const titulo={
       '/':user?'Painel':null,
       '/login':'Entrar',
-      '/cadastro':'Cadastrar farmácia',
+      '/cadastro':'Criar conta grátis',
       '/esqueci-senha':'Recuperar senha',
       '/confirmar-email':'Confirmar e-mail',
       '/redefinir-senha':'Redefinir senha',
