@@ -296,6 +296,23 @@ code {
 .app-shell-sidebar-recolhida .main-area main {
   max-width: none;
 }
+/* Tela de bloqueio: aparece no lugar da funcionalidade, não depois de preenchê-la. */
+.assinatura-bloqueio { padding: 40px 28px; text-align: center; }
+.assinatura-bloqueio-icone {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 18px;
+  border-radius: 16px;
+  background: #fdf3f2;
+  color: var(--danger);
+}
+.assinatura-bloqueio-icone svg { width: 26px; height: 26px; }
+.assinatura-bloqueio h1 { margin-bottom: 10px; font-size: 24px; }
+.assinatura-bloqueio p { max-width: 520px; margin: 0 auto; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.assinatura-bloqueio-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+
 /* Aviso de teste e assinatura: fica acima de qualquer página do sistema. */
 .faixa-assinatura {
   display: flex;

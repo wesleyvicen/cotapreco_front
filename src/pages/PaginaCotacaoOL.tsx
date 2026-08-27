@@ -1,11 +1,13 @@
 import {
-  ArrowDownToLine, Check, CircleAlert, CircleCheck, Columns3, Info, ListChecks, LoaderCircle, PenLine,
+  ArrowDownToLine, Check, CircleAlert, CircleCheck, Columns3, Info, ListChecks, Lock, LoaderCircle, PenLine,
   RotateCcw, ScanSearch, Search, ShieldCheck, TableProperties, Trash2, Upload, X,
 } from 'lucide-react'
 import {
   useEffect, useMemo, useRef, useState, type ReactNode,
 } from 'react'
 import { EstadoVazio } from '../components/ComponentesUI'
+import { usarAutenticacao } from '../autenticacao'
+import { acessoBloqueado, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
 import { salvarBlob } from '../lib/arquivos'
 import {
   ARMAZENAMENTO_COTACAO_OL, autoMapColumns, buildProductSignature, calculateOrder, compareProductNames,
@@ -205,6 +207,7 @@ function pontuacaoOportunidadeHistorico(item:ItemResultadoCompra, history:MapaHi
 }
 
 export default function PaginaCotacaoOL() {
+  const { user } = usarAutenticacao()
   const saved = estadoSalvo()
   const [cotacoes, setCotacoes] = useState<MapaCotacoes>(saved.cotacoes || {})
   const [pedido, setPedido] = useState<ItemPedido[]>(() => ensureOrderLineIds(saved.pedido || []))
@@ -637,6 +640,17 @@ export default function PaginaCotacaoOL() {
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Não foi possível gerar a exportação.') }
     finally { setExporting('') }
   }
+
+  if (acessoBloqueado(user?.accessAllowed)) return <div className="page">
+    <section className="card assinatura-bloqueio">
+      <div className="assinatura-bloqueio-icone"><Lock/></div>
+      <h1>Seu período de teste terminou</h1>
+      <p>A Cotação para OL fica pausada até a assinatura. As tabelas que você já importou continuam salvas neste navegador e voltam assim que o acesso for liberado.</p>
+      <div className="assinatura-bloqueio-acoes">
+        <a className="button button-primary" href={LINK_WHATSAPP_ASSINATURA} target="_blank" rel="noopener noreferrer">Assinar pelo WhatsApp</a>
+      </div>
+    </section>
+  </div>
 
   return <div className="page">
     <div className="page-header">

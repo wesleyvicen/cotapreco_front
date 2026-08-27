@@ -1,10 +1,12 @@
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, Columns3, Download,
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, Columns3, Download, Lock,
   FileSpreadsheet, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
 } from 'lucide-react'
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { api, apiArquivo, ErroApi } from '../api'
 import { AvisoErro } from '../components/ComponentesUI'
+import { usarAutenticacao } from '../autenticacao'
+import { acessoBloqueado, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
 import type {
   AnaliseArquivoImportacao, Cotacao, MapeamentoColunas, PreviaImportacao, Produto,
 } from '../types'
@@ -38,6 +40,7 @@ const completarPeloCatalogo = (item:ItemManual, campo:keyof Omit<ItemManual, 'id
 
 export default function PaginaNovaCotacao() {
   const navegar = usarNavegacao()
+  const { user } = usarAutenticacao()
   const [etapa, setEtapa] = useState(1)
   const [nome, setNome] = useState('')
   const [prazo, setPrazo] = useState('')
@@ -204,6 +207,19 @@ export default function PaginaNovaCotacao() {
   }
   const mensagem = cotacao?.publicUrl ? `Olá! Estamos realizando uma nova cotação.\nVocê pode enviar seus preços através do link abaixo:\n${cotacao.publicUrl}\nObrigado!` : ''
   const voltarProdutos = () => { setErro(''); setEtapa(2) }
+
+  if (acessoBloqueado(user?.accessAllowed)) return <div className="page narrow">
+    <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>
+    <section className="card assinatura-bloqueio">
+      <div className="assinatura-bloqueio-icone"><Lock/></div>
+      <h1>Seu período de teste terminou</h1>
+      <p>Novas cotações ficam pausadas até a assinatura. Tudo o que você já criou continua aqui: comparativos, pedidos, histórico de preços e as exportações em Excel.</p>
+      <div className="assinatura-bloqueio-acoes">
+        <a className="button button-primary" href={LINK_WHATSAPP_ASSINATURA} target="_blank" rel="noopener noreferrer">Assinar pelo WhatsApp</a>
+        <LinkInterno className="button button-ghost" to="/cotacoes">Ver minhas cotações</LinkInterno>
+      </div>
+    </section>
+  </div>
 
   return <div className="page narrow">
     <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>

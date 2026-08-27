@@ -1,7 +1,8 @@
 import { AlertTriangle, Clock3 } from 'lucide-react'
 import { usarAutenticacao } from '../autenticacao'
+import { LINK_WHATSAPP_ASSINATURA as WHATSAPP } from '../lib/assinatura'
 
-const WHATSAPP = 'https://wa.me/5581999441494?text=' + encodeURIComponent('Olá! Quero assinar o CotaPreço.')
+
 
 /*
  * O aviso do teste vive no layout, não em cada tela: a farmácia precisa ver o prazo
