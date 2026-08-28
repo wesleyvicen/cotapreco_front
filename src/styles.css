@@ -4210,8 +4210,6 @@ label small {
   width: min(980px, 100%);
 }
 .plan-items {
-  max-height: 65vh;
-  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -4302,10 +4300,28 @@ label small {
 }
 .purchase-plan-modal {
   width: min(1120px, calc(100vw - 40px));
-  max-height: calc(100vh - 40px);
+  height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
 }
+/* Só a busca fica presa no topo: cabeçalho, troca de modo e o passo a passo rolam junto com
+   a lista, que é onde a pessoa precisa de espaço. */
+.plan-corpo {
+  --busca-altura: 58px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.plan-corpo > .plan-product-search {
+  position: sticky;
+  z-index: 6;
+  top: 0;
+  background: #fff;
+  box-shadow: 0 6px 12px -10px rgba(12, 58, 45, 0.5);
+}
+.matriz-wrap { max-height: none; overflow-x: auto; overflow-y: visible; border: 0; border-radius: 0; }
+.matriz-plano thead th { top: var(--busca-altura); }
 .plan-items {
   padding-right: 7px;
 }
@@ -4798,6 +4814,102 @@ label small {
 }
 /* Quem usa isto vem de planilha: o produto tem que ser uma linha que se lê de uma vez, não
    um cartão que ocupa a tela. Produto, distribuidora, quantidade e resultado na horizontal. */
+/* Matriz produto × distribuidora: planilha de verdade, com o cabeçalho e a coluna do
+   produto fixos, porque com dez distribuidoras a linha some da vista ao rolar para o lado. */
+.matriz-wrap { max-height: 62vh; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+.matriz-plano { width: 100%; border-collapse: separate; border-spacing: 0; }
+.matriz-plano th, .matriz-plano td { padding: 7px 9px; border-bottom: 1px solid #edf1ef; text-align: center; }
+.matriz-plano thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: #f4f8f6; color: #425c54;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.matriz-plano thead th:first-child, .matriz-plano tbody th { position: sticky; left: 0; z-index: 1; text-align: left; background: #fff; }
+.matriz-plano thead th:first-child { z-index: 3; background: #f4f8f6; }
+.matriz-plano tbody th {
+  min-width: 190px;
+  max-width: 260px;
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.matriz-plano tbody th strong { display: block; font-size: 12.5px; line-height: 1.3; }
+.matriz-plano tbody th span { color: var(--muted); font-size: 10px; }
+.matriz-plano td input {
+  width: 68px; min-height: 32px; padding: 4px 7px;
+  border: 1px solid #d7e1dd; border-radius: 8px; background: #fbfcfc;
+  color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; text-align: right; outline: none;
+}
+.matriz-plano td input:focus { border-color: #74b39d; background: #fff; box-shadow: 0 0 0 3px rgba(25, 131, 95, 0.1); }
+.matriz-plano td small { display: block; margin-top: 3px; color: var(--muted); font-size: 9.5px; white-space: nowrap; }
+.matriz-plano td small b { margin-right: 3px; color: #b8860b; }
+.matriz-vazia { color: #c3cfca; }
+.matriz-excede input { border-color: #d9a441; background: #fffdf6; }
+.matriz-plano td.matriz-total strong { font-size: 14px; }
+.matriz-plano td.matriz-total small { margin-top: 1px; }
+.matriz-plano td.matriz-total.ok strong { color: var(--green); }
+.matriz-plano td.matriz-total.alerta strong { color: #96650a; }
+/* O erro nasce colado nas ações: é para lá que a pessoa olha depois de clicar em salvar,
+   e antes ele ficava no nível da página, atrás do próprio fundo escuro do modal. */
+.plan-erro { margin: 12px 0 0; }
+/* Sutil de propósito: é informação de contexto, não alerta. Quem precisa do detalhe passa
+   o mouse; quem só está varrendo a lista percebe que ali tem entrega registrada. */
+.selo-recebido {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  padding: 1px 6px 1px 4px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  vertical-align: middle;
+  cursor: help;
+}
+.selo-recebido svg { width: 12px; height: 12px; }
+.selo-recebido b { font-weight: 800; }
+
+.plan-item-recusado { border-color: #e6b7b1; background: #fffaf9; }
+/* O motivo ocupa a linha inteira no pé do produto: dentro da célula da quantidade, com
+   96px de largura, a frase virava cinco linhas de duas palavras. */
+.plan-item-motivo {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: #fdeeec;
+  color: #8f342c;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.plan-item-motivo svg { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 1px; }
+.matriz-linha-erro th, .matriz-linha-erro td { background: #fffaf7; }
+.matriz-linha-erro tbody th, .matriz-plano tbody tr.matriz-linha-erro th { background: #fffaf7; }
+.matriz-plano td.matriz-total em {
+  display: inline-grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  cursor: help;
+}
+.matriz-dica { margin: 10px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+
 .plan-items { --plan-colunas: minmax(190px, 1.4fr) minmax(210px, 1.3fr) 96px minmax(140px, 0.9fr); }
 /* Legenda e linhas compartilham o gabarito: o rótulo repetido em cada produto era altura
    gasta com o que a pessoa lê uma vez só. */
