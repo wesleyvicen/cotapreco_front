@@ -10,6 +10,10 @@ export interface ItemPreviaResposta { quotationItemId:number; ean:string|null; p
 export interface PreviaResposta { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; quotedItems:number; total:number; minimumOrderValue:number|null; items:ItemPreviaResposta[] }
 export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
+export type StatusAssinatura='NONE'|'TRIAL'|'PENDING'|'ACTIVE'|'OVERDUE'|'CANCELED'
+export interface PlanoAssinatura { value:number; cycle:'MONTHLY'; description:string }
+export interface Assinatura { status:StatusAssinatura; activeUntil:string|null; nextDueDate:string|null; plan:PlanoAssinatura|null; billingType:string|null; cardLast4:string|null; canceledAt:string|null }
+export interface CheckoutAssinatura { checkoutUrl:string; checkoutId:string; expiresAt:string|null }
 export interface ColunaArquivo { index:number; name:string }
 export interface MapeamentoColunas { ean:number|null; productName:number|null; quantity:number|null; laboratory:number|null }
 export interface AnaliseArquivoImportacao { sheetName:string; totalRows:number; columns:ColunaArquivo[]; suggestedMapping:MapeamentoColunas; sampleRows:string[][] }

@@ -1,6 +1,6 @@
 import { AlertTriangle, Clock3 } from 'lucide-react'
 import { usarAutenticacao } from '../autenticacao'
-import { LINK_WHATSAPP_ASSINATURA as WHATSAPP } from '../lib/assinatura'
+import { LinkInterno } from '../roteamento'
 
 
 
@@ -20,7 +20,7 @@ export default function FaixaAssinatura() {
       <strong>Seu período de teste terminou</strong>
       <span>Você continua vendo e exportando tudo o que já é seu. Para criar novas cotações, fale com a gente.</span>
     </div>
-    <a className="button button-primary" href={WHATSAPP} target="_blank" rel="noopener noreferrer">Assinar pelo WhatsApp</a>
+    <LinkInterno className="button button-primary" to="/assinatura">Assinar agora</LinkInterno>
   </div>
 
   if (user.daysLeft > 3) return null
@@ -30,6 +30,6 @@ export default function FaixaAssinatura() {
       <strong>{user.daysLeft === 1 ? 'Seu teste termina hoje' : `Seu teste termina em ${user.daysLeft} dias`}</strong>
       <span>Depois disso você continua com acesso ao histórico e às exportações, mas não cria novas cotações.</span>
     </div>
-    <a className="button button-secondary" href={WHATSAPP} target="_blank" rel="noopener noreferrer">Falar sobre assinatura</a>
+    <LinkInterno className="button button-secondary" to="/assinatura">Ver planos</LinkInterno>
   </div>
 }

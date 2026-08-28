@@ -8,7 +8,7 @@ import { AvisoErro } from '../components/ComponentesUI'
 import ModalColarColunas from '../components/ModalColarColunas'
 import { colunasColadasVazias, type ColunasColadas, type LinhaColada } from '../lib/colunasColadas'
 import { usarAutenticacao } from '../autenticacao'
-import { acessoBloqueado, emailPendente, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
+import { acessoBloqueado, emailPendente } from '../lib/assinatura'
 import type {
   AnaliseArquivoImportacao, Cotacao, MapeamentoColunas, PreviaImportacao, Produto,
 } from '../types'
@@ -272,7 +272,7 @@ export default function PaginaNovaCotacao() {
       <h1>Seu período de teste terminou</h1>
       <p>Novas cotações ficam pausadas até a assinatura. Tudo o que você já criou continua aqui: comparativos, pedidos, histórico de preços e as exportações em Excel.</p>
       <div className="assinatura-bloqueio-acoes">
-        <a className="button button-primary" href={LINK_WHATSAPP_ASSINATURA} target="_blank" rel="noopener noreferrer">Assinar pelo WhatsApp</a>
+        <LinkInterno className="button button-primary" to="/assinatura">Ver planos e assinar</LinkInterno>
         <LinkInterno className="button button-ghost" to="/cotacoes">Ver minhas cotações</LinkInterno>
       </div>
     </section>

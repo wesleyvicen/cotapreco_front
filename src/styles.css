@@ -332,6 +332,27 @@ code {
 .assinatura-acao h2 { margin-bottom: 6px; font-size: 18px; }
 .assinatura-acao p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
 .assinatura-acao-botoes { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Cartão do plano. Mobile-first: o preço fica acima da lista e o botão ocupa a largura
+   toda, porque no celular ele é o único destino real desta tela. */
+.assinatura-plano { display: flex; flex-direction: column; gap: 18px; padding: 24px; }
+.assinatura-plano-topo { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.assinatura-plano-topo h2 { margin: 4px 0 0; font-size: 20px; }
+.assinatura-preco { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.assinatura-preco strong { color: var(--green); font-size: 30px; letter-spacing: -0.8px; line-height: 1; }
+.assinatura-preco span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.assinatura-inclui { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.assinatura-inclui li { display: flex; align-items: flex-start; gap: 9px; color: var(--ink); font-size: 13.5px; line-height: 1.5; }
+.assinatura-inclui svg { flex: 0 0 auto; width: 17px; height: 17px; margin-top: 1px; color: var(--green); }
+.assinatura-plano .button-large { width: 100%; }
+.assinatura-plano-nota { display: flex; align-items: flex-start; gap: 9px; margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.assinatura-plano-nota svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; color: var(--green); }
+.assinatura-confirmando { display: flex; align-items: center; gap: 14px; padding: 18px 22px; }
+.assinatura-confirmando > svg { flex: 0 0 auto; width: 24px; height: 24px; color: var(--green); }
+.assinatura-confirmando div { display: flex; flex-direction: column; gap: 3px; }
+.assinatura-confirmando strong { font-size: 14px; }
+.assinatura-confirmando span { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+@media (min-width: 620px) { .assinatura-preco { align-items: flex-end; } .assinatura-plano .button-large { width: auto; align-self: flex-start; } }
+
 .assinatura-rodape { color: var(--muted); font-size: 13px; text-align: center; }
 .assinatura-rodape a { color: var(--green); font-weight: 700; }
 

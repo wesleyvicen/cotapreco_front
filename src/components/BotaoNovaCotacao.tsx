@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { usarAutenticacao } from '../autenticacao'
-import { acessoBloqueado, emailPendente, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
+import { acessoBloqueado, emailPendente } from '../lib/assinatura'
 import { LinkInterno } from '../roteamento'
 
 /*
@@ -9,10 +9,10 @@ import { LinkInterno } from '../roteamento'
  */
 export default function BotaoNovaCotacao({ rotulo = 'Nova cotação', comIcone = true }:{ rotulo?:string; comIcone?:boolean }) {
   const { user } = usarAutenticacao()
-  if (acessoBloqueado(user?.accessAllowed)) return <a className="button button-primary" href={LINK_WHATSAPP_ASSINATURA}
-    target="_blank" rel="noopener noreferrer" title="Seu período de teste terminou. Assine para voltar a criar cotações.">
+  if (acessoBloqueado(user?.accessAllowed)) return <LinkInterno className="button button-primary" to="/assinatura"
+    title="Seu período de teste terminou. Assine para voltar a criar cotações.">
     Assinar para criar cotações
-  </a>
+  </LinkInterno>
   /* Com o e-mail pendente o botão continua levando ao wizard: lá a tela explica o que falta
      e como achar o e-mail. Sumir com o botão esconderia justamente a explicação. */
   return <LinkInterno className="button button-primary" to="/cotacoes/nova"
