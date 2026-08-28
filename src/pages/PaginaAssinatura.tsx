@@ -1,14 +1,16 @@
 import {
-  BadgeCheck, CalendarClock, CircleAlert, CreditCard, Loader2, MessageCircle, ShieldCheck,
+  ArrowRight, BadgeCheck, CalendarClock, CircleAlert, CreditCard, Loader2, MessageCircle, ShieldCheck,
 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { AvisoErro } from '../components/ComponentesUI'
 import {
   assinaturaEmConfirmacao, LINK_WHATSAPP_ASSINATURA, precoDoPlano, ROTULO_STATUS, TOTAL_DIAS_TESTE,
 } from '../lib/assinatura'
-import type { Assinatura, CheckoutAssinatura } from '../types'
+import CamposEndereco from '../components/CamposEndereco'
+import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
+import type { Assinatura, CheckoutAssinatura, Empresa } from '../types'
 
 /* A mensagem já vai com o nome da farmácia: do outro lado, saber quem está pedindo
    evita a primeira ida e volta da conversa. */
@@ -35,6 +37,9 @@ export default function PaginaAssinatura() {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [retorno, setRetorno] = useState(() => new URLSearchParams(window.location.search).get('checkout') ?? '')
+  const [completando, setCompletando] = useState(false)
+  const [telefone, setTelefone] = useState('')
+  const [endereco, setEndereco] = useState<FormularioEndereco>(enderecoVazio)
   const tentativas = useRef(0)
 
   const carregar = useCallback(async () => {
@@ -87,7 +92,35 @@ export default function PaginaAssinatura() {
          chega a passar por este domínio. */
       window.location.href = checkout.checkoutUrl
     } catch (e) {
+      /* Falta de endereço não é erro, é etapa: em vez de um aviso vermelho sem saída, a
+         tela abre o formulário já preenchido com o que a farmácia tiver. */
+      if (e instanceof ErroApi && e.fields.motivo === 'DADOS_COBRANCA_INCOMPLETOS') {
+        setEnviando(false); await abrirCadastro(); return
+      }
       setErro(e instanceof ErroApi ? e.message : 'Não foi possível abrir o pagamento. Tente de novo em instantes.')
+      setEnviando(false)
+    }
+  }
+
+  const abrirCadastro = async () => {
+    setCompletando(true)
+    try {
+      const empresa = await api<Empresa>('/company')
+      setTelefone(formatarTelefone(empresa.telefone ?? '')); setEndereco(enderecoDoServidor(empresa.endereco))
+    } catch { /* Sem os dados atuais o formulário abre vazio, que é o caso mais comum mesmo. */ }
+  }
+
+  const salvarCadastroEAssinar = async (evento:FormEvent) => {
+    evento.preventDefault(); setErro(''); setEnviando(true)
+    try {
+      const empresa = await api<Empresa>('/company')
+      await api<Empresa>('/company', { method:'PUT', body:JSON.stringify({
+        nome:empresa.nome, cnpj:empresa.cnpj, telefone:telefone.replace(/\D/g, ''), endereco:paraEnvio(endereco),
+      }) })
+      setCompletando(false)
+      await assinar()
+    } catch (e) {
+      setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar os dados.')
       setEnviando(false)
     }
   }
@@ -145,7 +178,18 @@ export default function PaginaAssinatura() {
       A última cobrança não foi paga. Assim que o cartão for regularizado o acesso volta sozinho — pelo botão abaixo você atualiza o cartão.
     </div>}
 
-    {!ativa && !carregando && <section className="card assinatura-plano">
+    {completando && <section className="card assinatura-cadastro">
+      <div className="card-header"><div><h2>Falta só o endereço da farmácia</h2><p>A operadora de pagamento exige estes dados na cobrança. Você preenche uma vez — nas próximas vezes vai direto.</p></div></div>
+      <form onSubmit={salvarCadastroEAssinar}>
+        <CamposEndereco telefone={telefone} setTelefone={setTelefone} endereco={endereco} setEndereco={setEndereco}/>
+        <div className="assinatura-cadastro-acoes">
+          <button type="button" className="button button-ghost" disabled={enviando} onClick={() => { setCompletando(false); setErro('') }}>Agora não</button>
+          <button className="button button-primary" disabled={enviando}>{enviando ? 'Salvando...' : <>Salvar e continuar <ArrowRight/></>}</button>
+        </div>
+      </form>
+    </section>}
+
+    {!ativa && !carregando && !completando && <section className="card assinatura-plano">
       <div className="assinatura-plano-topo">
         <div>
           <span className="eyebrow green">Plano mensal</span>

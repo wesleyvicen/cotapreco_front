@@ -353,6 +353,37 @@ code {
 .assinatura-confirmando span { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
 @media (min-width: 620px) { .assinatura-preco { align-items: flex-end; } .assinatura-plano .button-large { width: auto; align-self: flex-start; } }
 
+/* Endereço: mobile-first em uma coluna; a partir do tablet os campos curtos dividem a
+   linha, porque número e UF ocuparem a largura toda parece erro de layout. */
+.endereco-grid { display: grid; gap: 14px; }
+.endereco-grid label { display: flex; flex-direction: column; gap: 6px; color: #425c54; font-size: 12px; font-weight: 700; }
+.endereco-grid label > small { color: #94a19d; font-weight: 500; }
+.endereco-rotulo { display: flex; align-items: baseline; gap: 4px; }
+.endereco-grid input {
+  width: 100%; min-width: 0; min-height: 46px; padding: 0 12px;
+  border: 1px solid #d7e1dd; border-radius: 10px; background: #fbfcfc;
+  color: var(--ink); font: inherit; font-size: 16px; font-weight: 500; outline: none;
+}
+.endereco-grid input:focus { border-color: #74b39d; background: #fff; box-shadow: 0 0 0 3px rgba(25, 131, 95, 0.1); }
+.endereco-grid input:disabled { background: #f2f5f4; color: #7d8f89; }
+.endereco-cep-campo { position: relative; display: block; }
+.endereco-cep-campo svg { position: absolute; top: 50%; right: 12px; width: 17px; height: 17px; transform: translateY(-50%); color: var(--green); }
+.settings-form-wrap { display: flex; flex-direction: column; gap: 18px; }
+.settings-form-wrap > .button { align-self: flex-start; }
+.assinatura-cadastro { padding: 0; }
+.assinatura-cadastro form { padding: 22px 24px 24px; }
+.assinatura-cadastro-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+@media (min-width: 720px) {
+  .endereco-grid { grid-template-columns: repeat(6, 1fr); }
+  .endereco-telefone, .endereco-cep { grid-column: span 3; }
+  .endereco-logradouro { grid-column: span 4; }
+  .endereco-numero { grid-column: span 2; }
+  .endereco-complemento, .endereco-bairro { grid-column: span 3; }
+  .endereco-cidade { grid-column: span 4; }
+  .endereco-uf { grid-column: span 2; }
+}
+@media (max-width: 560px) { .assinatura-cadastro-acoes .button { flex: 1; } }
+
 .assinatura-rodape { color: var(--muted); font-size: 13px; text-align: center; }
 .assinatura-rodape a { color: var(--green); font-weight: 700; }
 
