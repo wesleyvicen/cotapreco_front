@@ -4320,8 +4320,50 @@ label small {
   background: #fff;
   box-shadow: 0 6px 12px -10px rgba(12, 58, 45, 0.5);
 }
-.matriz-wrap { max-height: none; overflow-x: auto; overflow-y: visible; border: 0; border-radius: 0; }
-.matriz-plano thead th { top: var(--busca-altura); }
+/* Barra própria, presa logo abaixo da busca. A nativa da tabela fica escondida: ela nasce
+   no rodapé do conteúdo, e com quinze produtos isso é bem abaixo da área visível — barra
+   que exige rolar para ser encontrada não serve para quem não usa gestos. */
+.matriz-barra {
+  position: sticky;
+  z-index: 5;
+  top: var(--busca-altura);
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #fff;
+  padding-bottom: 2px;
+}
+.matriz-barra > div { height: 1px; }
+.matriz-barra::-webkit-scrollbar { height: 13px; }
+.matriz-barra::-webkit-scrollbar-track { border-radius: 999px; background: #eaf1ee; }
+.matriz-barra::-webkit-scrollbar-thumb { border: 3px solid #eaf1ee; border-radius: 999px; background: #9db8ad; }
+.matriz-barra::-webkit-scrollbar-thumb:hover { background: #6f9585; }
+
+.matriz-wrap {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none;
+  border: 0;
+  border-radius: 0;
+  /* Sombra à direita enquanto houver coluna escondida: some sozinha ao chegar no fim.
+     É o aviso que aparece antes de a pessoa procurar a barra. */
+  background:
+    linear-gradient(90deg, #fff 30%, rgba(255, 255, 255, 0)) left center / 24px 100% no-repeat,
+    linear-gradient(270deg, #fff 30%, rgba(255, 255, 255, 0)) right center / 24px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(12, 58, 45, 0.14), transparent) left center / 12px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(12, 58, 45, 0.14), transparent) right center / 12px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+/* Barra sempre visível, não só durante o gesto: no macOS a barra padrão é sobreposta e
+   desaparece, e quem não usa trackpad não descobre que existe mais coluna à direita. */
+.matriz-wrap::-webkit-scrollbar { display: none; }
+.plan-corpo::-webkit-scrollbar { width: 11px; }
+.plan-corpo::-webkit-scrollbar-track { background: transparent; }
+.plan-corpo::-webkit-scrollbar-thumb { border: 3px solid #fff; border-radius: 999px; background: #c3d3cc; }
+.plan-corpo::-webkit-scrollbar-thumb:hover { background: #9db8ad; }
+/* Sem top: o sticky vertical não funciona aqui. A caixa de rolagem lateral vira o contexto
+   do sticky e ela não rola para baixo — manter a regra só enganaria quem lesse depois. O
+   left continua valendo e é o que segura a coluna do produto ao rolar de lado. */
 .plan-items {
   padding-right: 7px;
 }
@@ -4817,7 +4859,9 @@ label small {
 /* Matriz produto × distribuidora: planilha de verdade, com o cabeçalho e a coluna do
    produto fixos, porque com dez distribuidoras a linha some da vista ao rolar para o lado. */
 .matriz-wrap { max-height: 62vh; overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
-.matriz-plano { width: 100%; border-collapse: separate; border-spacing: 0; }
+.matriz-plano { width: 100%; min-width: 100%; border-collapse: separate; border-spacing: 0; }
+.matriz-plano thead th:not(:first-child):not(.matriz-total) { min-width: 112px; }
+.matriz-plano thead th.matriz-total { min-width: 84px; }
 .matriz-plano th, .matriz-plano td { padding: 7px 9px; border-bottom: 1px solid #edf1ef; text-align: center; }
 .matriz-plano thead th {
   position: sticky; top: 0; z-index: 2;
@@ -4873,6 +4917,47 @@ label small {
 }
 .selo-recebido svg { width: 12px; height: 12px; }
 .selo-recebido b { font-weight: 800; }
+
+.guided-stock-note { position: relative; }
+.justificativa-minimizar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  color: #7a6320;
+}
+.justificativa-minimizar:hover { background: rgba(122, 99, 32, 0.1); }
+.justificativa-minimizar svg { width: 16px; height: 16px; }
+
+/* A justificativa já salva vira uma linha de leitura, clicável para editar. Ela é
+   obrigatória uma vez, não toda vez que a tela remonta. */
+.justificativa-resumo {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 2px;
+  padding: 6px 10px;
+  border: 1px dashed #e0d3ab;
+  border-radius: 9px;
+  background: #fffdf5;
+  color: #7a6320;
+  font-size: 11.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.justificativa-resumo:hover { border-color: #cbb877; background: #fffbe9; }
+.justificativa-resumo > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.justificativa-resumo b { font-weight: 800; }
+.justificativa-resumo svg { flex: 0 0 auto; width: 14px; height: 14px; }
 
 .plan-item-recusado { border-color: #e6b7b1; background: #fffaf9; }
 /* O motivo ocupa a linha inteira no pé do produto: dentro da célula da quantidade, com

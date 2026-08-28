@@ -873,6 +873,22 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
 
   /* Leva a primeira linha recusada para a vista: com vinte produtos, o destaque costuma
      estar fora da área rolável e a mensagem manda corrigir algo que não dá para ver. */
+  const area=useRef<HTMLDivElement|null>(null)
+  const barra=useRef<HTMLDivElement|null>(null)
+  const [larguraTabela,setLarguraTabela]=useState(0)
+  const [larguraVisivel,setLarguraVisivel]=useState(0)
+  useEffect(()=>{
+    const alvo=area.current
+    if(!alvo)return
+    const medir=()=>{setLarguraTabela(alvo.scrollWidth);setLarguraVisivel(alvo.clientWidth)}
+    medir()
+    const observador=new ResizeObserver(medir)
+    observador.observe(alvo)
+    return ()=>observador.disconnect()
+  },[produtos])
+  const transborda=larguraTabela>larguraVisivel+1
+  const espelhar=(de:HTMLDivElement|null,para:HTMLDivElement|null)=>{if(de&&para&&para.scrollLeft!==de.scrollLeft)para.scrollLeft=de.scrollLeft}
+
   const primeiraComErro=useRef<HTMLTableRowElement|null>(null)
   const primeiroRecusado=produtos.find(produto=>Object.keys(erros).some(chave=>chave.startsWith(`itens.${produto.quotationItemId}.`)))?.quotationItemId
   useEffect(()=>{
@@ -881,7 +897,12 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
   },[erros])
 
   if(colunas.length===0)return <div className="plan-search-empty"><strong>Nenhuma distribuidora respondeu</strong><span>Sem oferta não há o que dividir.</span></div>
-  return <div className="table-wrap matriz-wrap"><table className="matriz-plano">
+  return <>
+  {transborda&&<div className="matriz-barra" ref={barra} onScroll={()=>espelhar(barra.current,area.current)}
+    role="scrollbar" aria-label="Rolar as distribuidoras para o lado" aria-controls="matriz-plano" aria-orientation="horizontal">
+    <div style={{width:larguraTabela}}/>
+  </div>}
+  <div className="table-wrap matriz-wrap" ref={area} onScroll={()=>espelhar(area.current,barra.current)}><table className="matriz-plano" id="matriz-plano">
     <thead><tr><th scope="col">Produto</th>
       {colunas.map(coluna=><th key={coluna.responseId} scope="col">{coluna.supplierName}</th>)}
       <th scope="col" className="matriz-total">Total</th></tr></thead>
@@ -912,11 +933,20 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
       </tr>
     })}</tbody>
   </table></div>
+  </>
 }
 
 function ModalPlano({produtos,edicoes,setEdicoes,erros,erroGeral,ocupado,focado,aoFechar,aoSalvar}:{produtos:ComparacaoProduto[];edicoes:EdicaoPlano[];setEdicoes:(e:EdicaoPlano[])=>void;erros:Record<string,string>;erroGeral:string;ocupado:boolean;focado:boolean;aoFechar:()=>void;aoSalvar:()=>void}){
   const[busca,setBusca]=useState('')
   const[modoEdicao,setModoEdicao]=useState<'rapido'|'avancado'>('rapido')
+  /* Justificativa já preenchida abre recolhida: ela é obrigatória uma vez, não toda vez.
+     Só expande quando está vazia — aí realmente falta preencher — ou quando pedem para editar. */
+  const [editandoJustificativa,setEditandoJustificativa]=useState<Set<number>>(new Set())
+  const alternarJustificativa=(itemId:number)=>setEditandoJustificativa(atuais=>{
+    const proximo=new Set(atuais)
+    if(proximo.has(itemId))proximo.delete(itemId);else proximo.add(itemId)
+    return proximo
+  })
   const preenchido=useRef(false)
   /* Mesma razão da matriz: com quinze produtos a linha recusada quase nunca está na área
      visível, e mandar corrigir o destacado sem mostrar o destaque não ajuda ninguém. */
@@ -950,7 +980,7 @@ function ModalPlano({produtos,edicoes,setEdicoes,erros,erroGeral,ocupado,focado,
     <div className="plan-corpo">
     <div className="modal-header modal-header-simple"><div><h2>{focado?'Planejar compra deste produto':'Revisar plano final de compra'}</h2><p>{modoEdicao==='rapido'?'Escolha uma distribuidora e uma quantidade. O sistema aplicará o mesmo número ao total da compra e ao fornecedor escolhido.':focado?'Defina separadamente o total e como ele será dividido entre as distribuidoras.':'Revise cada produto e defina separadamente o total e a divisão entre distribuidoras.'}</p></div><button className="icon-button" aria-label="Fechar" onClick={aoFechar}><X/></button></div>
     <div className="plan-mode-switch" role="tablist" aria-label="Modo de ajuste"><button type="button" role="tab" aria-selected={modoEdicao==='rapido'} className={modoEdicao==='rapido'?'active':''} onClick={()=>setModoEdicao('rapido')}><strong>Ajuste rápido</strong><span>Uma distribuidora e uma quantidade</span><small>Recomendado</small></button><button type="button" role="tab" aria-selected={modoEdicao==='avancado'} className={modoEdicao==='avancado'?'active':''} onClick={()=>setModoEdicao('avancado')}><strong>Avançado</strong><span>Divida a quantidade entre fornecedores</span></button></div>
-    {modoEdicao==='rapido'?<div className="plan-intro quick-plan-intro"><strong>É bem simples</strong><span><b>1.</b> Escolha de quem vai comprar.</span><span><b>2.</b> Digite a quantidade. Ex.: 100 no total = 100 dessa distribuidora.</span></div>:<div className="plan-intro"><strong>Como funciona?</strong><span><b>1.</b> Defina o total que deseja comprar.</span><span><b>2.</b> Mantenha o cálculo automático ou escolha quem fornecerá primeiro.</span><span><b>3.</b> Se dividir a compra, informe quanto vai para a primeira distribuidora.</span></div>}
+    {modoEdicao==='rapido'?<div className="plan-intro quick-plan-intro"><strong>É bem simples</strong><span><b>1.</b> Escolha de quem vai comprar.</span><span><b>2.</b> Digite a quantidade. Ex.: 100 no total = 100 dessa distribuidora.</span></div>:null}
     {!focado&&<div className="plan-product-search"><Search/><input type="search" aria-label="Buscar produtos" placeholder="Buscar produto por nome ou EAN" value={busca} onChange={event=>setBusca(event.target.value)}/>{busca&&<button type="button" aria-label="Limpar busca" title="Limpar busca" onClick={()=>setBusca('')}><X/></button>}<span>{produtosVisiveis.length} de {produtos.length} produtos</span></div>}
     {modoEdicao==='avancado'
       ?<MatrizDistribuidoras produtos={produtosVisiveis} edicoes={edicoes} erros={erros} alterar={alterar}/>
@@ -959,6 +989,8 @@ function ModalPlano({produtos,edicoes,setEdicoes,erros,erroGeral,ocupado,focado,
       :<div className="plan-legenda plan-legenda-avancada" aria-hidden="true"><span>Produto</span><span>Total</span><span>Comprar 1º de</span><span>Qtd. dela</span></div>)}{produtosVisiveis.length===0?<div className="plan-search-empty"><Search/><strong>Nenhum produto encontrado</strong><span>Tente buscar por outro nome ou EAN.</span><button type="button" className="button button-ghost" onClick={()=>setBusca('')}>Limpar busca</button></div>:produtosVisiveis.map(p=>{const e=edicoes.find(x=>x.quotationItemId===p.quotationItemId)!;const inicial=edicoesIniciais.find(x=>x.quotationItemId===p.quotationItemId)!;const produtoAlterado=JSON.stringify(e)!==JSON.stringify(inicial);const idRapido=e.selectedResponseId??p.offers[0]?.responseId??null;const oferta=p.offers.find(o=>o.responseId===e.selectedResponseId)??p.offers[0];const quantidadeRapida=e.championQuantity??e.desiredQuantity;const excesso=e.championQuantity!=null&&oferta&&e.championQuantity>oferta.availableQuantity;const prefixo=`itens.${p.quotationItemId}.`;const previsao=preverDivisao(p,e);
       const erroQuantidade=erros[`${prefixo}desiredQuantity`]??erros[`${prefixo}championQuantity`]??erros[`${prefixo}allocations`];
       const linhaRecusada=!!erroQuantidade||!!erros[`${prefixo}selectedResponseId`]||!!erros[`${prefixo}stockOverrideNote`];
+      /* Vazia ou recusada, precisa aparecer; preenchida e aceita, só o resumo. */
+      const justificativaAberta=!e.stockOverrideNote.trim()||editandoJustificativa.has(p.quotationItemId)||!!erros[`${prefixo}stockOverrideNote`];
       return <article key={p.quotationItemId} ref={p.quotationItemId===itemRecusado?primeiraRecusada:undefined} className={`plan-item guided-plan-item ${linhaRecusada?'plan-item-recusado':''}`}>
       <div className="plan-product"><strong>{p.productName}<SeloRecebido produto={p}/></strong><span>Pedido original: {p.requestedQuantity} {p.requestedQuantity===1?'unidade':'unidades'}</span></div>
       <><div className="guided-fields quick-guided-fields">
@@ -970,7 +1002,12 @@ function ModalPlano({produtos,edicoes,setEdicoes,erros,erroGeral,ocupado,focado,
       {linhaRecusada&&<p className="plan-item-motivo" role="alert">
         <AlertTriangle/><span>{erroQuantidade??erros[`${prefixo}selectedResponseId`]??erros[`${prefixo}stockOverrideNote`]}</span>
       </p>}
-      {excesso&&<div className="plan-note guided-stock-note"><div><strong>Confirmação de estoque necessária</strong><span>A distribuidora informou {oferta.availableQuantity} un., mas você quer comprar {e.championQuantity} un. dela. Explique o que foi combinado com o representante.</span></div><label>Justificativa interna<input autoFocus placeholder="Ex.: representante confirmou mais 5 unidades por telefone" value={e.stockOverrideNote} onChange={x=>alterar(p.quotationItemId,{stockOverrideNote:x.target.value})}/><small>Esta informação não aparecerá no pedido enviado.</small>{!e.stockOverrideNote.trim()&&<small className="field-error">Preencha a justificativa para salvar.</small>}{erros[`${prefixo}stockOverrideNote`]&&<small className="field-error">{erros[`${prefixo}stockOverrideNote`]}</small>}</label></div>}
+      {excesso&&(justificativaAberta
+      ?<div className="plan-note guided-stock-note"><div><strong>Confirmação de estoque necessária</strong><span>A distribuidora informou {oferta.availableQuantity} un., mas você quer comprar {e.championQuantity} un. dela. Explique o que foi combinado com o representante.</span></div>{e.stockOverrideNote.trim()&&!erros[`${prefixo}stockOverrideNote`]&&<button type="button" className="icon-button justificativa-minimizar" title="Minimizar a justificativa" aria-label="Minimizar a justificativa" onClick={()=>alternarJustificativa(p.quotationItemId)}><ChevronUp/></button>}<label>Justificativa interna<input placeholder="Ex.: representante confirmou mais 5 unidades por telefone" value={e.stockOverrideNote} onChange={x=>alterar(p.quotationItemId,{stockOverrideNote:x.target.value})}/><small>Esta informação não aparecerá no pedido enviado.</small>{!e.stockOverrideNote.trim()&&<small className="field-error">Preencha a justificativa para salvar.</small>}{erros[`${prefixo}stockOverrideNote`]&&<small className="field-error">{erros[`${prefixo}stockOverrideNote`]}</small>}</label></div>
+      :<button type="button" className="justificativa-resumo" onClick={()=>alternarJustificativa(p.quotationItemId)}
+        title="Editar a justificativa do estoque adicional">
+        <PackageCheck/><span><b>Estoque adicional justificado:</b> {e.stockOverrideNote.trim()}</span><Edit3/>
+      </button>)}
     </article>})}</div>}
     {modoEdicao==='avancado'&&<p className="matriz-dica">Digite quanto vem de cada distribuidora. O total de cada produto acompanha a soma da linha, e ☆ marca o menor preço.</p>}
     </div>
