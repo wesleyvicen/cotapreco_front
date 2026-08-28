@@ -4214,7 +4214,7 @@ label small {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 .plan-item {
   display: grid;
@@ -4796,21 +4796,104 @@ label small {
 .focused-plan-modal {
   width: min(1040px, calc(100vw - 40px));
 }
+/* Quem usa isto vem de planilha: o produto tem que ser uma linha que se lê de uma vez, não
+   um cartão que ocupa a tela. Produto, distribuidora, quantidade e resultado na horizontal. */
+.plan-items { --plan-colunas: minmax(190px, 1.4fr) minmax(210px, 1.3fr) 96px minmax(140px, 0.9fr); }
+/* Legenda e linhas compartilham o gabarito: o rótulo repetido em cada produto era altura
+   gasta com o que a pessoa lê uma vez só. */
+.plan-legenda {
+  display: grid;
+  grid-template-columns: var(--plan-colunas);
+  gap: 14px;
+  padding: 0 12px 2px;
+  color: #6f817b;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
 .plan-item.guided-plan-item {
-  display: block;
-  padding: 18px;
+  display: grid;
+  grid-template-columns: var(--plan-colunas);
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
   border-color: #dbe6e2;
+}
+/* Na linha compacta o campo é célula, não cartão: padding, borda e fundo próprios somavam
+   quase 30px de moldura por campo, em cada produto. */
+.guided-plan-item .guided-field {
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.guided-plan-item .guided-field input,
+.guided-plan-item .guided-field select {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 13px;
 }
 .guided-plan-item .plan-product {
   display: flex;
   flex-direction: column;
-  margin: -4px -4px 16px;
-  padding: 14px 16px;
-  background: #f2f8f5;
-  border-radius: 11px;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  background: none;
 }
 .guided-plan-item .plan-product strong {
-  font-size: 16px;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+.guided-plan-item .plan-product span { font-size: 10.5px !important; margin-top: 0; }
+/* Os campos entram na própria linha da grade, em vez de formarem um bloco dentro dela. */
+.plan-item.guided-plan-item > .guided-fields {
+  display: contents;
+}
+/* O avançado tem um campo a mais: total, distribuidora e quantidade dela. */
+.plan-items.avancado { --plan-colunas: minmax(180px, 1.3fr) 88px minmax(220px, 1.4fr) minmax(130px, 0.8fr); }
+.plan-legenda-avancada { grid-template-columns: var(--plan-colunas); }
+.guided-rotulo {
+  display: block;
+  margin-bottom: 3px;
+  color: #6f817b;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.guided-field-quantidade input { text-align: right; }
+.plan-resultado {
+  margin: 0;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.plan-resultado.neutro { color: var(--muted); font-weight: 600; }
+.guided-plan-item .plan-note,
+.guided-plan-item .allocation-preview { grid-column: 1 / -1; }
+/* A previsão vira um rodapé fino da linha, não outro cartão empilhado. */
+.guided-plan-item .allocation-preview {
+  margin-top: 2px;
+  padding: 8px 10px;
+  border-radius: 9px;
+}
+.guided-plan-item .allocation-preview-title { margin-bottom: 5px; }
+.guided-plan-item .allocation-preview-title strong { font-size: 11px; }
+.guided-plan-item .allocation-preview p { margin: 5px 0 0; font-size: 11px; }
+.guided-plan-item .quantity-shortcuts button { padding: 3px 7px; font-size: 9.5px; }
+.guided-field-disabled { opacity: 0.55; }
+@media (max-width: 860px) {
+  .plan-legenda { display: none; }
+  .plan-item.guided-plan-item { grid-template-columns: 1fr 1fr; }
+  .guided-plan-item .plan-product { grid-column: 1 / -1; }
+  .plan-resultado { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .plan-item.guided-plan-item { grid-template-columns: 1fr; }
 }
 .plan-item > .guided-fields {
   display: grid;
