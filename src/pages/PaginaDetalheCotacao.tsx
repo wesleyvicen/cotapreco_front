@@ -22,8 +22,12 @@ interface AchadoRisco { produto:ComparacaoProduto; ofertas:number; distribuidora
 const semAcento=(valor:string)=>valor.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
 const CHAVE_CORTE='cotapreco:achados-corte'
 const CHAVE_ACHADOS_ABERTO='cotapreco:achados-aberto'
+/* A faixa nasce minimizada: a tela já chega cheia, e três cartões de achado empurram o
+   comparativo para fora da primeira dobra antes de a pessoa ter escolhido olhar para eles.
+   Minimizada ela continua dizendo quantos são, que é o que decide se vale abrir.
+   Só 'true' expande: quem abriu de propósito alguma vez continua encontrando aberta. */
 function lerAchadosAberto(){
-  try{return window.localStorage.getItem(CHAVE_ACHADOS_ABERTO)!=='false'}catch{return true}
+  try{return window.localStorage.getItem(CHAVE_ACHADOS_ABERTO)==='true'}catch{return false}
 }
 const CORTE_PADRAO=15
 /* Fora da faixa se ajusta ao limite, nunca cai para zero: um corte inválido virando "sem corte"
