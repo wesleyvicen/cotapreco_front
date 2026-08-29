@@ -2158,6 +2158,12 @@ label small {
   font-size: 9px;
   font-weight: 800;
 }
+.supplier-row-toggle small.gerado {
+  color: #3d6b8f;
+}
+.supplier-row-toggle small.desatualizado {
+  color: #a45b12;
+}
 .supplier-row-toggle small svg {
   width: 11px;
   height: 11px;
