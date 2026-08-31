@@ -92,6 +92,7 @@ code {
 }
 .brand {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 11px;
   padding: 0 9px;
@@ -122,10 +123,31 @@ code {
 }
 .sidebar nav {
   display: flex;
+  flex: 1;
+  min-height: 0;
   flex-direction: column;
   gap: 5px;
   margin-top: 38px;
-  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .24) transparent;
+}
+.sidebar nav::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar nav::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .24);
+  background-clip: content-box;
+}
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, .4);
+  background-clip: content-box;
 }
 .sidebar-toggle {
   margin-left: auto;
@@ -176,6 +198,7 @@ code {
 }
 .account {
   display: grid;
+  flex: 0 0 auto;
   grid-template-columns: 38px 1fr 34px;
   align-items: center;
   gap: 10px;
@@ -271,8 +294,10 @@ code {
 }
 .sidebar.sidebar-recolhida nav a {
   justify-content: center;
-  width: 52px;
+  width: 100%;
+  max-width: 52px;
   min-height: 46px;
+  margin-inline: auto;
   padding: 12px;
 }
 .sidebar.sidebar-recolhida .nav-divider {
@@ -2237,7 +2262,7 @@ label small {
   border-bottom: 1px solid #dce8e3;
   box-shadow: inset 0 5px 10px rgba(23, 61, 49, .04);
 }
-.supplier-detail-content .supplier-products {
+.supplier-detail-content .supplier-products-wrap {
   padding-top: 3px;
 }
 .purchase-coverage-table {
@@ -2384,6 +2409,17 @@ label small {
   }
   .supplier-detail-content .minimum-order-alert .button {
     width: 100%;
+  }
+  .supplier-products-table {
+    min-width: 560px;
+    font-size: 11px;
+  }
+  .supplier-products-table thead th,
+  .supplier-products-table td {
+    padding-inline: 8px;
+  }
+  .supplier-products-table .allocated-product-name {
+    min-width: 190px;
   }
 }
 .public-page {
@@ -4189,28 +4225,70 @@ label small {
 .supplier-purchase-card.expanded .supplier-toggle > svg {
   transform: rotate(180deg);
 }
-.supplier-products {
+.supplier-products-wrap {
+  padding: 0 22px 12px;
   background: #f8faf9;
   border-top: 1px solid #edf1ef;
-  padding: 3px 22px 12px;
 }
-.allocated-product {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 8px 16px;
-  padding: 13px 0;
-  border-bottom: 1px solid #e5ece9;
+.supplier-detail-footer {
+  padding: 0 22px 4px;
+  background: #f8faf9;
 }
-.allocated-product:last-child {
-  border-bottom: 0;
+.supplier-products-table {
+  min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 0;
 }
-.allocated-product > div {
-  min-width: 0;
+.supplier-products-table thead th {
+  padding: 7px 10px;
+  height: 32px;
+  border-bottom: 1px solid #dfe9e5;
+  background: #eff5f2;
+  white-space: nowrap;
 }
-.allocated-product > div > span {
+.supplier-products-table th.numeric,
+.supplier-products-table td.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.supplier-products-table td {
+  padding: 9px 10px;
+  border-top: 1px solid #e5ece9;
+  background: #fff;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.supplier-products-table tbody tr:first-child td {
+  border-top: 0;
+}
+.supplier-products-table tbody tr:hover td {
+  background: #f8fcfa;
+}
+.supplier-products-table .allocated-product-name {
+  min-width: 260px;
+  white-space: normal;
+}
+.supplier-products-table .allocated-product-name small {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+}
+.supplier-products-table .allocated-product-actions {
+  width: 1%;
+  text-align: right;
+}
+.supplier-products-table .line-actions {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+.supplier-products-table .line-actions .button {
+  min-height: 34px;
+  padding: 7px 10px;
   font-size: 10px;
-  color: var(--muted);
+}
+.supplier-products-table .line-actions .button svg {
+  width: 14px;
+  height: 14px;
 }
 .allocation-title {
   display: flex;
@@ -4326,14 +4404,11 @@ label small {
   .supplier-toggle > svg {
     grid-column: 4;
   }
-  .supplier-products {
+  .supplier-products-wrap {
     padding: 3px 15px 12px;
   }
-  .allocated-product {
-    grid-template-columns: 1fr;
-  }
-  .allocated-product > strong {
-    font-size: 14px;
+  .supplier-detail-footer {
+    padding: 0 15px 4px;
   }
   .winner-option {
     grid-template-columns: 30px 1fr auto;
