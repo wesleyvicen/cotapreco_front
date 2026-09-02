@@ -23,6 +23,7 @@ function painelValido(valor:unknown):valor is Painel {
   return typeof painel.openQuotations==='number'
     &&typeof painel.finishedQuotations==='number'
     &&typeof painel.responsesThisMonth==='number'
+    &&typeof painel.responsesTotal==='number'
     &&typeof painel.quotedValue==='number'
     &&typeof painel.estimatedSavings==='number'
     &&Array.isArray(painel.latestQuotations)

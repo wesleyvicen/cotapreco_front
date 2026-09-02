@@ -25,7 +25,7 @@ export interface LinhaCompraSugerida { quotationItemId:number; ean:string|null; 
 export type StatusPedidoMinimo='SEM_MINIMO'|'ATENDIDO'|'ABAIXO_DO_MINIMO'
 export interface CompraSugerida { responseId?:number; supplierName:string; productCount:number; totalQuantity:number; total:number; minimumOrderValue:number|null; minimumOrderShortfall:number; minimumOrderStatus:StatusPedidoMinimo; items?:LinhaCompraSugerida[] }
 export interface ComparacaoCotacao { products:ComparacaoProduto[]; supplierTotals:TotalDistribuidor[]; suggestedPurchase:CompraSugerida[]; productsWithoutOffer:number; partiallyCoveredProducts:number; bestCompositionTotal:number; estimatedSavings:number }
-export interface Painel { openQuotations:number; finishedQuotations:number; responsesThisMonth:number; quotedValue:number; estimatedSavings:number; latestQuotations:ResumoCotacao[] }
+export interface Painel { openQuotations:number; finishedQuotations:number; responsesThisMonth:number; responsesTotal:number; quotedValue:number; estimatedSavings:number; latestQuotations:ResumoCotacao[] }
 export interface Produto { id:number; ean:string|null; name:string; laboratory:string|null; presentation:string|null; category:string|null; active:boolean; createdAt:string; updatedAt:string }
 export interface Representante { id:number; nome:string; telefone:string; email:string }
 export interface RespostaAutenticacaoRepresentante { token:string; tipoToken:string; expiraEmSegundos:number; representante:Representante }
