@@ -7637,3 +7637,41 @@ label small {
 .assinatura-empresa-links { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; }
 .assinatura-empresa-links a { color: var(--green); font-weight: 700; }
 .assinatura-empresa-links a:hover { text-decoration: underline; }
+
+/* Item aberto para cotar e ainda sem preço -------------------------------
+ * Antes ele ficava idêntico a um item cotado: borda verde, quantidade preenchida e
+ * contando no total. Um toque acidental no cartão bastava para a proposta seguir
+ * incompleta sem ninguém perceber. Agora o cartão sai do verde, avisa o que falta e
+ * oferece a saída em um clique. */
+.public-product.product-pending {
+  border-color: #e3b95f;
+  background: #fffdf7;
+}
+.product-pending-aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 11px 0 0;
+  border-radius: 10px;
+  background: #fff6e2;
+  padding: 9px 11px;
+  color: #7a5a15;
+  font-size: 12px;
+  font-weight: 700;
+}
+.product-pending-aviso svg { width: 16px; height: 16px; flex: none; }
+.product-pending-aviso span { flex: 1; min-width: 140px; }
+.product-pending-aviso button {
+  border: 1px solid #e0c98a;
+  border-radius: 8px;
+  background: #fff;
+  padding: 5px 10px;
+  color: #7a5a15;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.product-pending-aviso button:hover { background: #fdf3dd; }
+.product-pending-aviso button:focus-visible { outline: 2px solid #a97918; outline-offset: 2px; }
+.contador-pendente { color: #a97918; font-style: normal; font-weight: 800; }

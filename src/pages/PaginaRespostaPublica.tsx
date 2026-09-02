@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Building2,
@@ -11,7 +12,7 @@ import {
   LogOut,
   PackageCheck,
   Plus,
-  Save,
+  RefreshCw,
   Search,
   Send,
   ShieldCheck,
@@ -45,11 +46,18 @@ import type {
   RespostaPublica,
   ResumoRespostaPublica,
 } from "../types";
+import { usarCamadaNoHistorico } from "../hooks/usarCamadaNoHistorico";
 import { LinkInterno, usarParametros } from "../roteamento";
 
 type AbaAutenticacao = "entrar" | "cadastro" | "esqueci";
 type CampoCadastro = keyof typeof dadosCadastro;
 const dadosLogin = { identificador: "", senha: "" };
+/* Item que a pessoa abriu para cotar e deixou sem preço. Era o estado invisível da tela:
+   o cartão ficava verde como os cotados e o contador já somava o item, então dava para
+   enviar achando que estava tudo preenchido — ou tocar sem querer e nunca perceber. */
+const precoPendente = (item: ItemRespostaPublica) =>
+  item.disponivel && !(item.precoUnitario && item.precoUnitario > 0);
+
 const dadosCadastro = {
   nome: "",
   telefone: "",
@@ -105,7 +113,11 @@ export default function PaginaRespostaPublica() {
   const [mensagem, setMensagem] = useState("");
   const [criando, setCriando] = useState(false);
   const [revisando, setRevisando] = useState(false);
-  const [salvo, setSalvo] = useState(false);
+  /* A revisão é uma tela cheia servida na mesma URL: sem isto, o voltar do navegador pulava
+     a cotação inteira em vez de devolver a pessoa ao preenchimento. */
+  usarCamadaNoHistorico(revisando, () => setRevisando(false));
+  const entrarNaRevisao = () => setRevisando(true);
+  const sairDaRevisao = () => setRevisando(false);
   const [sucesso, setSucesso] = useState(false);
   const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
   const [versaoAutoSave, setVersaoAutoSave] = useState(0);
@@ -473,7 +485,7 @@ export default function PaginaRespostaPublica() {
     if (!resposta || !validarResposta()) return;
     limparAvisos();
     if (mostrarRevisao) {
-      setRevisando(true);
+      entrarNaRevisao();
       return;
     }
     setOcupado(true);
@@ -484,9 +496,7 @@ export default function PaginaRespostaPublica() {
           { method: "PUT", body: JSON.stringify(corpoResposta()) },
         ),
       );
-      setSalvo(true);
       setEstadoAutoSave("saved");
-      window.setTimeout(() => setSalvo(false), 1800);
     } catch (e) {
       aplicarErro(e, "Não foi possível salvar.");
     } finally {
@@ -510,10 +520,10 @@ export default function PaginaRespostaPublica() {
               { method: "POST" },
             );
       setResposta(enviada);
-      setRevisando(false);
       setSucesso(true);
+      sairDaRevisao();
     } catch (e) {
-      setRevisando(false);
+      sairDaRevisao();
       aplicarErro(e, "Não foi possível enviar a proposta.");
     } finally {
       setOcupado(false);
@@ -592,7 +602,7 @@ export default function PaginaRespostaPublica() {
         erro={erro}
         ocupado={ocupado}
         aoSair={sair}
-        aoVoltar={() => setRevisando(false)}
+        aoVoltar={sairDaRevisao}
         aoEnviar={() => void enviarResposta()}
       />
     );
@@ -606,7 +616,6 @@ export default function PaginaRespostaPublica() {
         itensCotados={itensCotados.length}
         total={total}
         ocupado={ocupado}
-        salvo={salvo}
         estadoAutoSave={estadoAutoSave}
         aoSair={sair}
         aoVoltar={() => void voltarParaLista()}
@@ -745,7 +754,6 @@ function Editor({
   itensCotados,
   total,
   ocupado,
-  salvo,
   estadoAutoSave,
   aoSair,
   aoVoltar,
@@ -761,7 +769,6 @@ function Editor({
   itensCotados: number;
   total: number;
   ocupado: boolean;
-  salvo: boolean;
   estadoAutoSave: "idle" | "pending" | "saving" | "saved" | "error";
   aoSair: () => void;
   aoVoltar: () => void;
@@ -770,6 +777,8 @@ function Editor({
   aoSalvar: () => void;
   aoRevisar: () => void;
 }) {
+  const pendentes = resposta.itens.filter(precoPendente).length;
+  const cotadosComPreco = itensCotados - pendentes;
   const [busca, setBusca] = useState("");
   const [observacoesAbertas, setObservacoesAbertas] = useState<Set<number>>(
     new Set(),
@@ -886,11 +895,11 @@ function Editor({
           <div className="progress-line">
             <div
               style={{
-                width: `${totalItens ? Math.round((itensCotados / totalItens) * 100) : 0}%`,
+                width: `${totalItens ? Math.round((cotadosComPreco / totalItens) * 100) : 0}%`,
               }}
             />
             <span>
-              {itensCotados} de {totalItens} cotados
+              {cotadosComPreco} de {totalItens} cotados
             </span>
           </div>
         </section>
@@ -944,10 +953,18 @@ function Editor({
                 });
                 window.setTimeout(() => camposPreco.current[item.id]?.focus());
               };
+              /* Desfaz o toque acidental sem obrigar a pessoa a caçar a caixa de seleção. */
+              const desativarItem = () =>
+                aoAlterarItem(item.id, {
+                  disponivel: false,
+                  precoUnitario: null,
+                  quantidadeDisponivel: null,
+                });
+              const semPreco = precoPendente(item);
               return (
                 <article
                   data-item-id={item.id}
-                  className={`public-product ${item.disponivel ? "available" : ""} ${invalido ? "product-error" : ""}`}
+                  className={`public-product ${item.disponivel ? "available" : ""} ${semPreco ? "product-pending" : ""} ${invalido ? "product-error" : ""}`}
                   key={item.id}
                 >
                   {!item.disponivel && resposta.podeCorrigir && (
@@ -1003,6 +1020,15 @@ function Editor({
                           : "Não cotado"}
                       </span>
                     </div>
+                  )}
+                  {semPreco && resposta.podeCorrigir && (
+                    <p className="product-pending-aviso">
+                      <AlertTriangle />
+                      <span>Falta o preço deste produto.</span>
+                      <button type="button" onClick={desativarItem}>
+                        Não vou cotar
+                      </button>
+                    </p>
                   )}
                   {item.disponivel && (
                     <div className="price-fields">
@@ -1146,20 +1172,29 @@ function Editor({
         {resposta.podeCorrigir && (
           <div className="public-action-bar">
             <div>
-              <span>{itensCotados} produtos cotados</span>
+              <span>
+                {cotadosComPreco}{" "}
+                {cotadosComPreco === 1 ? "produto cotado" : "produtos cotados"}
+                {pendentes > 0 && (
+                  <em className="contador-pendente">
+                    {" "}
+                    · {pendentes} sem preço
+                  </em>
+                )}
+              </span>
               <strong>{money(total)}</strong>
               <small className={`auto-save-status ${estadoAutoSave}`}>
                 {textoAutoSave}
               </small>
             </div>
-            {resposta.status === "IN_PROGRESS" && (
+            {estadoAutoSave === "error" && (
               <button
                 className="button button-secondary"
                 disabled={ocupado}
                 onClick={aoSalvar}
               >
-                <Save />
-                {salvo ? "Salvo!" : "Salvar rascunho"}
+                <RefreshCw />
+                Tentar salvar de novo
               </button>
             )}
             <button
