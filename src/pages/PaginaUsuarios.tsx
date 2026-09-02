@@ -1,6 +1,7 @@
 import { Plus, ShieldCheck, UserRound, Users } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi } from '../api'
+import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { usarAutenticacao } from '../autenticacao'
 import { AvisoErro, Carregando } from '../components/ComponentesUI'
 import type { UsuarioAdministracao } from '../types'
@@ -11,6 +12,8 @@ export default function PaginaUsuarios(){
   const {user}=usarAutenticacao(); const [usuarios,setUsuarios]=useState<UsuarioAdministracao[]|null>(null); const [erro,setErro]=useState(''); const [mensagem,setMensagem]=useState(''); const [mostrarForm,setMostrarForm]=useState(false); const [nome,setNome]=useState(''); const [email,setEmail]=useState(''); const [senha,setSenha]=useState(''); const [perfil,setPerfil]=useState<UsuarioAdministracao['role']>('BUYER'); const [ocupado,setOcupado]=useState(false)
   const carregar=()=>api<UsuarioAdministracao[]>('/users').then(setUsuarios).catch(e=>setErro(e instanceof ErroApi?e.message:'Não foi possível carregar os usuários.'))
   useEffect(()=>{if(user?.role==='ADMIN')carregar()},[user?.role])
+  /* O voltar do navegador fecha o formulário em vez de sair da administração. */
+  usarCamadaNoHistorico(mostrarForm,()=>setMostrarForm(false))
   const criar=async(event:FormEvent)=>{event.preventDefault();setErro('');setMensagem('');setOcupado(true);try{const criado=await api<UsuarioAdministracao>('/users',{method:'POST',body:JSON.stringify({nome,email,senha,perfil})});setUsuarios(atual=>[...(atual??[]),criado].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')));setNome('');setEmail('');setSenha('');setPerfil('BUYER');setMostrarForm(false);setMensagem(`${criado.name} já pode acessar a farmácia.`)}catch(e){setErro(e instanceof ErroApi?e.message:'Não foi possível criar o usuário.')}finally{setOcupado(false)}}
   if(user?.role!=='ADMIN')return <div className="page"><AvisoErro message="Somente administradores podem gerenciar usuários."/></div>
   if(!usuarios)return <div className="page"><Carregando/>{erro&&<AvisoErro message={erro}/>}</div>

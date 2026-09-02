@@ -13,6 +13,7 @@ import type {
   AnaliseArquivoImportacao, Cotacao, MapeamentoColunas, PreviaImportacao, Produto,
 } from '../types'
 import { LinkInterno, usarNavegacao } from '../roteamento'
+import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 
 function dataHoraLocal(data = new Date()) {
   const doisDigitos = (valor:number) => String(valor).padStart(2, '0')
@@ -77,6 +78,8 @@ export default function PaginaNovaCotacao() {
   const [itensManuais, setItensManuais] = useState<ItemManual[]>([novoItemManual()])
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [colarAberto, setColarAberto] = useState(false)
+  /* O voltar do navegador fecha o modal em vez de descartar a cotação em preparo. */
+  usarCamadaNoHistorico(colarAberto, () => setColarAberto(false))
   const [colunasColadas, setColunasColadas] = useState<ColunasColadas>(colunasColadasVazias)
   const [ignorarCabecalho, setIgnorarCabecalho] = useState(false)
   const [origemPrevia, setOrigemPrevia] = useState<OrigemItem>('planilha')

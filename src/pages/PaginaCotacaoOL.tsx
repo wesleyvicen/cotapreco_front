@@ -9,6 +9,7 @@ import { EstadoVazio } from '../components/ComponentesUI'
 import { usarAutenticacao } from '../autenticacao'
 import { acessoBloqueado, LINK_WHATSAPP_ASSINATURA } from '../lib/assinatura'
 import { salvarBlob } from '../lib/arquivos'
+import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import {
   ARMAZENAMENTO_COTACAO_OL, autoMapColumns, buildProductSignature, calculateOrder, compareProductNames,
   createOrderLineId, detectHeaderRow, ensureOrderLineIds, evaluatePriceOpportunity, findPriceHistoryReference,
@@ -593,6 +594,10 @@ export default function PaginaCotacaoOL() {
   const filterLabel = supplierFilter === 'todos' ? 'Todos os fornecedores' : supplierFilter
   const editingItem = resultado.find((item) => item.id === editingLineId)
   const reviewingItem = resultado.find((item) => item.id === reviewingLineId)
+  /* O voltar do navegador fecha o diálogo aberto em vez de abandonar a cotação para OL. */
+  usarCamadaNoHistorico(mapping != null, () => setMapping(null))
+  usarCamadaNoHistorico(Boolean(editingItem), () => { setEditingLineId(''); setPurchaseEditError('') })
+  usarCamadaNoHistorico(Boolean(reviewingItem), () => { setReviewingLineId(''); setMatchSearch('') })
   const filaRevisaoIds = resultado.filter((item) => item.sugestoesCorrespondencia.length > 0).map((item) => item.id)
   const posicaoFilaRevisao = filaRevisaoIds.indexOf(reviewingLineId)
   const reviewPendingCount = filaRevisaoIds.length

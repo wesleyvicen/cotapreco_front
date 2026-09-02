@@ -4,6 +4,7 @@ import { api, apiArquivo, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { EstadoVazio, AvisoErro, Carregando, EtiquetaStatus } from '../components/ComponentesUI'
 import type { ComparacaoCotacao, ComparacaoProduto, OfertaDistribuidor, Cotacao, EstrategiaPedidoMinimo, HistoricoPlano, OpcoesPedidoMinimo, PedidoCompra, PreviaManualPedidoMinimo, PreviaResposta, RespostaCotacao, ResultadoRestauracaoPlano, VersaoPlano } from '../types'
+import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { LinkInterno, usarParametros } from '../roteamento'
 
 type Aba='products'|'responses'|'comparison'|'purchase'
@@ -53,6 +54,18 @@ export default function PaginaDetalheCotacao(){
   const finalizando=useRef(false)
   const{id}=usarParametros();const{user}=usarAutenticacao();const[cotacao,setCotacao]=useState<Cotacao|null>(null);const[respostas,setRespostas]=useState<RespostaCotacao[]>([]);const[comparacao,setComparacao]=useState<ComparacaoCotacao|null>(null);const[pedidos,setPedidos]=useState<PedidoCompra[]>([])
   const[aba,setAba]=useState<Aba>('responses');const[carregando,setCarregando]=useState(true);const[respostasCarregadas,setRespostasCarregadas]=useState(false);const[pedidosCarregados,setPedidosCarregados]=useState(false);const[historicoCarregado,setHistoricoCarregado]=useState(false);const[ocupado,setOcupado]=useState(false);const[erro,setErro]=useState('');const[mensagem,setMensagem]=useState('');const[copiado,setCopiado]=useState('');const[expandidas,setExpandidas]=useState<Set<string>>(new Set());const[produtoDestacado,setProdutoDestacado]=useState<number|null>(null);const[corteTexto,setCorteTexto]=useState(()=>String(lerCorte()));const[achadosAberto,setAchadosAberto]=useState(lerAchadosAberto);const[todosAbertos,setTodosAbertos]=useState(false);const[produtoTroca,setProdutoTroca]=useState<ComparacaoProduto|null>(null);const[produtoPlano,setProdutoPlano]=useState<number|null>(null);const[edicoes,setEdicoes]=useState<EdicaoPlano[]|null>(null);const[versaoBaseEdicao,setVersaoBaseEdicao]=useState(0);const[errosPlano,setErrosPlano]=useState<Record<string,string>>({});const[erroPlano,setErroPlano]=useState('');const[erroAjuste,setErroAjuste]=useState('');const[prorrogando,setProrrogando]=useState(false);const[novoPrazo,setNovoPrazo]=useState('');const[linkProrrogado,setLinkProrrogado]=useState(false);const[opcoesMinimo,setOpcoesMinimo]=useState<OpcoesPedidoMinimo|null>(null);const[ajusteManual,setAjusteManual]=useState<OpcoesPedidoMinimo|null>(null);const[historico,setHistorico]=useState<HistoricoPlano>({currentVersionId:0,canUndo:false,versions:[]});const[historicoAberto,setHistoricoAberto]=useState(false);const[conferencia,setConferencia]=useState<PedidoConferencia[]|null>(null);const[confirmarCoberturaParcial,setConfirmarCoberturaParcial]=useState(false);const[confirmacaoCoberturaAberta,setConfirmacaoCoberturaAberta]=useState(false);const[previaResposta,setPreviaResposta]=useState<PreviaResposta|null>(null);const[carregandoPreviaResposta,setCarregandoPreviaResposta]=useState(false)
+  /* Os modais desta tela participam do histórico: o voltar do navegador fecha o que está na
+     frente, em vez de abandonar a cotação inteira e perder o que estava aberto. */
+  usarCamadaNoHistorico(previaResposta!=null,()=>setPreviaResposta(null))
+  usarCamadaNoHistorico(conferencia!=null,()=>setConferencia(null))
+  usarCamadaNoHistorico(produtoTroca!=null,()=>setProdutoTroca(null))
+  usarCamadaNoHistorico(edicoes!=null,()=>{setEdicoes(null);setProdutoPlano(null);setErroPlano('');setErrosPlano({})})
+  usarCamadaNoHistorico(prorrogando,()=>setProrrogando(false))
+  usarCamadaNoHistorico(opcoesMinimo!=null,()=>setOpcoesMinimo(null))
+  usarCamadaNoHistorico(ajusteManual!=null,()=>{setAjusteManual(null);setErroAjuste('')})
+  usarCamadaNoHistorico(historicoAberto,()=>setHistoricoAberto(false))
+  usarCamadaNoHistorico(confirmacaoCoberturaAberta,()=>setConfirmacaoCoberturaAberta(false))
+  usarCamadaNoHistorico(todosAbertos,()=>setTodosAbertos(false))
   useEffect(()=>{document.title=`${cotacao?`${cotacao.name} — ${tituloAba[aba]}`:'Cotação'} | CotaPreço`},[cotacao,aba])
   const invalidarCompra=useCallback(()=>{setComparacao(null);setPedidos([]);setPedidosCarregados(false);setHistorico({currentVersionId:0,canUndo:false,versions:[]});setHistoricoCarregado(false)},[])
   const carregar=useCallback(async()=>{if(!id)return;setCarregando(true);setErro('');try{const[q,r]=await Promise.all([api<Cotacao>(`/quotations/${id}`),api<RespostaCotacao[]>(`/quotations/${id}/responses`)]);setCotacao(q);setRespostas(r);setRespostasCarregadas(true)}catch(e){setErro(e instanceof ErroApi?e.message:'Falha ao carregar a cotação.')}finally{setCarregando(false)}},[id]);useEffect(()=>{setRespostas([]);setRespostasCarregadas(false);invalidarCompra();void carregar()},[carregar,invalidarCompra])
@@ -360,6 +373,7 @@ function Comparativo({comparacao,cotacaoId,destacado}:{comparacao:ComparacaoCota
   const temporizadorColuna=useRef<number|null>(null)
   const arrastouColuna=useRef(false)
   const[filtrosAbertos,setFiltrosAbertos]=useState(false)
+  usarCamadaNoHistorico(filtrosAbertos,()=>setFiltrosAbertos(false))
   const[cartoesAbertos,setCartoesAbertos]=useState<Set<number>>(()=>new Set())
   const[larguraJanela,setLarguraJanela]=useState(()=>typeof window==='undefined'?1024:window.innerWidth)
 
