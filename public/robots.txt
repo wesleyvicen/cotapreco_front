@@ -2,6 +2,9 @@ User-agent: *
 Allow: /$
 Allow: /login
 Allow: /cadastro
+Allow: /privacidade
+Allow: /termos
+Allow: /cookies
 Disallow: /cotacoes
 Disallow: /cotacao-ol
 Disallow: /produtos

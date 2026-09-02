@@ -35,6 +35,8 @@ import {
   EstadoVazio,
 } from "../components/ComponentesUI";
 import { IndicadorForcaSenha } from "../components/IndicadorForcaSenha";
+import AvisoPrivacidadeRepresentante from "../components/AvisoPrivacidadeRepresentante";
+import { AssinaturaEmpresa } from "../components/RodapeEmpresa";
 import type {
   CotacaoPublica,
   ItemRespostaPublica,
@@ -1617,12 +1619,17 @@ function Autenticacao({
             </label>
           </div>
           <small>Use uma senha fácil de lembrar, com até 72 caracteres.</small>
+          <AvisoPrivacidadeRepresentante />
           <button
             className="button button-primary button-large full-button"
             disabled={ocupado || !cadastroValido}
           >
             {ocupado ? "Criando conta..." : "Criar conta e continuar"}
           </button>
+          <small className="aviso-privacidade-aceite">
+            Ao criar a conta você concorda com os <LinkInterno to="/termos">Termos de Uso</LinkInterno> e
+            com a <LinkInterno to="/privacidade">Política de Privacidade</LinkInterno>.
+          </small>
         </form>
       )}
     </section>
@@ -1849,8 +1856,11 @@ function Logo() {
 function Rodape() {
   return (
     <footer className="public-footer">
-      <ShieldCheck />
-      Seus preços são confidenciais e visíveis apenas para a farmácia.
+      <span className="public-footer-aviso">
+        <ShieldCheck />
+        Seus preços são confidenciais e visíveis apenas para a farmácia.
+      </span>
+      <AssinaturaEmpresa />
     </footer>
   );
 }

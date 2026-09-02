@@ -7,6 +7,9 @@ import { Redirecionar, ProvedorParametros, usarLocalizacao } from './roteamento'
 
 const PaginaLanding=lazy(()=>import('./pages/PaginaLanding'))
 const PaginaConfirmarEmail=lazy(()=>import('./pages/PaginaConfirmarEmail'))
+const PaginaPoliticaPrivacidade=lazy(()=>import('./pages/PaginaPoliticaPrivacidade'))
+const PaginaTermosDeUso=lazy(()=>import('./pages/PaginaTermosDeUso'))
+const PaginaPoliticaCookies=lazy(()=>import('./pages/PaginaPoliticaCookies'))
 const PaginaAssinatura=lazy(()=>import('./pages/PaginaAssinatura'))
 const PaginaEsqueciSenha=lazy(()=>import('./pages/PaginaEsqueciSenha'))
 const PaginaCadastroFarmacia=lazy(()=>import('./pages/PaginaCadastroFarmacia'))
@@ -33,6 +36,9 @@ export default function App(){
       '/cadastro':'Criar conta grátis',
       '/esqueci-senha':'Recuperar senha',
       '/confirmar-email':'Confirmar e-mail',
+      '/privacidade':null,
+      '/termos':null,
+      '/cookies':null,
       '/redefinir-senha':'Redefinir senha',
       '/representante/redefinir-senha':'Redefinir senha',
       '/representante/alterar-senha':'Minha conta',
@@ -51,6 +57,9 @@ export default function App(){
   },[pathname,user])
   if(pathname==='/'&&!user&&!loading)return <ConteudoAssincrono><PaginaLanding/></ConteudoAssincrono>
   if(pathname==='/confirmar-email')return <ConteudoAssincrono><PaginaConfirmarEmail/></ConteudoAssincrono>
+  if(pathname==='/privacidade')return <ConteudoAssincrono><PaginaPoliticaPrivacidade/></ConteudoAssincrono>
+  if(pathname==='/termos')return <ConteudoAssincrono><PaginaTermosDeUso/></ConteudoAssincrono>
+  if(pathname==='/cookies')return <ConteudoAssincrono><PaginaPoliticaCookies/></ConteudoAssincrono>
   if(pathname==='/login')return <PaginaLogin/>
   if(pathname==='/esqueci-senha')return <ConteudoAssincrono><PaginaEsqueciSenha/></ConteudoAssincrono>
   if(pathname==='/redefinir-senha')return <ConteudoAssincrono><PaginaRedefinirSenha/></ConteudoAssincrono>

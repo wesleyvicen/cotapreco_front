@@ -1,5 +1,6 @@
 import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, PackageCheck, Search, ShieldCheck, Sparkles } from 'lucide-react'
 import { useEffect } from 'react'
+import RodapeSite from '../components/RodapeEmpresa'
 import { LinkInterno } from '../roteamento'
 
 const PERGUNTAS = [
@@ -218,18 +219,6 @@ export default function PaginaLanding() {
       </section>
     </main>
 
-    <footer className="lp-rodape">
-      <div className="lp-container lp-rodape-interno">
-        <div className="lp-marca">
-          <img src="/cotapreco-icon.png" alt="" width={30} height={30}/>
-          <span>CotaPreço</span>
-        </div>
-        <p>Cotação e compra de medicamentos para farmácias.</p>
-        <nav aria-label="Links do rodapé">
-          <LinkInterno to="/login">Entrar</LinkInterno>
-          <LinkInterno to="/cadastro">Criar conta</LinkInterno>
-        </nav>
-      </div>
-    </footer>
+    <RodapeSite/>
   </div>
 }

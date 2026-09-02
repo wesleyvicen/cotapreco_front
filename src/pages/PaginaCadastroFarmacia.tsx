@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { IndicadorForcaSenha } from '../components/IndicadorForcaSenha'
+import RodapeSite from '../components/RodapeEmpresa'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 
 type CampoCadastro = 'nomeUsuario' | 'nomeFarmacia' | 'cnpj' | 'email' | 'senha' | 'confirmacao'
@@ -153,6 +154,10 @@ export default function PaginaCadastroFarmacia() {
               {ocupado ? 'Criando sua conta...' : <>Começar teste grátis <ArrowRight/></>}
             </button>
             <p className="cad-garantia"><ShieldCheck/> Sem cartão de crédito. Sem cobrança quando o teste terminar.</p>
+            <p className="cad-aceite">
+              Ao criar a conta você concorda com os <LinkInterno to="/termos">Termos de Uso</LinkInterno> e
+              com a <LinkInterno to="/privacidade">Política de Privacidade</LinkInterno>.
+            </p>
           </form>
 
           <p className="cad-alternativa">Já tem conta? <LinkInterno to="/login">Entrar na minha farmácia</LinkInterno></p>
@@ -166,6 +171,8 @@ export default function PaginaCadastroFarmacia() {
         </ul>
       </div>
     </main>
+
+    <RodapeSite mostrarCadastro={false}/>
   </div>
 }
 

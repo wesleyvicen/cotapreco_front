@@ -325,6 +325,165 @@
 .lp-rodape nav a { color: var(--lp-verde); font-size: 14px; font-weight: 700; text-decoration: none; }
 .lp-rodape nav a:hover { text-decoration: underline; }
 
+/* Faixa legal: quem responde pelo produto. Fica abaixo da marca e dos links, em corpo
+   menor, porque é informação de confiança e não um caminho de navegação. */
+.lp-rodape-empresa {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--lp-linha);
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+.lp-rodape-empresa p { margin: 0; color: var(--lp-suave); font-size: 13px; line-height: 1.55; }
+.lp-rodape-empresa strong { color: var(--lp-verde); font-weight: 800; }
+.lp-rodape-empresa a { color: var(--lp-verde); font-weight: 700; text-decoration: none; }
+.lp-rodape-empresa a:hover { text-decoration: underline; }
+.lp-rodape-legal { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin-bottom: 12px; }
+.lp-rodape-legal a { color: var(--lp-verde); font-size: 13px; font-weight: 700; text-decoration: none; }
+.lp-rodape-legal a:hover { text-decoration: underline; }
+
+/* Páginas de documento (privacidade, termos, cookies) --------------------
+ * Texto longo que quase ninguém lê inteiro: a pessoa chega atrás de uma seção. Daí o
+ * índice grudado ao lado no desktop e a medida de linha curta — 68ch é o que mantém a
+ * leitura confortável sem transformar a página numa coluna estreita de jornal. */
+.legal-main { padding: 26px 0 56px; background: linear-gradient(180deg, #f2f8f5 0%, #fff 40%); }
+.legal-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  color: var(--lp-verde);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.legal-voltar:hover { text-decoration: underline; }
+.legal-voltar svg { width: 17px; height: 17px; }
+.legal-cabecalho { max-width: 760px; margin-bottom: 30px; }
+.legal-cabecalho h1 {
+  margin: 0 0 12px;
+  font-size: 30px;
+  line-height: 1.15;
+  letter-spacing: -0.6px;
+  color: var(--lp-verde);
+}
+.legal-resumo { margin: 0 0 10px; color: var(--lp-suave); font-size: 16px; line-height: 1.6; }
+.legal-vigencia {
+  display: inline-block;
+  margin: 0;
+  border-radius: 999px;
+  background: #eaf4ef;
+  padding: 5px 12px;
+  color: var(--lp-verde);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.legal-corpo { display: grid; gap: 28px; align-items: start; min-width: 0; }
+.legal-indice {
+  border: 1px solid var(--lp-linha);
+  border-radius: 14px;
+  background: #f8fbfa;
+  padding: 18px 20px;
+}
+.legal-indice strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--lp-verde);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.legal-indice ol { margin: 0; padding-left: 20px; display: grid; gap: 7px; }
+.legal-indice li { color: var(--lp-suave); font-size: 13.5px; }
+.legal-indice a { color: inherit; text-decoration: none; }
+.legal-indice a:hover { color: var(--lp-verde); text-decoration: underline; }
+
+.legal-texto { max-width: min(68ch, 100%); min-width: 0; color: #2c3f39; font-size: 15.5px; line-height: 1.72; }
+.legal-texto section { margin-bottom: 34px; scroll-margin-top: 84px; }
+.legal-texto h2 {
+  margin: 0 0 12px;
+  font-size: 21px;
+  line-height: 1.25;
+  letter-spacing: -0.3px;
+  color: var(--lp-verde);
+}
+.legal-texto p { margin: 0 0 14px; }
+.legal-texto ul { margin: 0 0 14px; padding-left: 20px; display: grid; gap: 9px; }
+.legal-texto li { padding-left: 2px; }
+.legal-texto strong { color: #16352b; font-weight: 700; }
+.legal-texto a { color: var(--lp-verde); font-weight: 700; text-decoration: underline; }
+.legal-texto code {
+  border-radius: 5px;
+  background: #eef4f1;
+  padding: 1px 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+  word-break: break-word;
+}
+.legal-contato { list-style: none; padding-left: 0; }
+
+/* Tabelas rolam sozinhas: são as únicas coisas largas destas páginas e o corpo do
+   documento nunca pode ganhar rolagem horizontal por causa delas. */
+.legal-tabela-wrap { max-width: 100%; overflow-x: auto; margin: 0 0 18px; }
+.legal-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.legal-tabela thead { background: #eef5f1; }
+.legal-tabela th,
+.legal-tabela td {
+  border: 1px solid var(--lp-linha);
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 128px;
+}
+.legal-tabela th { color: var(--lp-verde); font-weight: 800; }
+/* Nome de cookie e de chave não quebra no meio: a tabela rola em vez de partir a palavra. */
+.legal-tabela code { white-space: nowrap; }
+
+.legal-destaque {
+  margin: 0 0 28px;
+  border: 1px solid #cfe6da;
+  border-left: 4px solid var(--lp-verde);
+  border-radius: 12px;
+  background: #f4faf7;
+  padding: 18px 20px;
+}
+.legal-destaque strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--lp-verde);
+  font-size: 14px;
+}
+.legal-destaque ul { margin: 0; padding-left: 19px; display: grid; gap: 7px; }
+.legal-destaque p:last-child { margin-bottom: 0; }
+
+.legal-relacionados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 34px;
+  border-top: 1px solid var(--lp-linha);
+  padding-top: 20px;
+}
+.legal-relacionados a { color: var(--lp-verde); font-size: 14px; font-weight: 700; text-decoration: none; }
+.legal-relacionados a:hover { text-decoration: underline; }
+
+/* Aceite abaixo do botão de criar conta. */
+.cad-aceite { margin: 10px 0 0; color: var(--lp-suave); font-size: 12.5px; line-height: 1.55; text-align: center; }
+.cad-aceite a { color: var(--lp-verde); font-weight: 700; }
+
+@media (min-width: 900px) {
+  .legal-main { padding: 34px 0 70px; }
+  .legal-cabecalho h1 { font-size: 38px; }
+  .legal-corpo { grid-template-columns: 250px minmax(0, 1fr); gap: 44px; }
+  .legal-indice { position: sticky; top: 22px; max-height: calc(100vh - 44px); overflow-y: auto; }
+}
+
 /* A partir do tablet ------------------------------------------------ */
 @media (min-width: 700px) {
   .lp-hero { padding: 52px 0 8px; }
