@@ -2884,7 +2884,9 @@ label small {
   .sidebar.sidebar-recolhida nav a {
     justify-content: flex-start;
     width: auto;
+    max-width: none;
     min-height: 0;
+    margin-inline: 0;
     padding: 12px 13px;
   }
   .sidebar.sidebar-recolhida nav a span {
@@ -2918,6 +2920,9 @@ label small {
   .sidebar-close {
     display: grid;
     margin-left: auto;
+  }
+  .sidebar-toggle {
+    display: none;
   }
   .sidebar-backdrop {
     display: block;
