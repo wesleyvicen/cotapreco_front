@@ -10,7 +10,7 @@ import {
 } from '../lib/assinatura'
 import CamposEndereco from '../components/CamposEndereco'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
-import type { Assinatura, CheckoutAssinatura, Conta } from '../types'
+import type { AjusteQuantidade, Assinatura, CheckoutAssinatura, Conta, Empresa } from '../types'
 
 /* A mensagem já vai com o nome da farmácia: do outro lado, saber quem está pedindo
    evita a primeira ida e volta da conversa. */
@@ -40,6 +40,14 @@ export default function PaginaAssinatura() {
   const [completando, setCompletando] = useState(false)
   const [telefone, setTelefone] = useState('')
   const [endereco, setEndereco] = useState<FormularioEndereco>(enderecoVazio)
+  const [conta, setConta] = useState<Conta|null>(null)
+  const [quantidadeEstimada, setQuantidadeEstimada] = useState(() => Math.max(1, user?.companies.length ?? 1))
+  const [editandoQuantidade, setEditandoQuantidade] = useState(false)
+  const [novaQuantidade, setNovaQuantidade] = useState(1)
+  const [empresasLista, setEmpresasLista] = useState<Empresa[]|null>(null)
+  const [erroQuantidade, setErroQuantidade] = useState('')
+  const [salvandoQuantidade, setSalvandoQuantidade] = useState(false)
+  const [desativando, setDesativando] = useState<number|null>(null)
   const tentativas = useRef(0)
 
   const carregar = useCallback(async () => {
@@ -51,6 +59,10 @@ export default function PaginaAssinatura() {
   }, [])
 
   useEffect(() => { void carregar() }, [carregar])
+
+  /* Só para calcular a estimativa de preço por quantidade de farmácia — não muda o que é
+     cobrado de verdade, que o backend sempre calcula pela quantidade real na hora do checkout. */
+  useEffect(() => { api<Conta>('/account').then(setConta).catch(() => {}) }, [])
 
   /* Limpa o parâmetro da URL para o aviso de retorno não voltar a cada refresh nem vazar
      em link compartilhado. */
@@ -70,6 +82,11 @@ export default function PaginaAssinatura() {
   if (!user) return null
 
   const plano = precoDoPlano(assinatura)
+  /* Preço estimado pela quantidade que a pessoa disser ter — some o adicional por farmácia
+     igual o backend faz, só que aqui é cálculo de exibição, sem cobrar nada. */
+  const precoEstimado = conta
+    ? conta.precoBase + conta.precoAdicionalPorFarmacia * Math.max(0, quantidadeEstimada - 1)
+    : plano.value
   const semPrazo = user.subscriptionUntil == null
   const vencida = user.accessAllowed === false
   const emTeste = user.onTrial
@@ -84,10 +101,15 @@ export default function PaginaAssinatura() {
   const rotulo = status ? ROTULO_STATUS[status]
     : { 'sem-prazo':'Acesso liberado', vencida:'Vencida', teste:'Período de teste', ativa:'Assinatura ativa' }[estado]
 
-  const assinar = async () => {
+  const empresasAtivasLista = (empresasLista ?? []).filter(e => e.ativo)
+  const precisaDesativar = editandoQuantidade ? Math.max(0, empresasAtivasLista.length - novaQuantidade) : 0
+
+  const assinar = async (quantidade?:number) => {
     setErro(''); setEnviando(true)
     try {
-      const checkout = await api<CheckoutAssinatura>('/subscription/checkout', { method:'POST' })
+      const checkout = await api<CheckoutAssinatura>('/subscription/checkout', {
+        method:'POST', body:JSON.stringify({ quantidadeFarmacias: quantidade ?? null }),
+      })
       /* Sai do app para a página do Asaas: o cartão é digitado lá, e nenhum dado dele
          chega a passar por este domínio. */
       window.location.href = checkout.checkoutUrl
@@ -115,14 +137,48 @@ export default function PaginaAssinatura() {
     try {
       const conta = await api<Conta>('/account')
       await api<Conta>('/account', { method:'PUT', body:JSON.stringify({
-        nome:conta.nome, cnpj:conta.cnpj, telefone:telefone.replace(/\D/g, ''), endereco:paraEnvio(endereco),
+        empresaPagadoraId:conta.empresaPagadoraId, telefone:telefone.replace(/\D/g, ''), endereco:paraEnvio(endereco),
       }) })
       setCompletando(false)
-      await assinar()
+      await assinar(quantidadeEstimada)
     } catch (e) {
       setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar os dados.')
       setEnviando(false)
     }
+  }
+
+  const abrirEdicaoQuantidade = () => {
+    setErroQuantidade(''); setEditandoQuantidade(true)
+    setNovaQuantidade(conta?.farmaciasContratadas ?? 1)
+    api<Empresa[]>('/companies').then(setEmpresasLista).catch(() => {})
+  }
+
+  const desativarEmpresa = async (id:number) => {
+    setDesativando(id); setErroQuantidade('')
+    try {
+      await api(`/companies/${id}/desativar`, { method:'POST' })
+      setEmpresasLista(await api<Empresa[]>('/companies'))
+    } catch (e) { setErroQuantidade(e instanceof ErroApi ? e.message : 'Não foi possível desativar.') }
+    finally { setDesativando(null) }
+  }
+
+  const salvarQuantidade = async () => {
+    setErroQuantidade(''); setSalvandoQuantidade(true)
+    try {
+      const resultado = await api<AjusteQuantidade>('/subscription/quantity', {
+        method:'POST', body:JSON.stringify({ quantidade:novaQuantidade }),
+      })
+      if (resultado.checkout) {
+        /* Aumentou: precisa pagar o proporcional antes de valer. */
+        window.location.href = resultado.checkout.checkoutUrl
+        return
+      }
+      setAssinatura(resultado.assinatura)
+      setConta(await api<Conta>('/account'))
+      setEditandoQuantidade(false)
+      void recarregarUsuario()
+    } catch (e) { setErroQuantidade(e instanceof ErroApi ? e.message : 'Não foi possível salvar.') }
+    finally { setSalvandoQuantidade(false) }
   }
 
   return <div className="page narrow">
@@ -193,22 +249,70 @@ export default function PaginaAssinatura() {
       <div className="assinatura-plano-topo">
         <div>
           <span className="eyebrow green">Plano mensal</span>
-          <h2>Tudo liberado, um preço só</h2>
+          <h2>{quantidadeEstimada > 1 ? 'Uma mensalidade para toda a rede' : 'Tudo liberado, um preço só'}</h2>
         </div>
         <div className="assinatura-preco">
-          <strong>{money(plano.value)}</strong>
-          <span>por mês</span>
+          <strong>{money(precoEstimado)}</strong>
+          <span>por mês{quantidadeEstimada > 1 ? ` · ${quantidadeEstimada} farmácias` : ''}</span>
         </div>
       </div>
       <ul className="assinatura-inclui">{INCLUSO.map(item => <li key={item}><BadgeCheck/>{item}</li>)}</ul>
-      <button className="button button-primary button-large" disabled={enviando} onClick={() => void assinar()}>
-        {enviando ? 'Abrindo pagamento...' : <><CreditCard/>{vencida || status === 'OVERDUE' ? 'Reativar por' : 'Assinar por'} {money(plano.value)}/mês</>}
+      {conta && <div className="assinatura-estimador">
+        <label>Quantas farmácias você tem no total?
+          <input type="number" min={1} max={99} value={quantidadeEstimada}
+            onChange={e => setQuantidadeEstimada(Math.max(1, Number(e.target.value) || 1))}/>
+        </label>
+        <p>Com {quantidadeEstimada} farmácia{quantidadeEstimada !== 1 ? 's' : ''}, sua mensalidade é <strong>{money(precoEstimado)}</strong>.
+          {quantidadeEstimada > (user.companies.length || 1) && ' Você paga por todas agora e fica liberado para criar as que faltam — sem cobrança extra — pela tela Dados da Farmácia.'}
+        </p>
+        {quantidadeEstimada > 3 && <p className="assinatura-estimador-contato">
+          <MessageCircle/>
+          <a href={linkComContexto(user.groupName, `Tenho ${quantidadeEstimada} farmácias e quero negociar condições especiais`)} target="_blank" rel="noopener noreferrer">Rede grande? Fale com a gente para negociar condições especiais.</a>
+        </p>}
+      </div>}
+      <button className="button button-primary button-large" disabled={enviando} onClick={() => void assinar(quantidadeEstimada)}>
+        {enviando ? 'Abrindo pagamento...' : <><CreditCard/>{vencida || status === 'OVERDUE' ? 'Reativar por' : 'Assinar por'} {money(precoEstimado)}/mês</>}
       </button>
       <p className="assinatura-plano-nota">
         <ShieldCheck/>
         O cartão é cadastrado na página do Asaas, nossa processadora — os dados dele não passam pelo CotaPreço.
         A cobrança se repete todo mês e você cancela quando quiser, aqui mesmo.
       </p>
+    </section>}
+
+    {ativa && conta && <section className="card assinatura-quantidade">
+      <div className="card-header">
+        <div>
+          <h2>Farmácias contratadas</h2>
+          <p>{money(conta.precoBase)} base{conta.farmaciasContratadas > 1 && <> + {money(conta.precoAdicionalPorFarmacia)} × {conta.farmaciasContratadas - 1} adicional{conta.farmaciasContratadas - 1 !== 1 ? 'is' : ''}</>} = <strong>{money(conta.precoMensalAtual)}</strong>/mês</p>
+        </div>
+        {!editandoQuantidade && <button type="button" className="button button-secondary" onClick={abrirEdicaoQuantidade}>Editar quantidade</button>}
+      </div>
+      <p className="assinatura-quantidade-resumo">Contratado para <strong>{conta.farmaciasContratadas}</strong> farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
+        {' · '}{conta.empresasAtivas} ativa{conta.empresasAtivas !== 1 ? 's' : ''}.</p>
+
+      {editandoQuantidade && <div className="assinatura-editor-quantidade">
+        {erroQuantidade && <AvisoErro message={erroQuantidade}/>}
+        <label>Nova quantidade contratada
+          <input type="number" min={1} max={99} value={novaQuantidade}
+            onChange={e => setNovaQuantidade(Math.max(1, Number(e.target.value) || 1))}/>
+        </label>
+        {precisaDesativar > 0 && <div className="assinatura-desativar-lista">
+          <p>Você tem {empresasAtivasLista.length} farmácias ativas — desative {precisaDesativar} para reduzir para {novaQuantidade}.</p>
+          <ul>{empresasAtivasLista.map(e => <li key={e.id}>
+            <span>{e.nome}</span>
+            <button type="button" className="button button-ghost" disabled={desativando === e.id} onClick={() => void desativarEmpresa(e.id)}>
+              {desativando === e.id ? 'Desativando...' : 'Desativar'}
+            </button>
+          </li>)}</ul>
+        </div>}
+        <div className="modal-actions">
+          <button type="button" className="button button-ghost" onClick={() => setEditandoQuantidade(false)}>Cancelar</button>
+          <button type="button" className="button button-primary" disabled={salvandoQuantidade || precisaDesativar > 0} onClick={() => void salvarQuantidade()}>
+            {salvandoQuantidade ? 'Salvando...' : novaQuantidade > conta.farmaciasContratadas ? 'Ir para o pagamento' : 'Salvar'}
+          </button>
+        </div>
+      </div>}
     </section>}
 
     {ativa && <section className="card assinatura-acao">

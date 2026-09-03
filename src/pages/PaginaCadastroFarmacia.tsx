@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { IndicadorForcaSenha } from '../components/IndicadorForcaSenha'
+import { cnpjValido } from '../lib/cnpj'
 import RodapeSite from '../components/RodapeEmpresa'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 
@@ -50,6 +51,11 @@ export default function PaginaCadastroFarmacia() {
 
   const cadastrar = async (evento:FormEvent) => {
     evento.preventDefault(); setErro(''); setErrosCampos({})
+    if (!cnpjValido(cnpj)) {
+      setErrosCampos({ cnpj:'Este CNPJ não é válido. Confira os números.' })
+      formulario.current?.querySelector<HTMLInputElement>('[name="cnpj"]')?.focus()
+      return
+    }
     if (senha !== confirmacao) {
       setErrosCampos({ confirmacao:'As senhas não conferem. Confira as duas usando o olho ao lado.' })
       formulario.current?.querySelector<HTMLInputElement>('[name="confirmacao"]')?.focus()
