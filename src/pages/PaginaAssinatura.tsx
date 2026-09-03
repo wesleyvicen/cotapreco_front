@@ -10,7 +10,7 @@ import {
 } from '../lib/assinatura'
 import CamposEndereco from '../components/CamposEndereco'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
-import type { Assinatura, CheckoutAssinatura, Empresa } from '../types'
+import type { Assinatura, CheckoutAssinatura, Conta } from '../types'
 
 /* A mensagem já vai com o nome da farmácia: do outro lado, saber quem está pedindo
    evita a primeira ida e volta da conversa. */
@@ -105,17 +105,17 @@ export default function PaginaAssinatura() {
   const abrirCadastro = async () => {
     setCompletando(true)
     try {
-      const empresa = await api<Empresa>('/company')
-      setTelefone(formatarTelefone(empresa.telefone ?? '')); setEndereco(enderecoDoServidor(empresa.endereco))
+      const conta = await api<Conta>('/account')
+      setTelefone(formatarTelefone(conta.telefone ?? '')); setEndereco(enderecoDoServidor(conta.endereco))
     } catch { /* Sem os dados atuais o formulário abre vazio, que é o caso mais comum mesmo. */ }
   }
 
   const salvarCadastroEAssinar = async (evento:FormEvent) => {
     evento.preventDefault(); setErro(''); setEnviando(true)
     try {
-      const empresa = await api<Empresa>('/company')
-      await api<Empresa>('/company', { method:'PUT', body:JSON.stringify({
-        nome:empresa.nome, cnpj:empresa.cnpj, telefone:telefone.replace(/\D/g, ''), endereco:paraEnvio(endereco),
+      const conta = await api<Conta>('/account')
+      await api<Conta>('/account', { method:'PUT', body:JSON.stringify({
+        nome:conta.nome, cnpj:conta.cnpj, telefone:telefone.replace(/\D/g, ''), endereco:paraEnvio(endereco),
       }) })
       setCompletando(false)
       await assinar()
@@ -130,7 +130,7 @@ export default function PaginaAssinatura() {
       <div>
         <span className="eyebrow green">Minha conta</span>
         <h1>Assinatura</h1>
-        <p>Situação do acesso da {user.companyName} e o que fazer para renovar.</p>
+        <p>Situação do acesso da {user.groupName} e o que fazer para renovar.</p>
       </div>
     </div>
 
@@ -218,7 +218,7 @@ export default function PaginaAssinatura() {
       </div>
       <div className="assinatura-acao-botoes">
         <button className="button button-secondary" disabled={enviando} onClick={() => void assinar()}><CreditCard/>{enviando ? 'Abrindo...' : 'Atualizar cartão'}</button>
-        <a className="button button-ghost" href={linkComContexto(user.companyName, 'Quero cancelar minha assinatura do CotaPreço')}
+        <a className="button button-ghost" href={linkComContexto(user.groupName, 'Quero cancelar minha assinatura do CotaPreço')}
           target="_blank" rel="noopener noreferrer"><MessageCircle/>Cancelar assinatura</a>
       </div>
     </section>}

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api'
 import { criarChavePainel, lerPainelCache, revalidarPainelCache } from '../cache/cachePainel'
+import { empresaAtiva } from '../lib/permissoes'
 import type { Painel, Usuario } from '../types'
 
 export function usarPainel(user:Usuario|null){
-  const chave=user?criarChavePainel(user.companyId,user.id):null
+  const empresa=empresaAtiva(user)
+  const chave=empresa?criarChavePainel(empresa.id,user!.id):null
   const [data,setData]=useState<Painel|null>(()=>chave?lerPainelCache(chave):null)
   const [carregando,setCarregando]=useState(!data)
   const [revalidando,setRevalidando]=useState(Boolean(chave))
