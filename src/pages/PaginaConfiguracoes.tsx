@@ -1,4 +1,4 @@
-import { Building2, MapPin, Save } from 'lucide-react'
+import { Building2, MapPin, Plus, Save } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
@@ -108,10 +108,78 @@ function CardCobranca() {
   </form>
 }
 
+/* Farmácias do grupo: criar uma nova (dentro do limite do plano) e ver as que já existem.
+   Só aparece pra quem é ADMIN em alguma farmácia do grupo — mesma regra da cobrança, porque
+   é uma ação de conta, não desta farmácia específica. */
+function CardFarmacias() {
+  const { user, recarregarUsuario } = usarAutenticacao()
+  const admin = isAdminDoGrupo(user)
+  const [empresas, setEmpresas] = useState<Empresa[]|null>(null)
+  const [conta, setConta] = useState<Conta|null>(null)
+  const [mostrarForm, setMostrarForm] = useState(false)
+  const [nome, setNome] = useState('')
+  const [cnpj, setCnpj] = useState('')
+  const [erro, setErro] = useState('')
+  const [mensagem, setMensagem] = useState('')
+  const [ocupado, setOcupado] = useState(false)
+
+  const carregar = () => {
+    api<Empresa[]>('/companies').then(setEmpresas).catch(() => {})
+    api<Conta>('/account').then(setConta).catch(() => {})
+  }
+  useEffect(() => { if (admin) carregar() }, [admin])
+
+  if (!admin) return null
+
+  const noLimite = conta != null && conta.empresasAtivas >= conta.limiteEmpresas
+
+  const criar = async (evento:FormEvent) => {
+    evento.preventDefault(); setErro(''); setMensagem(''); setOcupado(true)
+    try {
+      await api<Empresa>('/companies', { method:'POST', body:JSON.stringify({ nome, cnpj:cnpj.replace(/\D/g, '') }) })
+      setNome(''); setCnpj(''); setMostrarForm(false)
+      setMensagem('Farmácia criada. Você já tem acesso a ela — escolha-a no seletor do menu.')
+      carregar()
+      /* O usuário em memória ainda não conhece a farmácia nova: sem recarregar, o seletor
+         de farmácia no menu só mostraria ela depois de um F5 manual. */
+      void recarregarUsuario()
+    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível criar a farmácia.') }
+    finally { setOcupado(false) }
+  }
+
+  return <section className="card settings-card">
+    <div className="card-header">
+      <div><h2><Building2/> Farmácias do grupo</h2><p>{conta ? `${conta.empresasAtivas} de ${conta.limiteEmpresas} farmácia(s) do seu plano.` : ''}</p></div>
+      <button type="button" className="button button-secondary" disabled={noLimite}
+        title={noLimite ? 'Seu plano atingiu o limite de farmácias. Fale com a gente para ampliar.' : undefined}
+        onClick={() => { setErro(''); setMensagem(''); setMostrarForm(true) }}><Plus/>Nova farmácia</button>
+    </div>
+    {mensagem && <div className="alert alert-success">{mensagem}</div>}
+    {!empresas
+      ? <Carregando/>
+      : <div className="table-wrap"><table><thead><tr><th>Farmácia</th><th>CNPJ</th><th>Status</th></tr></thead><tbody>
+          {empresas.map(e => <tr key={e.id}><td><strong>{e.nome}</strong></td><td>{e.cnpj ? formatarCnpj(e.cnpj) : '—'}</td>
+            <td><span className={e.ativo ? 'status-active' : 'status-inactive'}>{e.ativo ? 'Ativa' : 'Inativa'}</span></td></tr>)}
+        </tbody></table></div>}
+    {mostrarForm && <div className="modal-backdrop" role="presentation"><form className="modal user-modal" onSubmit={criar}>
+      <div className="modal-header"><div className="modal-icon"><Building2/></div><div><h2>Nova farmácia</h2><p>Você entra como administrador dela.</p></div>
+        <button type="button" className="icon-button" onClick={() => setMostrarForm(false)}>×</button></div>
+      {erro && <AvisoErro message={erro}/>}
+      <div className="user-form">
+        <label>Nome da farmácia<input required maxLength={160} value={nome} onChange={e => setNome(e.target.value)}/></label>
+        <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpj} onChange={e => setCnpj(formatarCnpj(e.target.value))}/><small>Informe os 14 dígitos do CNPJ.</small></label>
+      </div>
+      <div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => setMostrarForm(false)}>Cancelar</button>
+        <button className="button button-primary" disabled={ocupado}>{ocupado ? 'Criando...' : 'Criar farmácia'}</button></div>
+    </form></div>}
+  </section>
+}
+
 export default function PaginaConfiguracoes() {
   return <div className="page">
     <div className="page-header"><div><span className="eyebrow green">Administração</span><h1>Dados da farmácia</h1><p>Informações usadas nos pedidos de compra e na cobrança da assinatura.</p></div></div>
     <CardIdentificacao/>
     <CardCobranca/>
+    <CardFarmacias/>
   </div>
 }

@@ -17,6 +17,10 @@ export function criarChavePainel(empresaId:number,usuarioId:number){
   return `${PREFIXO_PAINEL}${empresaId}:${usuarioId}`
 }
 
+export function criarChavePainelGeral(grupoId:number,usuarioId:number){
+  return `${PREFIXO_PAINEL}geral:${grupoId}:${usuarioId}`
+}
+
 function painelValido(valor:unknown):valor is Painel {
   if(!valor||typeof valor!=='object')return false
   const painel=valor as Partial<Painel>
