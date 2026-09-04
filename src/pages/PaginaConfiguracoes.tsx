@@ -154,7 +154,7 @@ function CardFarmacias() {
           ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
           : '.'}</p>
       {conta.sugerirContato && <div className="alert alert-warning plano-resumo-contato">
-        <MessageCircle/><span>Rede grande? Fale com a gente para negociar condições especiais para o seu caso.</span>
+        <MessageCircle/><span>Redes maiores merecem um preço sob medida.</span>
         <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
       </div>}
     </section>}

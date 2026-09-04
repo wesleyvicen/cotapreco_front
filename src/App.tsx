@@ -25,13 +25,14 @@ const PaginaConfiguracoes=lazy(()=>import('./pages/PaginaConfiguracoes'))
 const PaginaAlterarSenha=lazy(()=>import('./pages/PaginaAlterarSenha'))
 const PaginaUsuarios=lazy(()=>import('./pages/PaginaUsuarios'))
 const PaginaCotacaoOL=lazy(()=>import('./pages/PaginaCotacaoOL'))
+const PaginaStaff=lazy(()=>import('./pages/PaginaStaff'))
 
 export default function App(){
   const{pathname}=usarLocalizacao()
   const{user,loading}=usarAutenticacao()
   useEffect(()=>{
     const titulo={
-      '/':user?'Painel':null,
+      '/':user?(user.staff?'Contas':'Painel'):null,
       '/login':'Entrar',
       '/cadastro':'Criar conta grátis',
       '/esqueci-senha':'Recuperar senha',
@@ -68,6 +69,11 @@ export default function App(){
   if(pathname==='/representante/redefinir-senha')return <ConteudoAssincrono><PaginaRedefinirSenhaRepresentante/></ConteudoAssincrono>
   const publicMatch=pathname.match(/^\/cotacao\/responder\/([^/]+)$/)
   if(publicMatch)return <ConteudoAssincrono><ProvedorParametros params={{token:decodeURIComponent(publicMatch[1])}}><PaginaRespostaPublica/></ProvedorParametros></ConteudoAssincrono>
+  /* Staff não tem farmácia nenhuma — nenhuma rota normal (cotações, produtos, assinatura...)
+     faz sentido pra essa conta, então qualquer caminho cai na tela própria dela. Mesmo
+     LayoutSistema de sempre (menu lateral, avatar, sair) — ele mesmo troca os links do menu
+     quando user.staff é true. */
+  if(user?.staff)return <RotaProtegida><LayoutSistema><ConteudoAssincrono><PaginaStaff/></ConteudoAssincrono></LayoutSistema></RotaProtegida>
   let page:ReactNode
   if(pathname==='/')page=<PaginaPainel/>
   else if(pathname==='/cotacoes')page=<PaginaCotacoes/>

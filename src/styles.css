@@ -1378,6 +1378,10 @@ label small {
   color: #94a19d;
   margin-left: 4px;
 }
+.totp-setup { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px; border: 1px solid #d7e1dd; border-radius: 12px; background: #fbfcfc; }
+.totp-qr { width: 180px; height: 180px; border-radius: 8px; }
+.totp-segredo-manual { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
+.totp-segredo-manual code { display: inline-block; margin-top: 4px; padding: 4px 8px; border-radius: 6px; background: #eef3f1; font-size: 13px; letter-spacing: 1px; word-break: break-all; }
 .demo-hint {
   background: #f5f8f7;
   border-radius: 10px;
@@ -6589,6 +6593,13 @@ label small {
   color: #a43e43;
   background: #f9e7e7;
 }
+.status-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 700; }
+.status-badge.status-active { color: #157653; background: #e5f5ed; }
+.status-badge.status-trial { color: #8a6416; background: #fff8ec; }
+.status-badge.status-pending { color: #6b4b9b; background: #f0e9fa; }
+.status-badge.status-overdue { color: #a43e43; background: #f9e7e7; }
+.status-badge.status-canceled,
+.status-badge.status-none { color: #5a6b66; background: #eef2f0; }
 .role-tag-stack {
   display: flex;
   flex-direction: column;
@@ -8048,3 +8059,14 @@ label small {
 .product-pending-aviso button:hover { background: #fdf3dd; }
 .product-pending-aviso button:focus-visible { outline: 2px solid #a97918; outline-offset: 2px; }
 .contador-pendente { color: #a97918; font-style: normal; font-weight: 800; }
+
+/* Tela de staff — mesmo LayoutSistema de sempre (sidebar, avatar, sair), só o conteúdo é
+   próprio: lista de contas de cliente em vez de cotações. */
+.staff-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 4px; }
+.staff-resumo > div { padding: 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.staff-resumo strong { font-size: 22px; }
+.staff-resumo span { font-size: 12px; color: var(--muted); }
+.staff-paginacao { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.staff-paginacao span { font-size: 12.5px; color: var(--muted); }
+.staff-paginacao > div { display: flex; gap: 8px; }
+.staff-paginacao .button { padding: 7px 12px; font-size: 13px; }

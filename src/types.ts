@@ -1,7 +1,17 @@
 export type StatusCotacao = 'DRAFT' | 'OPEN' | 'CLOSED' | 'COMPLETED' | 'CANCELLED'
 export type StatusResposta = 'IN_PROGRESS' | 'SUBMITTED'
 export interface EmpresaAcesso { id:number; name:string; role:'ADMIN'|'BUYER'|'VIEWER' }
-export interface Usuario { id:number; name:string; email:string; groupId:number; groupName:string; companies:EmpresaAcesso[]; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean }
+export interface Usuario { id:number; name:string; email:string; groupId:number; groupName:string; companies:EmpresaAcesso[]; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean; staff:boolean }
+export interface PendenciaDoisFatores { token:string; configurando:boolean; otpauthUri:string|null; segredoManual:string|null }
+export interface ContaStaff {
+  grupoId:number; nomeFarmacia:string; cnpj:string|null; responsavelNome:string|null; responsavelEmail:string|null
+  statusAssinatura:StatusAssinatura; emTeste:boolean; assinaturaAte:string|null
+  farmaciasContratadas:number; farmaciasAtivas:number; contaAtiva:boolean; criadoEm:string
+}
+export interface PaginaContasStaff {
+  itens:ContaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number
+  totalContas:number; totalPagando:number; totalEmTeste:number; totalVencidas:number
+}
 export interface AcessoEmpresaUsuario { companyId:number; companyName:string; role:'ADMIN'|'BUYER'|'VIEWER' }
 export interface UsuarioAdministracao { id:number; name:string; email:string; active:boolean; createdAt:string; access:AcessoEmpresaUsuario[] }
 export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null }

@@ -296,7 +296,7 @@ export default function PaginaAssinatura() {
         </p>
         {quantidadeEstimada > 3 && <p className="assinatura-estimador-contato">
           <MessageCircle/>
-          <a href={linkComContexto(user.groupName, `Tenho ${quantidadeEstimada} farmácias e quero negociar condições especiais`)} target="_blank" rel="noopener noreferrer">Rede grande? Fale com a gente para negociar condições especiais.</a>
+          <a href={linkComContexto(user.groupName, `Tenho ${quantidadeEstimada} farmácias e quero negociar condições especiais`)} target="_blank" rel="noopener noreferrer">Redes maiores merecem um preço sob medida. Fale com a gente pelo WhatsApp.</a>
         </p>}
       </div>}
       <button className="button button-primary button-large" disabled={enviando} onClick={() => void assinar(quantidadeEstimada)}>

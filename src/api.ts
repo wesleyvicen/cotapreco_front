@@ -24,7 +24,7 @@ const limparSessao=(sessao:Sessao)=>{
 }
 const alteraDados=(options:RequestInit)=>!['GET','HEAD','OPTIONS'].includes((options.method??'GET').toUpperCase())
 const podeRenovar=(path:string,sessao:Sessao)=>sessao==='farmacia'
-  ? !['/auth/login','/auth/register','/auth/refresh','/auth/logout','/auth/esqueci-senha','/auth/redefinir-senha'].includes(path)
+  ? !['/auth/login','/auth/login/2fa','/auth/register','/auth/refresh','/auth/logout','/auth/esqueci-senha','/auth/redefinir-senha'].includes(path)
   : !['/publico/representantes/refresh','/publico/representantes/logout'].includes(path)
 
 async function renovar(sessao:Sessao):Promise<void> {
