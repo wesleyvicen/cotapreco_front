@@ -101,17 +101,23 @@ export default function PaginaAssinatura() {
   if (!user) return null
 
   const plano = precoDoPlano(assinatura)
+  const negociado = conta?.precoNegociado ?? false
   /* Preço estimado pela quantidade que a pessoa disser ter — some o adicional por farmácia
-     igual o backend faz, só que aqui é cálculo de exibição, sem cobrar nada. */
-  const precoEstimado = conta
-    ? conta.precoBase + conta.precoAdicionalPorFarmacia * Math.max(0, quantidadeEstimada - 1)
-    : plano.value
+     igual o backend faz, só que aqui é cálculo de exibição, sem cobrar nada. Numa conta
+     negociada não tem estimativa: o valor já é o combinado com a equipe. */
+  const precoEstimado = negociado && conta
+    ? conta.precoMensalAtual
+    : conta
+      ? conta.precoBase + conta.precoAdicionalPorFarmacia * Math.max(0, quantidadeEstimada - 1)
+      : plano.value
   const semPrazo = user.subscriptionUntil == null
   const vencida = user.accessAllowed === false
   const emTeste = user.onTrial
   const diasRestantes = user.daysLeft ?? 0
   /* Com 7 dias pela frente a pessoa está vivendo o dia 1, não o dia 0. */
   const diaAtual = Math.min(TOTAL_DIAS_TESTE, Math.max(1, TOTAL_DIAS_TESTE - diasRestantes + 1))
+
+  const quantidadeParaAssinar = negociado && conta ? conta.farmaciasContratadas : quantidadeEstimada
 
   const status = assinatura?.status
   const ativa = status === 'ACTIVE'
@@ -274,32 +280,34 @@ export default function PaginaAssinatura() {
       </form>
     </section>}
 
-    {!ativa && !carregando && !completando && <section className="card assinatura-plano">
+    {!ativa && !semPrazo && !carregando && !completando && <section className="card assinatura-plano">
       <div className="assinatura-plano-topo">
         <div>
           <span className="eyebrow green">Plano mensal</span>
-          <h2>{quantidadeEstimada > 1 ? 'Uma mensalidade para toda a rede' : 'Tudo liberado, um preço só'}</h2>
+          <h2>{negociado ? 'Preço negociado com a equipe CotaPreço' : quantidadeEstimada > 1 ? 'Uma mensalidade para toda a rede' : 'Tudo liberado, um preço só'}</h2>
         </div>
         <div className="assinatura-preco">
           <strong>{money(precoEstimado)}</strong>
-          <span>por mês{quantidadeEstimada > 1 ? ` · ${quantidadeEstimada} farmácias` : ''}</span>
+          <span>por mês{quantidadeParaAssinar > 1 ? ` · ${quantidadeParaAssinar} farmácias` : ''}</span>
         </div>
       </div>
       <ul className="assinatura-inclui">{INCLUSO.map(item => <li key={item}><BadgeCheck/>{item}</li>)}</ul>
-      {conta && <div className="assinatura-estimador">
-        <label>Quantas farmácias você tem no total?
-          <input type="number" min={1} max={99} value={quantidadeEstimada}
-            onChange={e => setQuantidadeEstimada(Math.max(1, Number(e.target.value) || 1))}/>
-        </label>
-        <p>Com {quantidadeEstimada} farmácia{quantidadeEstimada !== 1 ? 's' : ''}, sua mensalidade é <strong>{money(precoEstimado)}</strong>.
-          {quantidadeEstimada > (user.companies.length || 1) && ' Você paga por todas agora e fica liberado para criar as que faltam — sem cobrança extra — pela tela Dados da Farmácia.'}
-        </p>
-        {quantidadeEstimada > 3 && <p className="assinatura-estimador-contato">
-          <MessageCircle/>
-          <a href={linkComContexto(user.groupName, `Tenho ${quantidadeEstimada} farmácias e quero negociar condições especiais`)} target="_blank" rel="noopener noreferrer">Redes maiores merecem um preço sob medida. Fale com a gente pelo WhatsApp.</a>
-        </p>}
-      </div>}
-      <button className="button button-primary button-large" disabled={enviando} onClick={() => void assinar(quantidadeEstimada)}>
+      {conta && (negociado
+        ? <p className="assinatura-estimador-contato">Esse valor foi combinado direto com a equipe para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}. Para mudar, fale com a gente de novo.</p>
+        : <div className="assinatura-estimador">
+            <label>Quantas farmácias você tem no total?
+              <input type="number" min={1} max={99} value={quantidadeEstimada}
+                onChange={e => setQuantidadeEstimada(Math.max(1, Number(e.target.value) || 1))}/>
+            </label>
+            <p>Com {quantidadeEstimada} farmácia{quantidadeEstimada !== 1 ? 's' : ''}, sua mensalidade é <strong>{money(precoEstimado)}</strong>.
+              {quantidadeEstimada > (user.companies.length || 1) && ' Você paga por todas agora e fica liberado para criar as que faltam — sem cobrança extra — pela tela Dados da Farmácia.'}
+            </p>
+            {quantidadeEstimada > 3 && <p className="assinatura-estimador-contato">
+              <MessageCircle/>
+              <a href={linkComContexto(user.groupName, `Tenho ${quantidadeEstimada} farmácias e quero negociar condições especiais`)} target="_blank" rel="noopener noreferrer">Redes maiores merecem um preço sob medida. Fale com a gente pelo WhatsApp.</a>
+            </p>}
+          </div>)}
+      <button className="button button-primary button-large" disabled={enviando} onClick={() => void assinar(quantidadeParaAssinar)}>
         {enviando ? 'Abrindo pagamento...' : <><CreditCard/>{vencida || status === 'OVERDUE' ? 'Reativar por' : 'Assinar por'} {money(precoEstimado)}/mês</>}
       </button>
       <p className="assinatura-plano-nota">
@@ -313,12 +321,18 @@ export default function PaginaAssinatura() {
       <div className="card-header">
         <div>
           <h2>Farmácias contratadas</h2>
-          <p>{money(conta.precoBase)} base{conta.farmaciasContratadas > 1 && <> + {money(conta.precoAdicionalPorFarmacia)} × {conta.farmaciasContratadas - 1} adicional{conta.farmaciasContratadas - 1 !== 1 ? 'is' : ''}</>} = <strong>{money(conta.precoMensalAtual)}</strong>/mês</p>
+          {negociado
+            ? <p>Preço negociado com a equipe CotaPreço = <strong>{money(conta.precoMensalAtual)}</strong>/mês</p>
+            : <p>{money(conta.precoBase)} base{conta.farmaciasContratadas > 1 && <> + {money(conta.precoAdicionalPorFarmacia)} × {conta.farmaciasContratadas - 1} adicional{conta.farmaciasContratadas - 1 !== 1 ? 'is' : ''}</>} = <strong>{money(conta.precoMensalAtual)}</strong>/mês</p>}
         </div>
-        {!editandoQuantidade && <button type="button" className="button button-secondary" onClick={abrirEdicaoQuantidade}>Editar quantidade</button>}
+        {!editandoQuantidade && !negociado && <button type="button" className="button button-secondary" onClick={abrirEdicaoQuantidade}>Editar quantidade</button>}
       </div>
       <p className="assinatura-quantidade-resumo">Contratado para <strong>{conta.farmaciasContratadas}</strong> farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
         {' · '}{conta.empresasAtivas} ativa{conta.empresasAtivas !== 1 ? 's' : ''}.</p>
+      {negociado && <p className="assinatura-estimador-contato">
+        <MessageCircle/>
+        <a href={linkComContexto(user.groupName, 'Preciso ajustar a quantidade de farmácias da minha negociação')} target="_blank" rel="noopener noreferrer">Para ajustar a quantidade, fale com a gente de novo pelo WhatsApp.</a>
+      </p>}
       {conta.farmaciasContratadasAgendadas != null && <p className="assinatura-quantidade-agendada">
         Já pago até {assinatura?.nextDueDate ? date(assinatura.nextDueDate) : 'a próxima cobrança'} — depois disso cai para <strong>{conta.farmaciasContratadasAgendadas}</strong> farmácia{conta.farmaciasContratadasAgendadas !== 1 ? 's' : ''}.
       </p>}

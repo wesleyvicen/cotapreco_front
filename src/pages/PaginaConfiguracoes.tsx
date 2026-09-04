@@ -148,12 +148,21 @@ function CardFarmacias() {
 
     {conta && <section className="card settings-card plano-resumo">
       <div className="plano-resumo-valor"><strong>{money(conta.precoMensalAtual)}</strong><span>por mês</span></div>
-      <p>{money(conta.precoBase)} pela primeira farmácia + {money(conta.precoAdicionalPorFarmacia)} por farmácia
-        adicional · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
-        {conta.empresasAtivas < conta.farmaciasContratadas
-          ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
-          : '.'}</p>
-      {conta.sugerirContato && <div className="alert alert-warning plano-resumo-contato">
+      {conta.precoNegociado
+        ? <p>Preço negociado com a equipe CotaPreço · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
+            {conta.empresasAtivas < conta.farmaciasContratadas
+              ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
+              : '.'}</p>
+        : <p>{money(conta.precoBase)} pela primeira farmácia + {money(conta.precoAdicionalPorFarmacia)} por farmácia
+            adicional · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
+            {conta.empresasAtivas < conta.farmaciasContratadas
+              ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
+              : '.'}</p>}
+      {conta.precoNegociado && <div className="alert alert-warning plano-resumo-contato">
+        <MessageCircle/><span>Precisa mudar a quantidade ou o valor negociado?</span>
+        <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+      </div>}
+      {!conta.precoNegociado && conta.sugerirContato && <div className="alert alert-warning plano-resumo-contato">
         <MessageCircle/><span>Redes maiores merecem um preço sob medida.</span>
         <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
       </div>}
@@ -217,10 +226,12 @@ function CardFarmacias() {
       {conta && (dentroDaCota
         ? <p className="modal-nota">Você já contratou {conta.farmaciasContratadas} farmácias e usou {conta.empresasAtivas} — esta entra dentro
             do que já foi pago, sem cobrança extra e sem precisar de pagamento agora.</p>
-        : <p className="modal-nota">Isso soma {money(conta.precoAdicionalPorFarmacia)}/mês na assinatura. Você vai pro pagamento agora, e a
-            farmácia só é criada depois que ele for confirmado.</p>)}
+        : conta.precoNegociado
+          ? <p className="modal-nota">Sua conta tem um preço negociado com a equipe CotaPreço para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''} — para criar mais que isso, fale com a gente de novo.</p>
+          : <p className="modal-nota">Isso soma {money(conta.precoAdicionalPorFarmacia)}/mês na assinatura. Você vai pro pagamento agora, e a
+              farmácia só é criada depois que ele for confirmado.</p>)}
       <div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => setMostrarForm(false)}>Cancelar</button>
-        <button className="button button-primary" disabled={enviando}>
+        <button className="button button-primary" disabled={enviando || (!dentroDaCota && (conta?.precoNegociado ?? false))}>
           {enviando ? (dentroDaCota ? 'Criando...' : 'Abrindo pagamento...') : dentroDaCota ? 'Criar farmácia' : 'Ir para o pagamento'}
         </button></div>
     </form></div>}

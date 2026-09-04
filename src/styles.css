@@ -6598,7 +6598,7 @@ label small {
 .status-badge.status-trial { color: #8a6416; background: #fff8ec; }
 .status-badge.status-pending { color: #6b4b9b; background: #f0e9fa; }
 .status-badge.status-overdue { color: #a43e43; background: #f9e7e7; }
-.status-badge.status-canceled,
+.status-badge.status-canceled { color: #a15c1f; background: #fbeee0; }
 .status-badge.status-none { color: #5a6b66; background: #eef2f0; }
 .role-tag-stack {
   display: flex;
@@ -8070,3 +8070,4 @@ label small {
 .staff-paginacao span { font-size: 12.5px; color: var(--muted); }
 .staff-paginacao > div { display: flex; gap: 8px; }
 .staff-paginacao .button { padding: 7px 12px; font-size: 13px; }
+.staff-acoes { display: flex; gap: 4px; white-space: nowrap; }
