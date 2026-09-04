@@ -100,7 +100,21 @@ function CardFarmacias() {
     finally { setSalvandoEdicao(false) }
   }
 
+  const reativarEmpresa = async (id:number) => {
+    setErroEdicao('')
+    setSalvandoEdicao(true)
+    try {
+      await api<Empresa>(`/companies/${id}/reativar`, { method:'POST' })
+      setMensagem('Farmácia reativada.')
+      setSelecionada(null)
+      carregar()
+      void recarregarUsuario()
+    } catch (e) { setErroEdicao(e instanceof ErroApi ? e.message : 'Não foi possível reativar.') }
+    finally { setSalvandoEdicao(false) }
+  }
+
   const dentroDaCota = conta != null && conta.empresasAtivas < conta.farmaciasContratadas
+  const semCotaLivre = conta != null && conta.empresasAtivas >= conta.farmaciasContratadas
 
   const abrirCheckout = async (evento:FormEvent) => {
     evento.preventDefault(); setErro('')
@@ -172,11 +186,19 @@ function CardFarmacias() {
               {selecionada === e.id && <tr className="farmacia-linha-edicao"><td colSpan={3}>
                 <form className="stack-form settings-form" onSubmit={ev => salvarEdicao(ev, e.id)}>
                   {erroEdicao && <AvisoErro message={erroEdicao}/>}
+                  {!e.ativo && conta && (semCotaLivre
+                    ? <p className="modal-nota">Você já está usando toda a cota contratada ({conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}) —
+                        aumente a quantidade em Assinatura antes de reativar esta.</p>
+                    : <p className="modal-nota">Reativar não cobra nada extra — ainda está dentro do que você já contratou.</p>)}
                   <label>Nome da farmácia<input required maxLength={160} value={nomeEdicao} onChange={ev => setNomeEdicao(ev.target.value)}/></label>
                   <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpjEdicao} onChange={ev => setCnpjEdicao(formatarCnpj(ev.target.value))}/></label>
                   <div className="line-actions">
                     <button className="button button-primary" disabled={salvandoEdicao}><Save/>{salvandoEdicao ? 'Salvando...' : 'Salvar dados'}</button>
-                    {e.ativo && <button type="button" className="button button-ghost" disabled={salvandoEdicao} onClick={() => void desativarEmpresa(e.id)}>Desativar farmácia</button>}
+                    {e.ativo
+                      ? <button type="button" className="button button-ghost" disabled={salvandoEdicao} onClick={() => void desativarEmpresa(e.id)}>Desativar farmácia</button>
+                      : <button type="button" className="button button-secondary" disabled={salvandoEdicao || semCotaLivre} onClick={() => void reativarEmpresa(e.id)}>
+                          {salvandoEdicao ? 'Reativando...' : 'Reativar farmácia'}
+                        </button>}
                   </div>
                 </form>
               </td></tr>}
