@@ -17,6 +17,7 @@ export interface PlanoAssinatura { value:number; cycle:'MONTHLY'; description:st
 export interface Assinatura { status:StatusAssinatura; activeUntil:string|null; nextDueDate:string|null; plan:PlanoAssinatura|null; billingType:string|null; cardLast4:string|null; canceledAt:string|null }
 export interface CheckoutAssinatura { checkoutUrl:string; checkoutId:string; expiresAt:string|null }
 export interface AjusteQuantidade { checkout:CheckoutAssinatura|null; assinatura:Assinatura|null }
+export interface EmpresaPendente { nome:string; cnpj:string|null; abertoEm:string }
 export interface ColunaArquivo { index:number; name:string }
 export interface MapeamentoColunas { ean:number|null; productName:number|null; quantity:number|null; laboratory:number|null }
 export interface AnaliseArquivoImportacao { sheetName:string; totalRows:number; columns:ColunaArquivo[]; suggestedMapping:MapeamentoColunas; sampleRows:string[][] }
@@ -41,7 +42,7 @@ export interface EnderecoEmpresa { cep:string; logradouro:string; numero:string;
 export interface Empresa { id:number; nome:string; cnpj:string|null; ativo:boolean }
 /* Dados de cobrança da conta (grupo): nome/CNPJ/telefone/endereço usados no checkout do
    Asaas. Distintos da Empresa — aqui é a conta toda, não uma farmácia. */
-export interface Conta { id:number; empresaPagadoraId:number; nome:string; cnpj:string|null; telefone:string|null; endereco:EnderecoEmpresa|null; enderecoCompleto:boolean; empresasAtivas:number; farmaciasContratadas:number; precoBase:number; precoAdicionalPorFarmacia:number; precoMensalAtual:number; sugerirContato:boolean }
+export interface Conta { id:number; empresaPagadoraId:number; nome:string; cnpj:string|null; telefone:string|null; endereco:EnderecoEmpresa|null; enderecoCompleto:boolean; empresasAtivas:number; farmaciasContratadas:number; farmaciasContratadasAgendadas:number|null; precoBase:number; precoAdicionalPorFarmacia:number; precoMensalAtual:number; sugerirContato:boolean }
 export type StatusPedido='GERADO'|'COMPARTILHADO'|'DESATUALIZADO'|'CANCELADO'
 export interface ItemPedido { quotationItemId:number; ean:string|null; productName:string; quantity:number; unitPrice:number; subtotal:number; stockOverrideNote:string|null; receivedQuantity:number|null; receivedUnitPrice:number|null; receivedSubtotal:number|null; receiptNote:string|null; reorderShortfall:boolean }
 export interface PedidoCompra { id:number; responseId:number; number:string; status:StatusPedido; supplierName:string; supplierDocument:string|null; total:number; minimumOrderValue:number|null; belowMinimum:boolean; belowMinimumConfirmed:boolean; generatedAt:string; sharedAt:string|null; checkedAt:string|null; receivedTotal:number|null; pdfAvailable:boolean; items:ItemPedido[] }

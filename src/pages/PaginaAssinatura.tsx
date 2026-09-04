@@ -1,5 +1,5 @@
 import {
-  ArrowRight, BadgeCheck, CalendarClock, CircleAlert, CreditCard, Loader2, MessageCircle, ShieldCheck,
+  ArrowRight, BadgeCheck, CalendarClock, CircleAlert, CreditCard, Loader2, MessageCircle, ShieldCheck, X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, date, ErroApi, money } from '../api'
@@ -25,6 +25,22 @@ const INCLUSO = [
   'Usuários da equipe sem custo por acesso',
 ]
 
+/* Mesma lista usada em "O que acontece quando vence" e na confirmação de cancelamento — os
+   dois casos têm exatamente a mesma consequência (o acesso completo pausa quando o prazo
+   pago acaba), só muda o que leva até lá. */
+const CONTINUA_FUNCIONANDO = [
+  'Consultar cotações, comparativos e pedidos já criados',
+  'Histórico de preços entre cotações',
+  'Exportar tudo em Excel',
+  'Acessar a conta e trocar a senha',
+]
+const FICA_PAUSADO = [
+  'Criar e abrir novas cotações',
+  'Importar planilhas e gerar pedidos',
+  'Cotação para OL',
+  'Conferir recebimento e finalizar compras',
+]
+
 /* O webhook do Asaas costuma chegar em segundos, mas a farmácia volta do checkout antes
    dele. Em vez de mostrar "vencida" para quem acabou de pagar, a tela espera um pouco. */
 const ESPERA_CONFIRMACAO_MS = 3000
@@ -48,6 +64,9 @@ export default function PaginaAssinatura() {
   const [erroQuantidade, setErroQuantidade] = useState('')
   const [salvandoQuantidade, setSalvandoQuantidade] = useState(false)
   const [desativando, setDesativando] = useState<number|null>(null)
+  const [cancelando, setCancelando] = useState(false)
+  const [cancelandoEnviando, setCancelandoEnviando] = useState(false)
+  const [erroCancelamento, setErroCancelamento] = useState('')
   const tentativas = useRef(0)
 
   const carregar = useCallback(async () => {
@@ -149,7 +168,7 @@ export default function PaginaAssinatura() {
 
   const abrirEdicaoQuantidade = () => {
     setErroQuantidade(''); setEditandoQuantidade(true)
-    setNovaQuantidade(conta?.farmaciasContratadas ?? 1)
+    setNovaQuantidade(conta?.farmaciasContratadasAgendadas ?? conta?.farmaciasContratadas ?? 1)
     api<Empresa[]>('/companies').then(setEmpresasLista).catch(() => {})
   }
 
@@ -179,6 +198,16 @@ export default function PaginaAssinatura() {
       void recarregarUsuario()
     } catch (e) { setErroQuantidade(e instanceof ErroApi ? e.message : 'Não foi possível salvar.') }
     finally { setSalvandoQuantidade(false) }
+  }
+
+  const confirmarCancelamento = async () => {
+    setErroCancelamento(''); setCancelandoEnviando(true)
+    try {
+      setAssinatura(await api<Assinatura>('/subscription/cancel', { method:'POST' }))
+      setCancelando(false)
+      void recarregarUsuario()
+    } catch (e) { setErroCancelamento(e instanceof ErroApi ? e.message : 'Não foi possível cancelar agora.') }
+    finally { setCancelandoEnviando(false) }
   }
 
   return <div className="page narrow">
@@ -290,6 +319,9 @@ export default function PaginaAssinatura() {
       </div>
       <p className="assinatura-quantidade-resumo">Contratado para <strong>{conta.farmaciasContratadas}</strong> farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
         {' · '}{conta.empresasAtivas} ativa{conta.empresasAtivas !== 1 ? 's' : ''}.</p>
+      {conta.farmaciasContratadasAgendadas != null && <p className="assinatura-quantidade-agendada">
+        Já pago até {assinatura?.nextDueDate ? date(assinatura.nextDueDate) : 'a próxima cobrança'} — depois disso cai para <strong>{conta.farmaciasContratadasAgendadas}</strong> farmácia{conta.farmaciasContratadasAgendadas !== 1 ? 's' : ''}.
+      </p>}
 
       {editandoQuantidade && <div className="assinatura-editor-quantidade">
         {erroQuantidade && <AvisoErro message={erroQuantidade}/>}
@@ -318,12 +350,11 @@ export default function PaginaAssinatura() {
     {ativa && <section className="card assinatura-acao">
       <div>
         <h2>Trocar o cartão ou cancelar</h2>
-        <p>Para trocar o cartão, abra um novo pagamento — a cobrança antiga é substituída. Para cancelar ou pedir nota fiscal, fale com a gente.</p>
+        <p>Para trocar o cartão, abra um novo pagamento — a cobrança antiga é substituída. Para nota fiscal, fale com a gente.</p>
       </div>
       <div className="assinatura-acao-botoes">
         <button className="button button-secondary" disabled={enviando} onClick={() => void assinar()}><CreditCard/>{enviando ? 'Abrindo...' : 'Atualizar cartão'}</button>
-        <a className="button button-ghost" href={linkComContexto(user.groupName, 'Quero cancelar minha assinatura do CotaPreço')}
-          target="_blank" rel="noopener noreferrer"><MessageCircle/>Cancelar assinatura</a>
+        <button type="button" className="button button-ghost" onClick={() => { setErroCancelamento(''); setCancelando(true) }}>Cancelar assinatura</button>
       </div>
     </section>}
 
@@ -332,21 +363,11 @@ export default function PaginaAssinatura() {
       <div className="assinatura-listas">
         <div>
           <span className="assinatura-lista-titulo assinatura-lista-mantem">Continua funcionando</span>
-          <ul>
-            <li>Consultar cotações, comparativos e pedidos já criados</li>
-            <li>Histórico de preços entre cotações</li>
-            <li>Exportar tudo em Excel</li>
-            <li>Acessar a conta e trocar a senha</li>
-          </ul>
+          <ul>{CONTINUA_FUNCIONANDO.map(item => <li key={item}>{item}</li>)}</ul>
         </div>
         <div>
           <span className="assinatura-lista-titulo assinatura-lista-pausa">Fica pausado</span>
-          <ul>
-            <li>Criar e abrir novas cotações</li>
-            <li>Importar planilhas e gerar pedidos</li>
-            <li>Cotação para OL</li>
-            <li>Conferir recebimento e finalizar compras</li>
-          </ul>
+          <ul>{FICA_PAUSADO.map(item => <li key={item}>{item}</li>)}</ul>
         </div>
       </div>
     </section>
@@ -355,5 +376,58 @@ export default function PaginaAssinatura() {
       Precisa de nota fiscal, contrato, Pix ou boleto no lugar do cartão? É só chamar —
       <a href={LINK_WHATSAPP_ASSINATURA} target="_blank" rel="noopener noreferrer"> falar no WhatsApp</a>.
     </p>
+
+    {cancelando && <ModalCancelarAssinatura
+      farmacia={user.groupName} preco={plano.value} farmacias={conta?.farmaciasContratadas ?? 1}
+      ativaAte={assinatura?.activeUntil ?? null} ocupado={cancelandoEnviando} erro={erroCancelamento}
+      aoFechar={() => setCancelando(false)} aoConfirmar={() => void confirmarCancelamento()}/>}
+  </div>
+}
+
+function ModalCancelarAssinatura({ farmacia, preco, farmacias, ativaAte, ocupado, erro, aoFechar, aoConfirmar }:{
+  farmacia:string; preco:number; farmacias:number; ativaAte:string|null; ocupado:boolean; erro:string
+  aoFechar:()=>void; aoConfirmar:()=>void
+}) {
+  return <div className="modal-backdrop">
+    <section className="modal cancelar-assinatura-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-cancelar-assinatura">
+      <div className="modal-header modal-header-simple">
+        <div>
+          <span className="eyebrow warning">Cancelar assinatura</span>
+          <h2 id="titulo-cancelar-assinatura">Antes de ir, veja o que muda</h2>
+          <p>{ativaAte ? <>Já está tudo pago até <strong>{date(ativaAte)}</strong> — o acesso continua até lá de qualquer forma, cancelando ou não. Cancelar só evita a próxima cobrança.</> : 'Cancelar evita a próxima cobrança.'}</p>
+        </div>
+        <button className="icon-button" aria-label="Fechar" disabled={ocupado} onClick={aoFechar}><X/></button>
+      </div>
+
+      {erro && <AvisoErro message={erro}/>}
+
+      <div className="cancelar-assinatura-bloco cancelar-assinatura-mantem">
+        <span className="cancelar-assinatura-titulo">Hoje, por {money(preco)}/mês, você tem</span>
+        <ul>{INCLUSO.map(item => <li key={item}><BadgeCheck/>{item}</li>)}</ul>
+      </div>
+
+      <div className="cancelar-assinatura-bloco cancelar-assinatura-perde">
+        <span className="cancelar-assinatura-titulo">{ativaAte ? `A partir de ${date(ativaAte)}` : 'Ao cancelar'}, isso pausa</span>
+        <ul>{FICA_PAUSADO.map(item => <li key={item}>{item}</li>)}</ul>
+        {farmacias > 1 && <p className="cancelar-assinatura-nota">Isso vale para as {farmacias} farmácias da rede, não só uma.</p>}
+      </div>
+
+      <div className="cancelar-assinatura-oferta">
+        <MessageCircle/>
+        <div>
+          <strong>É sobre o preço, ou falta algo no sistema?</strong>
+          <p>Fala com a gente antes — às vezes dá pra resolver sem cancelar.</p>
+        </div>
+        <a className="button button-secondary" href={linkComContexto(farmacia, 'Antes de cancelar, quero ver se dá pra resolver de outro jeito')}
+          target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+      </div>
+
+      <div className="modal-actions cancelar-assinatura-acoes">
+        <button type="button" className="cancelar-assinatura-link" disabled={ocupado} onClick={aoConfirmar}>
+          {ocupado ? 'Cancelando...' : 'Cancelar mesmo assim'}
+        </button>
+        <button type="button" className="button button-primary" disabled={ocupado} onClick={aoFechar}>Manter minha assinatura</button>
+      </div>
+    </section>
   </div>
 }

@@ -437,6 +437,31 @@ code {
 .assinatura-acao h2 { margin-bottom: 6px; font-size: 18px; }
 .assinatura-acao p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
 .assinatura-acao-botoes { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.cancelar-assinatura-modal { display: flex; flex-direction: column; gap: 16px; }
+.cancelar-assinatura-bloco { padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); }
+.cancelar-assinatura-titulo { display: block; font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+.cancelar-assinatura-bloco ul { margin: 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+.cancelar-assinatura-mantem { background: #f2f8f4; border-color: #d5e9dc; }
+.cancelar-assinatura-mantem li { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+.cancelar-assinatura-mantem svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--green-2); }
+.cancelar-assinatura-perde { background: #fdf7f0; border-color: #f0dfc4; }
+.cancelar-assinatura-perde ul { padding-left: 18px; list-style: disc; color: var(--muted); }
+.cancelar-assinatura-nota { margin: 10px 0 0; font-size: 12.5px; color: #96650a; }
+.cancelar-assinatura-oferta { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; background: #eef6f2; }
+.cancelar-assinatura-oferta > svg { flex-shrink: 0; color: var(--green-2); }
+.cancelar-assinatura-oferta > div { flex: 1; min-width: 0; }
+.cancelar-assinatura-oferta strong { display: block; font-size: 13.5px; }
+.cancelar-assinatura-oferta p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.cancelar-assinatura-acoes { justify-content: space-between; align-items: center; }
+.cancelar-assinatura-link { background: none; border: none; padding: 8px; font-size: 13px; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.cancelar-assinatura-link:hover { color: var(--danger); }
+.cancelar-assinatura-link:disabled { opacity: .6; cursor: default; }
+@media (max-width: 560px) {
+  .cancelar-assinatura-oferta { flex-direction: column; align-items: stretch; text-align: center; }
+  .cancelar-assinatura-acoes { flex-direction: column-reverse; gap: 10px; }
+  .cancelar-assinatura-acoes .button { width: 100%; }
+}
 /* Cartão do plano. Mobile-first: o preço fica acima da lista e o botão ocupa a largura
    toda, porque no celular ele é o único destino real desta tela. */
 .assinatura-plano { display: flex; flex-direction: column; gap: 18px; padding: 24px; }
@@ -464,6 +489,8 @@ code {
 .assinatura-quantidade .card-header p strong { color: var(--green); }
 .assinatura-quantidade-resumo { margin: 0; color: var(--muted); font-size: 13px; }
 .assinatura-quantidade-resumo strong { color: var(--ink); }
+.assinatura-quantidade-agendada { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fff8ec; border: 1px solid #f2dfb2; color: #8a6416; font-size: 13px; }
+.assinatura-quantidade-agendada strong { color: inherit; }
 .assinatura-editor-quantidade { display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f7faf8; }
 .assinatura-editor-quantidade > label { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #425c54; }
 .assinatura-editor-quantidade > label input { width: 80px; min-height: 38px; border: 1px solid #d7e1dd; border-radius: 8px; padding: 8px 10px; font: inherit; font-weight: 700; text-align: center; color: var(--ink); background: #fff; }
@@ -1167,6 +1194,8 @@ tbody tr:hover {
   border: 1px solid #f0dfad;
   color: #795b17;
 }
+.farmacias-pendentes ul { margin: 6px 0; padding-left: 18px; }
+.farmacias-pendentes p { margin: 6px 0 0; opacity: .85; }
 .loading,
 .page-loader {
   display: flex;

@@ -1,6 +1,6 @@
 import { Building2, ChevronDown, MapPin, MessageCircle, Plus, Save } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
-import { api, ErroApi, money } from '../api'
+import { api, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import CamposEndereco from '../components/CamposEndereco'
 import { AvisoErro, Carregando } from '../components/ComponentesUI'
@@ -8,7 +8,7 @@ import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type Fo
 import { linkWhatsappNegociarFarmacias } from '../lib/assinatura'
 import { cnpjValido } from '../lib/cnpj'
 import { isAdminDoGrupo } from '../lib/permissoes'
-import type { Conta, Empresa } from '../types'
+import type { Conta, Empresa, EmpresaPendente } from '../types'
 
 function formatarCnpj(valor:string) {
   const digitos = valor.replace(/\D/g, '').slice(0, 14)
@@ -25,6 +25,7 @@ function CardFarmacias() {
   const admin = isAdminDoGrupo(user)
   const [empresas, setEmpresas] = useState<Empresa[]|null>(null)
   const [conta, setConta] = useState<Conta|null>(null)
+  const [pendencias, setPendencias] = useState<EmpresaPendente[]>([])
   const [mensagem, setMensagem] = useState('')
 
   const [selecionada, setSelecionada] = useState<number|null>(null)
@@ -43,6 +44,7 @@ function CardFarmacias() {
   const carregar = () => {
     api<Empresa[]>('/companies').then(setEmpresas).catch(() => {})
     api<Conta>('/account').then(setConta).catch(() => {})
+    api<EmpresaPendente[]>('/subscription/pending-companies').then(setPendencias).catch(() => {})
   }
   useEffect(() => { if (admin) carregar() }, [admin])
 
@@ -144,6 +146,12 @@ function CardFarmacias() {
     </section>}
 
     {mensagem && <div className="alert alert-success">{mensagem}</div>}
+
+    {pendencias.length > 0 && <div className="alert alert-warning farmacias-pendentes">
+      <strong>Aguardando confirmação do pagamento:</strong>
+      <ul>{pendencias.map(p => <li key={p.cnpj ?? p.nome}>{p.nome} — aberto em {date(p.abertoEm)}</li>)}</ul>
+      <p>Se o pagamento já foi feito, isso normalmente resolve sozinho em poucos minutos. Demorando muito mais que isso, fale com a gente.</p>
+    </div>}
 
     <section className="card settings-card">
       <div className="card-header">
