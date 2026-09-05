@@ -5,10 +5,20 @@ import { api, encerrarSessaoFarmacia } from './api'
 import { limparCachePainel } from './cache/cachePainel'
 import { lerUsuarioFarmacia, limparSessaoFarmaciaLocal, possuiTokenFarmacia, salvarTokenFarmacia, salvarUsuarioFarmacia } from './cache/persistenciaSessao'
 import { Redirecionar } from './roteamento'
-import type { Usuario } from './types'
+import type { PendenciaDoisFatores, Usuario } from './types'
 
 interface DadosCadastroFarmacia { nomeUsuario:string; nomeFarmacia:string; cnpj:string; email:string; senha:string }
-interface ContextoAutenticacao { user:Usuario|null; loading:boolean; revalidating:boolean; recarregarUsuario:()=>Promise<void>; login:(email:string,password:string)=>Promise<void>; cadastrarFarmacia:(dados:DadosCadastroFarmacia)=>Promise<void>; logout:()=>Promise<void> }
+/* Mesmo endpoint, dois formatos possíveis: com "user" é login completo (igual sempre foi —
+   ninguém que já existe percebe diferença); sem "user" é pendência de segundo fator. */
+type RespostaLoginOuPendencia = {token:string;user:Usuario} | PendenciaDoisFatores
+interface ContextoAutenticacao {
+  user:Usuario|null; loading:boolean; revalidating:boolean; recarregarUsuario:()=>Promise<void>
+  /* Retorna null quando o login já completou (sessão iniciada); retorna a pendência quando a
+     conta exige segundo fator — nesse caso a sessão só começa depois de confirmarDoisFatores. */
+  login:(email:string,password:string)=>Promise<PendenciaDoisFatores|null>
+  confirmarDoisFatores:(token:string,codigo:string)=>Promise<void>
+  cadastrarFarmacia:(dados:DadosCadastroFarmacia)=>Promise<void>; logout:()=>Promise<void>
+}
 const AuthContext=createContext<ContextoAutenticacao|null>(null)
 
 let validacaoEmAndamento:Promise<Usuario>|null=null
@@ -51,8 +61,19 @@ export function ProvedorAutenticacao({children}:{children:ReactNode}) {
 
   const login=async(email:string,password:string)=>{
     const ciclo=++cicloSessao.current
-    const result=await api<{token:string;user:Usuario}>('/auth/login',{method:'POST',body:JSON.stringify({email,password})})
+    const resposta=await api<RespostaLoginOuPendencia>('/auth/login',{method:'POST',body:JSON.stringify({email,password})})
+    if(!('user' in resposta))return resposta
+    if(ciclo!==cicloSessao.current)return null
+    aplicarLogin(resposta)
+    return null
+  }
+  const confirmarDoisFatores=async(token:string,codigo:string)=>{
+    const ciclo=++cicloSessao.current
+    const resposta=await api<{token:string;user:Usuario}>('/auth/login/2fa',{method:'POST',body:JSON.stringify({token,codigo})})
     if(ciclo!==cicloSessao.current)return
+    aplicarLogin(resposta)
+  }
+  const aplicarLogin=(result:{token:string;user:Usuario})=>{
     limparCachePainel()
     salvarTokenFarmacia(result.token)
     salvarUsuarioFarmacia(result.user)
@@ -86,7 +107,7 @@ export function ProvedorAutenticacao({children}:{children:ReactNode}) {
     try{const usuario=await validarUsuarioAtual();salvarUsuarioFarmacia(usuario);setUser(usuario)}
     catch{/* Sessão inválida já é tratada pelo fluxo de autenticação. */}
   }
-  return <AuthContext.Provider value={{user,loading,revalidating,recarregarUsuario,login,cadastrarFarmacia,logout}}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{user,loading,revalidating,recarregarUsuario,login,confirmarDoisFatores,cadastrarFarmacia,logout}}>{children}</AuthContext.Provider>
 }
 export const usarAutenticacao=()=>{ const value=useContext(AuthContext); if(!value) throw new Error('ProvedorAutenticacao ausente'); return value }
 export function RotaProtegida({children}:{children:ReactNode}) { const {user,loading}=usarAutenticacao(); if(loading) return <div className="page-loader"><span className="spinner"/>Carregando...</div>; return user?children:<Redirecionar to="/login" replace/> }

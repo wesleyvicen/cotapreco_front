@@ -1,7 +1,23 @@
 export type StatusCotacao = 'DRAFT' | 'OPEN' | 'CLOSED' | 'COMPLETED' | 'CANCELLED'
 export type StatusResposta = 'IN_PROGRESS' | 'SUBMITTED'
-export interface Usuario { id:number; name:string; email:string; role:string; companyId:number; companyName:string; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean }
-export interface UsuarioAdministracao { id:number; name:string; email:string; role:'ADMIN'|'BUYER'|'VIEWER'; active:boolean; createdAt:string }
+export interface EmpresaAcesso { id:number; name:string; role:'ADMIN'|'BUYER'|'VIEWER' }
+export interface Usuario { id:number; name:string; email:string; groupId:number; groupName:string; companies:EmpresaAcesso[]; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean; staff:boolean }
+export interface PendenciaDoisFatores { token:string; configurando:boolean; otpauthUri:string|null; segredoManual:string|null }
+export interface ContaStaff {
+  grupoId:number; nomeFarmacia:string; cnpj:string|null; responsavelNome:string|null; responsavelEmail:string|null
+  statusAssinatura:StatusAssinatura; emTeste:boolean; assinaturaAte:string|null
+  farmaciasContratadas:number; farmaciasAtivas:number; contaAtiva:boolean; criadoEm:string
+  precoMensalAtual:number; precoMensalPersonalizado:number|null; cortesia:boolean
+}
+export interface SolicitacaoNegociacao { farmaciasContratadas:number; precoMensalPersonalizado:number|null }
+export interface SolicitacaoBrinde { farmaciasContratadas:number }
+export interface SolicitacaoTrial { dias:number }
+export interface PaginaContasStaff {
+  itens:ContaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number
+  totalContas:number; totalPagando:number; totalEmTeste:number; totalVencidas:number
+}
+export interface AcessoEmpresaUsuario { companyId:number; companyName:string; role:'ADMIN'|'BUYER'|'VIEWER' }
+export interface UsuarioAdministracao { id:number; name:string; email:string; active:boolean; createdAt:string; access:AcessoEmpresaUsuario[] }
 export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null }
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'|'purchaseComparisonEligible'|'purchasedItemCount'|'lastPurchaseAt'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
@@ -14,6 +30,8 @@ export type StatusAssinatura='NONE'|'TRIAL'|'PENDING'|'ACTIVE'|'OVERDUE'|'CANCEL
 export interface PlanoAssinatura { value:number; cycle:'MONTHLY'; description:string }
 export interface Assinatura { status:StatusAssinatura; activeUntil:string|null; nextDueDate:string|null; plan:PlanoAssinatura|null; billingType:string|null; cardLast4:string|null; canceledAt:string|null }
 export interface CheckoutAssinatura { checkoutUrl:string; checkoutId:string; expiresAt:string|null }
+export interface AjusteQuantidade { checkout:CheckoutAssinatura|null; assinatura:Assinatura|null }
+export interface EmpresaPendente { nome:string; cnpj:string|null; abertoEm:string }
 export interface ColunaArquivo { index:number; name:string }
 export interface MapeamentoColunas { ean:number|null; productName:number|null; quantity:number|null; laboratory:number|null }
 export interface AnaliseArquivoImportacao { sheetName:string; totalRows:number; columns:ColunaArquivo[]; suggestedMapping:MapeamentoColunas; sampleRows:string[][] }
@@ -35,7 +53,10 @@ export interface ResumoRespostaPublica { id:number; nomeDistribuidora:string; do
 export interface ItemRespostaPublica { id:number; ean:string|null; nomeProduto:string; laboratorio:string|null; quantidadeSolicitada:number; precoUnitario:number|null; quantidadeDisponivel:number|null; disponivel:boolean; observacao:string|null }
 export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:string; nomeRepresentante:string; nomeDistribuidora:string; documentoDistribuidora:string|null; valorMinimoPedido:number|null; status:StatusResposta; expiraEm:string|null; podeCorrigir:boolean; itens:ItemRespostaPublica[] }
 export interface EnderecoEmpresa { cep:string; logradouro:string; numero:string; complemento:string|null; bairro:string; cidade:string; uf:string }
-export interface Empresa { id:number; nome:string; cnpj:string|null; telefone:string|null; endereco:EnderecoEmpresa|null; enderecoCompleto:boolean }
+export interface Empresa { id:number; nome:string; cnpj:string|null; ativo:boolean }
+/* Dados de cobrança da conta (grupo): nome/CNPJ/telefone/endereço usados no checkout do
+   Asaas. Distintos da Empresa — aqui é a conta toda, não uma farmácia. */
+export interface Conta { id:number; empresaPagadoraId:number; nome:string; cnpj:string|null; telefone:string|null; endereco:EnderecoEmpresa|null; enderecoCompleto:boolean; empresasAtivas:number; farmaciasContratadas:number; farmaciasContratadasAgendadas:number|null; precoBase:number; precoAdicionalPorFarmacia:number; precoMensalAtual:number; sugerirContato:boolean; precoNegociado:boolean }
 export type StatusPedido='GERADO'|'COMPARTILHADO'|'DESATUALIZADO'|'CANCELADO'
 export interface ItemPedido { quotationItemId:number; ean:string|null; productName:string; quantity:number; unitPrice:number; subtotal:number; stockOverrideNote:string|null; receivedQuantity:number|null; receivedUnitPrice:number|null; receivedSubtotal:number|null; receiptNote:string|null; reorderShortfall:boolean }
 export interface PedidoCompra { id:number; responseId:number; number:string; status:StatusPedido; supplierName:string; supplierDocument:string|null; total:number; minimumOrderValue:number|null; belowMinimum:boolean; belowMinimumConfirmed:boolean; generatedAt:string; sharedAt:string|null; checkedAt:string|null; receivedTotal:number|null; pdfAvailable:boolean; items:ItemPedido[] }

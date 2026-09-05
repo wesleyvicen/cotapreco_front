@@ -1,4 +1,4 @@
-import { CHAVE_TOKEN_FARMACIA, limparSessaoFarmaciaLocal } from './cache/persistenciaSessao'
+import { CHAVE_TOKEN_FARMACIA, lerEmpresaAtivaId, limparSessaoFarmaciaLocal } from './cache/persistenciaSessao'
 import { invalidarCachePainel, limparCachePainel } from './cache/cachePainel'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
@@ -24,7 +24,7 @@ const limparSessao=(sessao:Sessao)=>{
 }
 const alteraDados=(options:RequestInit)=>!['GET','HEAD','OPTIONS'].includes((options.method??'GET').toUpperCase())
 const podeRenovar=(path:string,sessao:Sessao)=>sessao==='farmacia'
-  ? !['/auth/login','/auth/register','/auth/refresh','/auth/logout','/auth/esqueci-senha','/auth/redefinir-senha'].includes(path)
+  ? !['/auth/login','/auth/login/2fa','/auth/register','/auth/refresh','/auth/logout','/auth/esqueci-senha','/auth/redefinir-senha'].includes(path)
   : !['/publico/representantes/refresh','/publico/representantes/logout'].includes(path)
 
 async function renovar(sessao:Sessao):Promise<void> {
@@ -46,6 +46,13 @@ async function executar(path:string,options:RequestInit,sessao:Sessao|null,tenta
   if(!(options.body instanceof FormData)&&!headers.has('Content-Type'))headers.set('Content-Type','application/json')
   const token=sessao?localStorage.getItem(chaves[sessao]):null
   if(token)headers.set('Authorization',`Bearer ${token}`)
+  /* Farmácia ativa (hoje sempre a primeira do vínculo — sem seletor na tela ainda). Sem ela
+     o backend cai no mesmo padrão, então o cabeçalho é redundante para quem só tem uma
+     farmácia, mas correto para quando o seletor existir. */
+  if(sessao==='farmacia'){
+    const empresaId=lerEmpresaAtivaId()
+    if(empresaId!=null)headers.set('X-Empresa-Id',String(empresaId))
+  }
   const response=await fetch(`${API_URL}${path}`,{...options,headers,credentials:'include'})
   if(response.status===401&&sessao&&tentarRenovar&&podeRenovar(path,sessao)){
     try{await renovar(sessao);return executar(path,options,sessao,false)}catch{limparSessao(sessao)}

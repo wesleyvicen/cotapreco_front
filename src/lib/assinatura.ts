@@ -3,6 +3,9 @@ import type { Assinatura, PlanoAssinatura, StatusAssinatura } from '../types'
 export const LINK_WHATSAPP_ASSINATURA =
   'https://wa.me/5581999441494?text=' + encodeURIComponent('Olá! Quero assinar o CotaPreço.')
 
+export const linkWhatsappNegociarFarmacias = (quantidadeFarmacias:number) =>
+  'https://wa.me/5581999441494?text=' + encodeURIComponent(`Olá! Tenho ${quantidadeFarmacias} farmácias no CotaPreço e quero negociar condições especiais.`)
+
 /* Preço de exibição. A cobrança de verdade é montada pelo backend, que manda este mesmo
    valor ao Asaas: quando ele devolve o plano em GET /subscription, é o dele que vale — o
    preço na tela nunca pode divergir do que vai ser cobrado no cartão. */
