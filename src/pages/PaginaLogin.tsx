@@ -32,7 +32,7 @@ export default function PaginaLogin(){
 
   return <div className="login-page">
     <section className="login-hero">
-      <div className="brand light"><div className="brand-copy"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260904-2" alt="CotaPreço"/><span>Compras inteligentes</span></div></div>
+      <div className="brand light"><div className="brand-copy"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/><span>Compras inteligentes</span></div></div>
       <div className="hero-copy">
         <span className="eyebrow"><Sparkles size={16}/> Mais economia, menos planilhas</span>
         <h1>Compare propostas.<br/>Compre melhor.</h1>

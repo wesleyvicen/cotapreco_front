@@ -29,7 +29,7 @@ export default function RodapeSite({ mostrarCadastro = true }: { mostrarCadastro
   return <footer className="lp-rodape">
     <div className="lp-container lp-rodape-interno">
       <div className="lp-marca">
-        <img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260904-2" alt="CotaPreço"/>
+        <img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/>
       </div>
       <p>Cotação e compra de medicamentos para farmácias.</p>
       <nav aria-label="Links do rodapé">

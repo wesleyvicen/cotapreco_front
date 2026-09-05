@@ -92,7 +92,7 @@ export default function PaginaLanding() {
     <header className="lp-topo">
       <div className="lp-container lp-topo-interno">
         <div className="lp-marca">
-          <img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260904-2" alt="CotaPreço"/>
+          <img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/>
         </div>
         <nav className="lp-topo-acoes" aria-label="Acesso ao sistema">
           <LinkInterno to="/login" className="lp-link-entrar">Entrar</LinkInterno>
