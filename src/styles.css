@@ -5607,6 +5607,48 @@ label small {
 .brand-copy .cotapreco-logo {
   width: 148px;
 }
+.sidebar .brand {
+  min-height: 72px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: #f8fbfa;
+  box-shadow: 0 8px 24px rgba(3, 33, 24, 0.16);
+}
+.sidebar .brand-copy {
+  gap: 4px;
+}
+.sidebar .brand-copy .cotapreco-logo {
+  width: 146px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.sidebar .brand-copy span {
+  padding-left: 2px;
+  color: #60756e;
+  opacity: 1;
+}
+.sidebar .brand .sidebar-toggle,
+.sidebar .brand .sidebar-close {
+  color: #0e4d3b;
+}
+.sidebar .brand .sidebar-toggle:hover,
+.sidebar .brand .sidebar-close:hover {
+  background: #e5f1ec;
+}
+.sidebar.sidebar-recolhida .brand {
+  min-height: 50px;
+  padding: 6px;
+  border-radius: 14px;
+}
+@media (max-width: 760px) {
+  .sidebar.sidebar-recolhida .brand {
+    min-height: 72px;
+    padding: 10px 11px;
+    border-radius: 16px;
+  }
+}
 .brand.light .brand-copy {
   align-items: flex-start;
 }
