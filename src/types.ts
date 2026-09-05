@@ -16,6 +16,8 @@ export interface PaginaContasStaff {
   itens:ContaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number
   totalContas:number; totalPagando:number; totalEmTeste:number; totalVencidas:number
 }
+export interface RegistroAuditoriaStaff { id:number; grupoId:number; nomeFarmacia:string; acao:string; descricao:string; staffNome:string; staffEmail:string; criadoEm:string }
+export interface PaginaAuditoriaStaff { itens:RegistroAuditoriaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number }
 export interface AcessoEmpresaUsuario { companyId:number; companyName:string; role:'ADMIN'|'BUYER'|'VIEWER' }
 export interface UsuarioAdministracao { id:number; name:string; email:string; active:boolean; createdAt:string; access:AcessoEmpresaUsuario[] }
 export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null }

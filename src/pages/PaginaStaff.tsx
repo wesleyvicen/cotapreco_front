@@ -1,15 +1,17 @@
-import { ChevronLeft, ChevronRight, Gift, HandCoins, Search, Timer } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Gift, HandCoins, ScrollText, Search, Timer, Users } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi, money, date } from '../api'
 import { AvisoErro, Carregando, EstadoVazio } from '../components/ComponentesUI'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { ROTULO_STATUS } from '../lib/assinatura'
-import type { ContaStaff, PaginaContasStaff } from '../types'
+import type { ContaStaff, PaginaAuditoriaStaff, PaginaContasStaff } from '../types'
 
 const TAMANHO_PAGINA = 20
 /* Espera a pessoa parar de digitar antes de ir ao banco — sem isso cada tecla vira uma
    consulta nova. */
 const ATRASO_BUSCA_MS = 350
+
+const ROTULO_ACAO_AUDITORIA:Record<string,string> = { NEGOCIACAO:'Negociação', BRINDE:'Cortesia', TRIAL:'Trial' }
 
 function formatarCnpj(valor:string|null) {
   if (!valor) return '—'
@@ -46,6 +48,13 @@ function CampoPreco({ valor, aoAlterar }:{ valor:string; aoAlterar:(digitos:stri
 }
 
 export default function PaginaStaff() {
+  const [aba, setAba] = useState<'contas'|'auditoria'>('contas')
+
+  const [auditoriaResultado, setAuditoriaResultado] = useState<PaginaAuditoriaStaff|null>(null)
+  const [auditoriaPagina, setAuditoriaPagina] = useState(0)
+  const [auditoriaCarregando, setAuditoriaCarregando] = useState(true)
+  const [auditoriaErro, setAuditoriaErro] = useState('')
+
   const [busca, setBusca] = useState('')
   const [buscaAplicada, setBuscaAplicada] = useState('')
   const [pagina, setPagina] = useState(0)
@@ -84,6 +93,17 @@ export default function PaginaStaff() {
       .catch(() => setErro('Não foi possível carregar as contas.'))
       .finally(() => setCarregando(false))
   }, [buscaAplicada, pagina])
+
+  /* Só busca quando a aba está aberta — evita gastar a consulta em toda visita à tela. */
+  useEffect(() => {
+    if (aba !== 'auditoria') return
+    setAuditoriaCarregando(true); setAuditoriaErro('')
+    const parametros = new URLSearchParams({ pagina: String(auditoriaPagina), tamanho: String(TAMANHO_PAGINA) })
+    api<PaginaAuditoriaStaff>(`/staff/audit?${parametros}`)
+      .then(setAuditoriaResultado)
+      .catch(() => setAuditoriaErro('Não foi possível carregar a auditoria.'))
+      .finally(() => setAuditoriaCarregando(false))
+  }, [aba, auditoriaPagina])
 
   /* O voltar do navegador fecha o formulário aberto em vez de sair da tela. */
   usarCamadaNoHistorico(negociando !== null || brindando !== null || emTrial !== null,
@@ -170,6 +190,39 @@ export default function PaginaStaff() {
   return <div className="page">
     <div className="page-header"><div><span className="eyebrow green">Contas</span><h1>Clientes do CotaPreço</h1><p>Quem está pagando, em teste ou com pagamento atrasado.</p></div></div>
 
+    <div className="tabs" role="tablist" aria-label="Seções do painel de staff">
+      <button type="button" role="tab" aria-selected={aba==='contas'} className={aba==='contas'?'active':''} onClick={() => setAba('contas')}><Users size={17}/>Contas</button>
+      <button type="button" role="tab" aria-selected={aba==='auditoria'} className={aba==='auditoria'?'active':''} onClick={() => setAba('auditoria')}><ScrollText size={17}/>Auditoria</button>
+    </div>
+
+    {aba==='auditoria' && <section className="card">
+      {auditoriaErro && <div className="alert alert-error">{auditoriaErro}</div>}
+      {auditoriaCarregando && !auditoriaResultado
+        ? <Carregando/>
+        : !auditoriaResultado || auditoriaResultado.itens.length === 0
+          ? <EstadoVazio title="Nenhum registro ainda" description="Negociações, brindes e trials feitos pela equipe aparecem aqui, com quem fez e quando."/>
+          : <>
+              <div className="table-wrap"><table>
+                <thead><tr><th>Farmácia</th><th>Ação</th><th>Descrição</th><th>Staff</th><th>Quando</th></tr></thead>
+                <tbody>{auditoriaResultado.itens.map(item => <tr key={item.id}>
+                  <td><strong>{item.nomeFarmacia}</strong></td>
+                  <td>{ROTULO_ACAO_AUDITORIA[item.acao] ?? item.acao}</td>
+                  <td>{item.descricao}</td>
+                  <td>{item.staffNome}<br/><small>{item.staffEmail}</small></td>
+                  <td>{date(item.criadoEm)}</td>
+                </tr>)}</tbody>
+              </table></div>
+              {auditoriaResultado.totalPaginas > 1 && <div className="staff-paginacao">
+                <span>Página {auditoriaResultado.pagina + 1} de {auditoriaResultado.totalPaginas} · {auditoriaResultado.totalItens} registro{auditoriaResultado.totalItens !== 1 ? 's' : ''}</span>
+                <div>
+                  <button type="button" className="button button-ghost" disabled={auditoriaPagina === 0} onClick={() => setAuditoriaPagina(p => p - 1)}><ChevronLeft size={16}/>Anterior</button>
+                  <button type="button" className="button button-ghost" disabled={auditoriaPagina + 1 >= auditoriaResultado.totalPaginas} onClick={() => setAuditoriaPagina(p => p + 1)}>Próxima<ChevronRight size={16}/></button>
+                </div>
+              </div>}
+            </>}
+    </section>}
+
+    {aba==='contas' && <>
     {resultado && <div className="staff-resumo">
       <div><strong>{resultado.totalContas}</strong><span>contas no total</span></div>
       <div><strong>{resultado.totalPagando}</strong><span>pagando</span></div>
@@ -226,6 +279,7 @@ export default function PaginaStaff() {
               </div>}
             </>}
     </section>
+    </>}
 
     {negociando && <div className="modal-backdrop" role="presentation"><form className="modal user-modal" onSubmit={salvarNegociacao}>
       <div className="modal-header"><div className="modal-icon"><HandCoins/></div><div><h2>Negociar condições</h2><p>{negociando.nomeFarmacia}</p></div>
