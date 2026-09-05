@@ -1,7 +1,7 @@
 export type StatusCotacao = 'DRAFT' | 'OPEN' | 'CLOSED' | 'COMPLETED' | 'CANCELLED'
 export type StatusResposta = 'IN_PROGRESS' | 'SUBMITTED'
 export interface EmpresaAcesso { id:number; name:string; role:'ADMIN'|'BUYER'|'VIEWER' }
-export interface Usuario { id:number; name:string; email:string; groupId:number; groupName:string; companies:EmpresaAcesso[]; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean; staff:boolean }
+export interface Usuario { id:number; name:string; email:string; groupId:number; groupName:string; companies:EmpresaAcesso[]; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean; staff:boolean; doisFatoresAtivo:boolean }
 export interface PendenciaDoisFatores { token:string; configurando:boolean; otpauthUri:string|null; segredoManual:string|null }
 export interface ContaStaff {
   grupoId:number; nomeFarmacia:string; cnpj:string|null; responsavelNome:string|null; responsavelEmail:string|null

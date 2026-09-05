@@ -1382,6 +1382,28 @@ label small {
 .totp-qr { width: 180px; height: 180px; border-radius: 8px; }
 .totp-segredo-manual { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
 .totp-segredo-manual code { display: inline-block; margin-top: 4px; padding: 4px 8px; border-radius: 6px; background: #eef3f1; font-size: 13px; letter-spacing: 1px; word-break: break-all; }
+.campo-seguranca { margin-top: 6px; padding: 18px; border: 1px solid #d7e1dd; border-radius: 12px; background: #fbfcfc; display: flex; flex-direction: column; gap: 12px; }
+.campo-seguranca-header { display: flex; align-items: center; gap: 12px; }
+.campo-seguranca-header .eyebrow { margin-bottom: 2px; }
+.campo-seguranca-header strong { display: block; font-size: 15px; color: var(--ink); }
+.campo-seguranca p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
+.codigo-input { text-align: center; font-size: 26px; font-weight: 700; letter-spacing: 9px; }
+.medidor-forca { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 0; }
+.medidor-forca-barra { height: 6px; border-radius: 999px; background: #e7ece9; overflow: hidden; }
+.medidor-forca-preenchimento { display: block; height: 100%; border-radius: 999px; transition: width .35s ease, background-color .35s ease; }
+.medidor-forca-preenchimento.nivel-fraca { background: #d9534f; }
+.medidor-forca-preenchimento.nivel-media { background: #f0ad4e; }
+.medidor-forca-preenchimento.nivel-boa { background: #8bc34a; }
+.medidor-forca-preenchimento.nivel-forte { background: #1f9d63; }
+.medidor-forca-rotulo { font-weight: 700; animation: medidor-forca-surgir .35s ease; }
+.medidor-forca-rotulo.nivel-fraca { color: #c0392b; }
+.medidor-forca-rotulo.nivel-media { color: #c07a1a; }
+.medidor-forca-rotulo.nivel-boa { color: #5c9c2e; }
+.medidor-forca-rotulo.nivel-forte { color: #1f7a4d; }
+@keyframes medidor-forca-surgir { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+.confirmacao-status { display: flex; align-items: center; gap: 5px; font-weight: 700; animation: medidor-forca-surgir .3s ease; }
+.confirmacao-status.ok { color: #1f7a4d; }
+.confirmacao-status.nok { color: #c0392b; }
 .demo-hint {
   background: #f5f8f7;
   border-radius: 10px;

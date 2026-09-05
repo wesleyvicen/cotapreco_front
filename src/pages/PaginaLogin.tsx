@@ -97,8 +97,8 @@ function FormularioDoisFatores({ pendencia, aoVoltar }:{ pendencia:PendenciaDois
       {pendencia.segredoManual && <p className="totp-segredo-manual">Não consegue escanear? Digite este código manualmente: <code>{pendencia.segredoManual}</code></p>}
     </div>}
     <label>Código de 6 dígitos
-      <input type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" autoFocus
-        value={codigo} onChange={e => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))} required/>
+      <input className="codigo-input" type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" autoFocus
+        placeholder="000000" value={codigo} onChange={e => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 6))} required/>
     </label>
     <button className="button button-primary button-large" disabled={loading || codigo.length !== 6}>
       {loading ? 'Verificando...' : <>Confirmar <ArrowRight size={19}/></>}

@@ -72,8 +72,9 @@ export default function App(){
   /* Staff não tem farmácia nenhuma — nenhuma rota normal (cotações, produtos, assinatura...)
      faz sentido pra essa conta, então qualquer caminho cai na tela própria dela. Mesmo
      LayoutSistema de sempre (menu lateral, avatar, sair) — ele mesmo troca os links do menu
-     quando user.staff é true. */
-  if(user?.staff)return <RotaProtegida><LayoutSistema><ConteudoAssincrono><PaginaStaff/></ConteudoAssincrono></LayoutSistema></RotaProtegida>
+     quando user.staff é true. Exceção: /alterar-senha, que o menu de staff também mostra (ver
+     LayoutSistema) e precisa cair na tela de verdade, não na de contas. */
+  if(user?.staff&&pathname!=='/alterar-senha')return <RotaProtegida><LayoutSistema><ConteudoAssincrono><PaginaStaff/></ConteudoAssincrono></LayoutSistema></RotaProtegida>
   let page:ReactNode
   if(pathname==='/')page=<PaginaPainel/>
   else if(pathname==='/cotacoes')page=<PaginaCotacoes/>
