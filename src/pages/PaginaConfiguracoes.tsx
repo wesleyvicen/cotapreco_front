@@ -1,4 +1,4 @@
-import { Building2, ChevronDown, MapPin, MessageCircle, Plus, Save } from 'lucide-react'
+import { Building2, ChevronDown, Gift, MapPin, MessageCircle, Plus, Save } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
@@ -147,25 +147,38 @@ function CardFarmacias() {
     {retorno === 'sucesso' && <div className="alert alert-success">Pagamento confirmado! A farmácia nova aparece na lista abaixo em poucos segundos.</div>}
 
     {conta && <section className="card settings-card plano-resumo">
-      <div className="plano-resumo-valor"><strong>{money(conta.precoMensalAtual)}</strong><span>por mês</span></div>
-      {conta.precoNegociado
-        ? <p>Preço negociado com a equipe CotaPreço · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
-            {conta.empresasAtivas < conta.farmaciasContratadas
-              ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
-              : '.'}</p>
-        : <p>{money(conta.precoBase)} pela primeira farmácia + {money(conta.precoAdicionalPorFarmacia)} por farmácia
-            adicional · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
-            {conta.empresasAtivas < conta.farmaciasContratadas
-              ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
-              : '.'}</p>}
-      {conta.precoNegociado && <div className="alert alert-warning plano-resumo-contato">
-        <MessageCircle/><span>Precisa mudar a quantidade ou o valor negociado?</span>
-        <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
-      </div>}
-      {!conta.precoNegociado && conta.sugerirContato && <div className="alert alert-warning plano-resumo-contato">
-        <MessageCircle/><span>Redes maiores merecem um preço sob medida.</span>
-        <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
-      </div>}
+      {conta.cortesia
+        ? <div className="plano-resumo-cortesia">
+            <div className="plano-resumo-cortesia-badge"><Gift size={20}/></div>
+            <div>
+              <strong>Cortesia · acesso liberado sem cobrança</strong>
+              <p>Contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
+                {conta.empresasAtivas < conta.farmaciasContratadas
+                  ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
+                  : '.'}</p>
+            </div>
+          </div>
+        : <>
+            <div className="plano-resumo-valor"><strong>{money(conta.precoMensalAtual)}</strong><span>por mês</span></div>
+            {conta.precoNegociado
+              ? <p>Preço negociado com a equipe CotaPreço · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
+                  {conta.empresasAtivas < conta.farmaciasContratadas
+                    ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
+                    : '.'}</p>
+              : <p>{money(conta.precoBase)} pela primeira farmácia + {money(conta.precoAdicionalPorFarmacia)} por farmácia
+                  adicional · contratado para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}
+                  {conta.empresasAtivas < conta.farmaciasContratadas
+                    ? ` · ${conta.empresasAtivas} criada${conta.empresasAtivas !== 1 ? 's' : ''}, pode criar mais ${conta.farmaciasContratadas - conta.empresasAtivas} sem custo extra.`
+                    : '.'}</p>}
+            {conta.precoNegociado && <div className="alert alert-warning plano-resumo-contato">
+              <MessageCircle/><span>Precisa mudar a quantidade ou o valor negociado?</span>
+              <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+            </div>}
+            {!conta.precoNegociado && conta.sugerirContato && <div className="alert alert-warning plano-resumo-contato">
+              <MessageCircle/><span>Redes maiores merecem um preço sob medida.</span>
+              <a className="button button-ghost" href={linkWhatsappNegociarFarmacias(conta.farmaciasContratadas)} target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+            </div>}
+          </>}
     </section>}
 
     {mensagem && <div className="alert alert-success">{mensagem}</div>}

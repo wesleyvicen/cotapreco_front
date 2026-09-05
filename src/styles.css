@@ -4852,6 +4852,32 @@ label small {
 .plano-resumo-contato .button {
   margin-left: auto;
 }
+.plano-resumo-cortesia {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.plano-resumo-cortesia-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: #fff8e5;
+  color: #946817;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.plano-resumo-cortesia strong {
+  display: block;
+  font-size: 17px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.plano-resumo-cortesia p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
 .farmacia-linha-clicavel {
   cursor: pointer;
 }
