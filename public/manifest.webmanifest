@@ -6,5 +6,5 @@
   "display": "standalone",
   "background_color": "#f5f7f6",
   "theme_color": "#0e4d3b",
-  "icons": [{"src":"/cotapreco-icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
+  "icons": [{"src":"/cotapreco-icon-512.png?v=20260904-2","sizes":"512x512","type":"image/png","purpose":"any"}]
 }

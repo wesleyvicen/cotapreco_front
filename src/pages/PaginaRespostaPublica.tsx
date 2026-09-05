@@ -1883,8 +1883,7 @@ function Cabecalho({
 function Logo() {
   return (
     <div className="public-logo">
-      <img src="/cotapreco-icon.png" alt="" />
-      CotaPreço
+      <img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260904-2" alt="CotaPreço" />
     </div>
   );
 }

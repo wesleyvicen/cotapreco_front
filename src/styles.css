@@ -4229,8 +4229,8 @@ label small {
     font-size: 16px;
   }
   .public-header .public-logo img {
-    width: 30px;
-    height: 30px;
+    width: 136px;
+    height: auto;
   }
   .public-header > .representative-session {
     display: flex;
@@ -5593,12 +5593,42 @@ label small {
   height: 100%;
   object-fit: cover;
 }
-.public-logo > img {
+.cotapreco-logo {
   display: block;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  object-fit: cover;
+  width: 148px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.brand-copy {
+  gap: 2px;
+  min-width: 0;
+}
+.brand-copy .cotapreco-logo {
+  width: 148px;
+}
+.brand.light .brand-copy {
+  align-items: flex-start;
+}
+.brand.light .cotapreco-logo {
+  width: 205px;
+  padding: 9px 13px;
+  border-radius: 14px;
+  background: rgba(247, 251, 249, 0.96);
+}
+.brand.light .brand-copy span {
+  margin-top: 3px;
+  margin-left: 13px;
+}
+.brand.compact .cotapreco-logo {
+  width: 126px;
+}
+.public-logo > img.cotapreco-logo {
+  display: block;
+  width: 152px;
+  height: auto;
+  border-radius: 0;
+  object-fit: contain;
 }
 
 /* Produto adicional na revisão da cotação */
