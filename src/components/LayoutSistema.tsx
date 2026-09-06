@@ -2,6 +2,7 @@ import { BadgeCheck, BarChart3, Boxes, Building2, ChevronRight, ClipboardList, K
 import { useEffect, useState, type ReactNode } from 'react'
 import FaixaAssinatura from './FaixaAssinatura'
 import FaixaConfirmacaoEmail from './FaixaConfirmacaoEmail'
+import FaixaNotificacoesPush from './FaixaNotificacoesPush'
 import AvisoEmailConfirmado from './AvisoEmailConfirmado'
 import { AssinaturaEmpresa } from './RodapeEmpresa'
 import { LinkNavegacao } from '../roteamento'
@@ -54,6 +55,6 @@ export default function LayoutSistema({children}:{children:ReactNode}){
       <div className="account"><div className="avatar">{user?.name.slice(0,2).toUpperCase()}</div><div><strong>{user?.name}</strong>{!user?.staff&&<SeletorFarmacia user={user}/>}</div><button className="icon-button" title="Sair" onClick={()=>void logout()}><LogOut size={19}/></button></div>
     </aside>
     {open&&<button aria-label="Fechar menu" className="sidebar-backdrop" onClick={()=>setOpen(false)}/>} 
-    <div className="main-area"><header className="mobile-header"><button className="icon-button" onClick={()=>setOpen(true)}><Menu/></button><div className="brand compact"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></div><div className="avatar small">{user?.name[0]}</div></header><main><AvisoEmailConfirmado/><FaixaAssinatura/><FaixaConfirmacaoEmail/>{children}</main><footer className="rodape-sistema"><AssinaturaEmpresa/></footer></div>
+    <div className="main-area"><header className="mobile-header"><button className="icon-button" onClick={()=>setOpen(true)}><Menu/></button><div className="brand compact"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></div><div className="avatar small">{user?.name[0]}</div></header><main><AvisoEmailConfirmado/><FaixaAssinatura/><FaixaConfirmacaoEmail/>{!user?.staff&&<FaixaNotificacoesPush/>}{children}</main><footer className="rodape-sistema"><AssinaturaEmpresa/></footer></div>
   </div>
 }

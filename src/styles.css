@@ -630,6 +630,53 @@ code {
 .faixa-assinatura-vencida { border-color: #efd2d2; background: #fdf3f2; }
 .faixa-assinatura-vencida > svg { color: var(--danger); }
 
+.faixa-push {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--green-soft);
+}
+.faixa-push > svg { width: 21px; flex: none; color: var(--green); }
+.faixa-push > div { display: flex; min-width: 200px; flex: 1; flex-direction: column; gap: 2px; }
+.faixa-push strong { font-size: 14px; color: var(--ink); }
+.faixa-push span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.faixa-push .button { flex: none; }
+
+.push-vantagens-lista {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.push-vantagens-lista li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.push-vantagens-lista svg {
+  width: 20px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--green);
+}
+.push-vantagens-lista span {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.push-vantagens-nota {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
 .page {
   display: flex;
   flex-direction: column;
