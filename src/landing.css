@@ -75,6 +75,15 @@
   text-decoration: none;
 }
 .lp-link-entrar:hover { text-decoration: underline; }
+.lp-link-precos {
+  display: none;
+  padding: 9px 10px;
+  color: var(--lp-tinta);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.lp-link-precos:hover { color: var(--lp-verde); }
 
 /* Botões ------------------------------------------------------------ */
 .lp-botao {
@@ -104,6 +113,7 @@
 }
 .lp-botao-claro { background: #fff; color: var(--lp-verde); }
 .lp-botao-compacto { min-height: 40px; padding: 0 14px; font-size: 14px; }
+.lp-botao-full { width: 100%; }
 
 /* Hero -------------------------------------------------------------- */
 .lp-hero {
@@ -283,19 +293,138 @@
   font-weight: 600;
 }
 
-/* Oferta ------------------------------------------------------------ */
-.lp-oferta { background: var(--lp-verde); }
-.lp-oferta-interno { text-align: center; }
-.lp-oferta h2 { color: #fff; }
-.lp-oferta p {
-  max-width: 580px;
-  margin: 0 auto 24px;
-  color: #cde5da;
-  font-size: 15px;
-  line-height: 1.6;
+/* Preços -------------------------------------------------------------
+ * Vitrine de preço: cartão branco elevado sobre fundo verde-claro para o valor ser a
+ * primeira coisa que o olho pega. Mostrar o preço na própria landing (em vez de só depois
+ * do cadastro) é proposital — quem chega até aqui já decidiu que o produto resolve, e
+ * esconder o valor nessa hora só adia uma objeção que vai aparecer de qualquer jeito. */
+.lp-precos { background: var(--lp-verde-claro); }
+.lp-precos-interno { display: grid; justify-items: center; text-align: center; }
+.lp-precos-eyebrow {
+  margin-bottom: 8px;
+  color: var(--lp-verde);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.lp-oferta-nota { margin: 18px auto 0 !important; font-size: 14px; }
-.lp-oferta-nota a { color: #fff; font-weight: 700; }
+.lp-precos h2 { margin-bottom: 10px; }
+.lp-precos-sub { max-width: 480px; margin: 0 0 30px; color: var(--lp-suave); font-size: 15px; line-height: 1.55; }
+
+.lp-preco-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 28px 24px 26px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 20px 48px rgba(12, 58, 45, 0.14);
+}
+.lp-preco-numero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  color: var(--lp-verde);
+}
+.lp-preco-cifrao { margin-top: 8px; font-size: 20px; font-weight: 800; }
+.lp-preco-numero strong { font-size: 56px; line-height: 1; letter-spacing: -1.5px; font-weight: 900; }
+.lp-preco-centavos { margin-top: 8px; font-size: 20px; font-weight: 800; }
+.lp-preco-periodo { align-self: flex-end; margin: 0 0 12px 4px; color: var(--lp-suave); font-size: 15px; font-weight: 700; }
+.lp-preco-legenda { margin: 2px 0 22px; color: var(--lp-suave); font-size: 13.5px; font-weight: 600; }
+.lp-preco-lista {
+  display: grid;
+  gap: 11px;
+  margin: 0 0 22px;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--lp-linha);
+  list-style: none;
+  text-align: left;
+}
+.lp-preco-lista li { display: flex; align-items: flex-start; gap: 9px; color: var(--lp-tinta); font-size: 14px; font-weight: 600; line-height: 1.4; }
+.lp-preco-lista svg { flex: 0 0 auto; width: 17px; height: 17px; margin-top: 1px; color: var(--lp-verde); }
+.lp-preco-nota {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  margin: 14px 0 0;
+  color: var(--lp-suave);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.lp-preco-nota svg { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 1px; color: var(--lp-verde); }
+
+/* Estimador de rede: mesma lógica de preço que a tela de Assinatura já mostra depois do
+   login (base + adicional por farmácia), só que aqui é a estimativa de exibição, sem
+   cobrar nada. Dá o número de verdade antes de quem tem rede precisar falar com alguém. */
+.lp-preco-estimador {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  margin: 26px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+}
+.lp-preco-estimador label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--lp-tinta);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.lp-preco-estimador label svg { flex: 0 0 auto; width: 16px; height: 16px; color: var(--lp-verde); }
+.lp-preco-estimador input {
+  width: 64px;
+  min-height: 38px;
+  border: 1px solid #d3e0da;
+  border-radius: 9px;
+  background: #fbfdfc;
+  padding: 6px 8px;
+  color: var(--lp-tinta);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+.lp-preco-estimador input:focus { border-color: var(--lp-verde); outline: none; box-shadow: 0 0 0 3px rgba(14, 77, 59, 0.12); }
+.lp-preco-estimador > p { margin: 0; color: var(--lp-suave); font-size: 13px; line-height: 1.55; }
+.lp-preco-estimador > p strong { color: var(--lp-verde); font-size: 15px; }
+.lp-preco-estimador-contato { display: flex !important; align-items: flex-start; gap: 6px; color: #8a6416 !important; }
+.lp-preco-estimador-contato svg { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 1px; color: #946817; }
+.lp-preco-estimador-contato a { color: #946817; font-weight: 700; text-decoration: underline; }
+.lp-oferta-nota { margin: 16px auto 0 !important; font-size: 14px; }
+.lp-oferta-nota a { color: var(--lp-verde); font-weight: 700; }
+
+/* Barra fixa de CTA no celular: quem rolou até o meio da página já formou opinião — o
+   preço e o botão ficam sempre a um toque, sem precisar voltar ao topo. Some no desktop,
+   onde o cabeçalho já cumpre esse papel. */
+.lp-cta-fixa {
+  display: none;
+  position: fixed;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--lp-linha);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 -8px 24px rgba(12, 58, 45, 0.1);
+}
+.lp-cta-fixa > div { display: flex; flex-direction: column; line-height: 1.2; }
+.lp-cta-fixa strong { color: var(--lp-verde); font-size: 15px; font-weight: 900; }
+.lp-cta-fixa span { color: var(--lp-suave); font-size: 11.5px; font-weight: 600; }
+.lp-cta-fixa .lp-botao { flex: none; }
 
 /* FAQ --------------------------------------------------------------- */
 .lp-faq { max-width: 760px; }
@@ -489,8 +618,17 @@
   .legal-indice { position: sticky; top: 22px; max-height: calc(100vh - 44px); overflow-y: auto; }
 }
 
+/* Até o celular ------------------------------------------------------
+ * A barra fixa só faz sentido onde a tela é curta demais para o cabeçalho carregar CTA e
+ * preço ao mesmo tempo. A partir do tablet o cabeçalho já resolve isso. */
+@media (max-width: 699px) {
+  .lp-cta-fixa { display: flex; }
+  .lp { padding-bottom: 70px; }
+}
+
 /* A partir do tablet ------------------------------------------------ */
 @media (min-width: 700px) {
+  .lp-link-precos { display: inline-block; }
   .lp-hero { padding: 52px 0 8px; }
   .lp-hero h1 { font-size: 46px; }
   .lp-subtitulo { font-size: 18px; }

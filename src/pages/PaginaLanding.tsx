@@ -1,12 +1,22 @@
-import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, PackageCheck, Search, ShieldCheck, Sparkles } from 'lucide-react'
-import { useEffect } from 'react'
+import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, MessageCircle, PackageCheck, Search, ShieldCheck, Sparkles, Users } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { money } from '../api'
 import RodapeSite from '../components/RodapeEmpresa'
+import { INCLUSO, linkWhatsappNegociarFarmacias, PLANO_PADRAO, PRECO_ADICIONAL_FARMACIA_PADRAO, TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import { LinkInterno } from '../roteamento'
 
 const PERGUNTAS = [
   {
     pergunta: 'Preciso cadastrar cartão de crédito para testar?',
     resposta: 'Não. São 7 dias com o sistema inteiro liberado, sem cartão e sem cobrança automática no fim do teste.',
+  },
+  {
+    pergunta: 'O preço muda de acordo com quantas pessoas usam?',
+    resposta: 'Não. A mensalidade é por farmácia, não por usuário. Comprador, gerente ou dono podem ter acesso sem custo adicional.',
+  },
+  {
+    pergunta: 'Tenho mais de uma farmácia. Como fica o preço?',
+    resposta: 'Cada farmácia adicional soma R$ 89,90 à mensalidade da primeira, e todas ficam numa conta só. Para redes com mais de três farmácias, a gente costuma negociar um preço sob medida. É só chamar no WhatsApp.',
   },
   {
     pergunta: 'Minha farmácia precisa instalar algum programa?',
@@ -22,7 +32,7 @@ const PERGUNTAS = [
   },
   {
     pergunta: 'Serve para farmácia pequena, com poucos itens?',
-    resposta: 'Serve. O ganho aparece a partir do momento em que você pede preço para mais de uma distribuidora — e cresce conforme o histórico se acumula.',
+    resposta: 'Serve. O ganho aparece a partir do momento em que você pede preço para mais de uma distribuidora, e cresce conforme o histórico se acumula.',
   },
   {
     pergunta: 'O que acontece com meus dados se eu cancelar?',
@@ -34,7 +44,7 @@ const DIFERENCIAIS = [
   {
     icone: <Sparkles/>,
     titulo: 'Ele aponta a oportunidade e o risco de ruptura',
-    texto: 'Conforme as respostas chegam, o sistema destaca sozinho onde uma oferta está muito abaixo das outras — em reais, no volume que você pediu — e quais produtos só uma distribuidora ofertou, ou nenhuma.',
+    texto: 'Conforme as respostas chegam, o sistema destaca sozinho onde uma oferta está muito abaixo das outras (em reais, no volume que você pediu) e quais produtos só uma distribuidora ofertou, ou nenhuma.',
     reforco: 'Quando a diferença é grande demais para ser verdade, ele manda conferir embalagem e EAN antes de você contar com aquele preço.',
     imagem: '02-achados',
     alt: 'Faixa do CotaPreço destacando oportunidades de preço e produtos com risco de ruptura',
@@ -81,9 +91,14 @@ const DIFERENCIAIS = [
   },
 ]
 
+const [PRECO_REAIS, PRECO_CENTAVOS] = PLANO_PADRAO.value.toFixed(2).split('.')
+
 export default function PaginaLanding() {
+  const [quantidade, setQuantidade] = useState(1)
+  const precoEstimado = PLANO_PADRAO.value + PRECO_ADICIONAL_FARMACIA_PADRAO * Math.max(0, quantidade - 1)
+
   useEffect(() => {
-    document.title = 'CotaPreço — Cotação de medicamentos para farmácias | Teste 7 dias grátis'
+    document.title = 'CotaPreço · Cotação de medicamentos para farmácias | Teste 7 dias grátis'
   }, [])
 
   return <div className="lp">
@@ -95,6 +110,7 @@ export default function PaginaLanding() {
           <img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/>
         </div>
         <nav className="lp-topo-acoes" aria-label="Acesso ao sistema">
+          <a className="lp-link-precos" href="#precos">Preços</a>
           <LinkInterno to="/login" className="lp-link-entrar">Entrar</LinkInterno>
           <LinkInterno to="/cadastro" className="lp-botao lp-botao-primario lp-botao-compacto">Testar grátis</LinkInterno>
         </nav>
@@ -137,12 +153,12 @@ export default function PaginaLanding() {
             <li>
               <span className="lp-passo-numero">1</span>
               <h3><FileSpreadsheet/> Importe a sua lista</h3>
-              <p>Suba a planilha que você já usa. O sistema identifica as colunas e deixa você corrigir produto, EAN e quantidade antes de abrir — sem reimportar o arquivo.</p>
+              <p>Suba a planilha que você já usa. O sistema identifica as colunas e deixa você corrigir produto, EAN e quantidade antes de abrir, sem reimportar o arquivo.</p>
             </li>
             <li>
               <span className="lp-passo-numero">2</span>
               <h3><Link2/> Mande o link para as distribuidoras</h3>
-              <p>Cada representante abre o link no celular e preenche preço e disponibilidade. Nada para instalar e nenhuma planilha de volta por e-mail — ele só cria um acesso rápido na primeira vez.</p>
+              <p>Cada representante abre o link no celular e preenche preço e disponibilidade. Nada para instalar e nenhuma planilha de volta por e-mail. Ele só cria um acesso rápido na primeira vez.</p>
             </li>
             <li>
               <span className="lp-passo-numero">3</span>
@@ -167,7 +183,7 @@ export default function PaginaLanding() {
               <p>As respostas chegam prontas para comparar, o pedido de cada distribuidora sai montado e a conferência da entrega fecha o ciclo. Preço novo entra sozinho na conta.</p>
             </article>
           </div>
-          <p className="lp-tempo-fecho">Some quanto tempo isso ocupa na sua semana. É esse o tempo que volta — junto com o erro de digitação que custa caro no fechamento.</p>
+          <p className="lp-tempo-fecho">Some quanto tempo isso ocupa na sua semana. É esse o tempo que volta, junto com o erro de digitação que custa caro no fechamento.</p>
         </div>
       </section>
 
@@ -194,15 +210,43 @@ export default function PaginaLanding() {
         </div>
       </section>
 
-      <section className="lp-secao lp-oferta" aria-labelledby="oferta">
-        <div className="lp-container lp-oferta-interno">
-          <h2 id="oferta">Teste 7 dias, sem cartão</h2>
-          <p>
-            Todo o sistema liberado durante o teste: cotações, comparativo, plano de compra, histórico
-            e exportação. Não pedimos cartão de crédito para começar e não há cobrança automática
-            quando o período termina.
-          </p>
-          <LinkInterno to="/cadastro" className="lp-botao lp-botao-claro">Criar conta grátis <ArrowRight/></LinkInterno>
+      <section className="lp-secao lp-precos" aria-labelledby="precos" id="precos">
+        <div className="lp-container lp-precos-interno">
+          <span className="lp-precos-eyebrow">Assinatura</span>
+          <h2 id="precos">Um preço, sem pegadinha</h2>
+          <p className="lp-precos-sub">Mensalidade por farmácia: a equipe inteira usa sem custo extra por acesso.</p>
+
+          <div className="lp-preco-card">
+            <div className="lp-preco-numero">
+              <span className="lp-preco-cifrao">R$</span>
+              <strong>{PRECO_REAIS}</strong>
+              <span className="lp-preco-centavos">,{PRECO_CENTAVOS}</span>
+              <span className="lp-preco-periodo">/mês</span>
+            </div>
+            <p className="lp-preco-legenda">por farmácia · cancele quando quiser, sem multa</p>
+            <ul className="lp-preco-lista">
+              {INCLUSO.map(item => <li key={item}><BadgeCheck/>{item}</li>)}
+            </ul>
+            <LinkInterno to="/cadastro" className="lp-botao lp-botao-primario lp-botao-full">
+              Começar teste grátis de {TOTAL_DIAS_TESTE} dias <ArrowRight/>
+            </LinkInterno>
+            <p className="lp-preco-nota"><ShieldCheck/> Sem cartão para testar. Sem cobrança automática quando o teste termina.</p>
+          </div>
+
+          <div className="lp-preco-estimador">
+            <label><Users/> Quantas farmácias você tem?
+              <input type="number" min={1} max={99} value={quantidade}
+                onChange={e => setQuantidade(Math.max(1, Number(e.target.value) || 1))}/>
+            </label>
+            {quantidade === 1
+              ? <p>Uma farmácia: <strong>{money(PLANO_PADRAO.value)}</strong>/mês.</p>
+              : <p>Com {quantidade} farmácias, numa conta só: <strong>{money(precoEstimado)}</strong>/mês
+                {' '}({money(PLANO_PADRAO.value)} da primeira + {money(PRECO_ADICIONAL_FARMACIA_PADRAO)} × {quantidade - 1} adicional{quantidade - 1 !== 1 ? 'is' : ''}).</p>}
+            {quantidade > 3 && <p className="lp-preco-estimador-contato">
+              <MessageCircle/> Redes maiores costumam negociar condições especiais.{' '}
+              <a href={linkWhatsappNegociarFarmacias(quantidade)} target="_blank" rel="noopener noreferrer">Fale com a gente pelo WhatsApp</a>.
+            </p>}
+          </div>
           <p className="lp-oferta-nota">Já usa o CotaPreço? <LinkInterno to="/login">Entrar na minha farmácia</LinkInterno></p>
         </div>
       </section>
@@ -219,5 +263,13 @@ export default function PaginaLanding() {
     </main>
 
     <RodapeSite/>
+
+    <div className="lp-cta-fixa" role="complementary" aria-label="Começar teste grátis">
+      <div>
+        <strong>R$ {PRECO_REAIS},{PRECO_CENTAVOS}/mês</strong>
+        <span>{TOTAL_DIAS_TESTE} dias grátis, sem cartão</span>
+      </div>
+      <LinkInterno to="/cadastro" className="lp-botao lp-botao-primario lp-botao-compacto">Testar grátis</LinkInterno>
+    </div>
   </div>
 }

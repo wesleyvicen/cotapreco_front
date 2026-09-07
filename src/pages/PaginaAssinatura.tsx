@@ -6,7 +6,7 @@ import { api, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { AvisoErro } from '../components/ComponentesUI'
 import {
-  assinaturaEmConfirmacao, LINK_WHATSAPP_ASSINATURA, precoDoPlano, ROTULO_STATUS, TOTAL_DIAS_TESTE,
+  assinaturaEmConfirmacao, INCLUSO, LINK_WHATSAPP_ASSINATURA, precoDoPlano, ROTULO_STATUS, TOTAL_DIAS_TESTE,
 } from '../lib/assinatura'
 import CamposEndereco from '../components/CamposEndereco'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
@@ -16,14 +16,6 @@ import type { AjusteQuantidade, Assinatura, CheckoutAssinatura, Conta, Empresa }
    evita a primeira ida e volta da conversa. */
 const linkComContexto = (farmacia:string, assunto:string) =>
   'https://wa.me/5581999441494?text=' + encodeURIComponent(`Olá! ${assunto} — farmácia ${farmacia}.`)
-
-const INCLUSO = [
-  'Cotações e comparativo de preços ilimitados',
-  'Plano de compra por distribuidora, com pedido mínimo',
-  'Conferência de recebimento e histórico de preços',
-  'Exportação em Excel de tudo',
-  'Usuários da equipe sem custo por acesso',
-]
 
 /* Mesma lista usada em "O que acontece quando vence" e na confirmação de cancelamento — os
    dois casos têm exatamente a mesma consequência (o acesso completo pausa quando o prazo

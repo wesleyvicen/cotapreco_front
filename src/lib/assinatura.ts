@@ -11,7 +11,22 @@ export const linkWhatsappNegociarFarmacias = (quantidadeFarmacias:number) =>
    preço na tela nunca pode divergir do que vai ser cobrado no cartão. */
 export const PLANO_PADRAO:PlanoAssinatura = { value:119.9, cycle:'MONTHLY', description:'CotaPreço — plano mensal' }
 
+/* Preço padrão de cada farmácia além da primeira, na mesma conta. É o valor de tabela: a
+   conta pode ter um preço negociado (Conta.precoNegociado), que só o backend conhece
+   depois do login — aqui é só a estimativa mostrada antes de entrar. */
+export const PRECO_ADICIONAL_FARMACIA_PADRAO = 89.9
+
 export const TOTAL_DIAS_TESTE = 7
+
+/* Mesma lista usada na tela de assinatura (o que vem incluso e o resumo de cancelamento)
+   e na landing (a vitrine de preço) — um único lugar para o que o plano entrega. */
+export const INCLUSO = [
+  'Cotações e comparativo de preços ilimitados',
+  'Plano de compra por distribuidora, com pedido mínimo',
+  'Conferência de recebimento e histórico de preços',
+  'Exportação em Excel de tudo',
+  'Usuários da equipe sem custo por acesso',
+]
 
 export const precoDoPlano = (assinatura:Assinatura|null) => assinatura?.plan ?? PLANO_PADRAO
 
