@@ -1378,6 +1378,12 @@ tbody tr:hover {
   gap: 24px;
   padding: 40px;
 }
+/* No desktop a marca já mora no hero verde ao lado; esta versão só existe para o celular,
+   onde o hero inteiro some (ver @media 760px) e a página ficaria sem nenhuma identidade
+   visual no topo. */
+.login-panel-marca {
+  display: none;
+}
 .login-card {
   width: min(420px, 100%);
   display: flex;
@@ -1414,6 +1420,39 @@ tbody tr:hover {
   outline: none;
   background: #fbfcfc;
   color: var(--ink);
+}
+/* Sugestão de domínio de e-mail: duas camadas do mesmo tamanho, uma em cima da outra. A
+   de baixo (fantasma) desenha a caixa normal do campo e mostra o texto já digitado em
+   cor invisível seguido do resto do domínio sugerido em cinza — como o texto digitado é
+   idêntico em ambas as camadas, ele nunca aparece duplicado. A de cima é o input de
+   verdade, sem fundo nem borda próprios, só recebendo clique e teclado. */
+.email-autocompletar {
+  position: relative;
+}
+.email-autocompletar-fantasma {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 12px 13px;
+  border: 1px solid #d7e1dd;
+  border-radius: 10px;
+  background: #fbfcfc;
+  font: inherit;
+  line-height: normal;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+}
+.email-autocompletar-digitado {
+  color: transparent;
+}
+.email-autocompletar-sugestao {
+  color: #9aa8a3;
+}
+.email-autocompletar input {
+  position: relative;
+  background: transparent !important;
+  border-color: transparent !important;
 }
 input:focus,
 select:focus {
@@ -3285,13 +3324,31 @@ label small {
   }
   .login-page {
     grid-template-columns: 1fr;
+    background: linear-gradient(180deg, #f2f8f5 0%, #fff 46%);
   }
   .login-hero {
     display: none;
   }
   .login-panel {
-    padding: 28px 22px;
+    grid-template-rows: auto 1fr auto;
+    padding: 22px 20px 24px;
+    gap: 20px;
     min-height: 100vh;
+  }
+  .login-panel-marca {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: env(safe-area-inset-top);
+  }
+  .login-card {
+    width: 100%;
+  }
+  .login-card h2 {
+    font-size: 24px;
+  }
+  .forgot-password-link {
+    padding: 6px 0;
   }
   .public-header {
     padding: 0 15px;
@@ -5633,8 +5690,8 @@ label small {
   top: 4px;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 8px;
   background: transparent;

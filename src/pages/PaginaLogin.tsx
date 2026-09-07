@@ -1,10 +1,11 @@
 import { ArrowRight, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react'
 import QRCode from 'qrcode'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import AvisoEmailConfirmado from '../components/AvisoEmailConfirmado'
 import { AssinaturaEmpresa } from '../components/RodapeEmpresa'
+import { sugerirDominioEmail } from '../lib/sugestaoEmail'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 import type { PendenciaDoisFatores } from '../types'
 
@@ -17,8 +18,21 @@ export default function PaginaLogin(){
   const [error,setError]=useState('')
   const [loading,setLoading]=useState(false)
   const [pendencia,setPendencia]=useState<PendenciaDoisFatores|null>(null)
+  const sugestaoEmail=sugerirDominioEmail(email)
 
   if(user)return <Redirecionar to="/" replace/>
+
+  /* Tab e seta-direita são os dois jeitos que quem já viu esse tipo de sugestão espera
+     usar para aceitar (é o mesmo padrão da barra de endereço do navegador). Tab aceita e
+     já segue para o campo de senha; a seta só completa quando o cursor está no fim, senão
+     ela precisa continuar navegando dentro do texto normalmente. */
+  const teclaNoEmail=(e:KeyboardEvent<HTMLInputElement>)=>{
+    if(!sugestaoEmail)return
+    if(e.key==='Tab'&&!e.shiftKey){setEmail(sugestaoEmail);return}
+    if(e.key==='ArrowRight'&&e.currentTarget.selectionStart===email.length&&e.currentTarget.selectionEnd===email.length){
+      e.preventDefault();setEmail(sugestaoEmail)
+    }
+  }
 
   const submit=async(e:FormEvent)=>{
     e.preventDefault(); setError(''); setLoading(true)
@@ -42,13 +56,22 @@ export default function PaginaLogin(){
       <div className="hero-security"><ShieldCheck/><span>Seus dados protegidos e isolados por empresa</span></div>
     </section>
     <section className="login-panel">
+      <div className="login-panel-marca"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></div>
       {pendencia
         ? <FormularioDoisFatores pendencia={pendencia} aoVoltar={() => { setPendencia(null); setError('') }}/>
         : <form className="login-card" onSubmit={submit}>
             <AvisoEmailConfirmado/>
             <div><span className="eyebrow green">Bem-vindo de volta</span><h2>Acesse sua conta</h2><p>Use suas credenciais para continuar.</p></div>
             {error&&<div className="alert alert-error">{error}</div>}
-            <label>E-mail<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" required/></label>
+            <label>E-mail
+              <div className="email-autocompletar">
+                <div className="email-autocompletar-fantasma" aria-hidden="true">
+                  <span className="email-autocompletar-digitado">{email}</span>
+                  {sugestaoEmail&&<span className="email-autocompletar-sugestao">{sugestaoEmail.slice(email.length)}</span>}
+                </div>
+                <input type="text" inputMode="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={teclaNoEmail} autoComplete="email" required/>
+              </div>
+            </label>
             <label>Senha<div className="password-field"><input type={showPassword?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" required/><button type="button" aria-label={showPassword?'Ocultar senha':'Mostrar senha'} onClick={()=>setShowPassword(valor=>!valor)}>{showPassword?<EyeOff/>:<Eye/>}</button></div></label>
             <LinkInterno className="forgot-password-link" to="/esqueci-senha">Esqueci minha senha</LinkInterno>
             <button className="button button-primary button-large" disabled={loading}>{loading?'Entrando...':<>Entrar <ArrowRight size={19}/></>}</button>
