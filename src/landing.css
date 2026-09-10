@@ -298,6 +298,52 @@
  * primeira coisa que o olho pega. Mostrar o preço na própria landing (em vez de só depois
  * do cadastro) é proposital — quem chega até aqui já decidiu que o produto resolve, e
  * esconder o valor nessa hora só adia uma objeção que vai aparecer de qualquer jeito. */
+/* Depoimentos --------------------------------------------------------- */
+.lp-depoimentos { background: #f6faf8; }
+.lp-depoimentos-lista {
+  display: grid;
+  gap: 16px;
+}
+.lp-depoimento {
+  position: relative;
+  padding: 24px 22px 20px;
+  border: 1px solid var(--lp-linha);
+  border-radius: 15px;
+  background: #fff;
+}
+.lp-depoimento-icone {
+  width: 22px;
+  height: 22px;
+  margin-bottom: 10px;
+  color: var(--lp-verde);
+  opacity: 0.5;
+}
+.lp-depoimento-texto {
+  margin: 0 0 16px;
+  color: var(--lp-tinta);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.lp-depoimento footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.lp-depoimento-tipo {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--lp-verde-claro);
+  color: var(--lp-verde);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.lp-depoimento footer strong { color: var(--lp-tinta); }
+.lp-depoimento-papel { color: var(--lp-suave); }
+
 .lp-precos { background: var(--lp-verde-claro); }
 .lp-precos-interno { display: grid; justify-items: center; text-align: center; }
 .lp-precos-eyebrow {
@@ -639,6 +685,7 @@
   .lp-antes-depois { grid-template-columns: 1fr auto 1fr; gap: 18px; }
   .lp-seta svg { transform: none; }
   .lp-diferenciais { gap: 42px; }
+  .lp-depoimentos-lista { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
   .lp-diferencial { grid-template-columns: 1fr 1.25fr; align-items: center; gap: 40px; }
   .lp-diferencial:nth-child(even) .lp-diferencial-texto { order: 2; }
   .lp-diferencial-estreito { grid-template-columns: 1fr 0.6fr; }

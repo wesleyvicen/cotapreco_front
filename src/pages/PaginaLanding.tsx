@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, MessageCircle, PackageCheck, Search, ShieldCheck, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, MessageCircle, PackageCheck, Quote, Search, ShieldCheck, Sparkles, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { money } from '../api'
 import RodapeSite from '../components/RodapeEmpresa'
@@ -39,6 +39,22 @@ const PERGUNTAS = [
     resposta: 'As cotações, os pedidos e o histórico de preços continuam seus. Você pode exportar em Excel a qualquer momento, inclusive durante o teste.',
   },
 ]
+
+type TipoDepoimento = 'farmacia' | 'representante'
+
+const DEPOIMENTOS: { tipo: TipoDepoimento; nome: string; papel: string; texto: string }[] = [
+  {
+    tipo: 'representante',
+    nome: 'Fernanda Rodrigues',
+    papel: 'Representante · Acripel Distribuidora',
+    texto: 'Foi tranquilo. Fiz o cadastro que eu ainda não tinha e respondi rapidinho. Só usei o campo de observação para avisar quando o laboratório era diferente ou quando tinha preço melhor para quantidade maior.',
+  },
+]
+
+const ROTULO_TIPO_DEPOIMENTO: Record<TipoDepoimento, string> = {
+  farmacia: 'Farmácia',
+  representante: 'Representante',
+}
 
 const DIFERENCIAIS = [
   {
@@ -205,6 +221,23 @@ export default function PaginaLanding() {
                     loading="lazy" decoding="async" alt={item.alt}/>
                 </picture>
               </figure>}
+            </article>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-secao lp-depoimentos" aria-labelledby="depoimentos">
+        <div className="lp-container">
+          <h2 id="depoimentos">Quem já cotou pelo CotaPreço</h2>
+          <div className="lp-depoimentos-lista">
+            {DEPOIMENTOS.map(item => <article className="lp-depoimento" key={item.nome}>
+              <Quote className="lp-depoimento-icone" aria-hidden="true"/>
+              <p className="lp-depoimento-texto">{item.texto}</p>
+              <footer>
+                <span className="lp-depoimento-tipo">{ROTULO_TIPO_DEPOIMENTO[item.tipo]}</span>
+                <strong>{item.nome}</strong>
+                <span className="lp-depoimento-papel">{item.papel}</span>
+              </footer>
             </article>)}
           </div>
         </div>
