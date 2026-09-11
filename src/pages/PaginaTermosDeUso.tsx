@@ -1,11 +1,12 @@
 import LayoutLegal, { DestaqueLegal, type SecaoLegal } from '../components/LayoutLegal'
+import { TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import { LinkInterno } from '../roteamento'
 
 const INDICE: SecaoLegal[] = [
   { id: 'aceite', titulo: 'Aceite destes termos' },
   { id: 'o-que-e', titulo: 'O que o CotaPreço é — e o que não é' },
   { id: 'conta', titulo: 'Conta, usuários e perfis' },
-  { id: 'teste', titulo: 'Teste de 7 dias' },
+  { id: 'teste', titulo: `Teste de ${TOTAL_DIAS_TESTE} dias` },
   { id: 'assinatura', titulo: 'Assinatura, preço e cobrança' },
   { id: 'cancelamento', titulo: 'Cancelamento e reembolso' },
   { id: 'inadimplencia', titulo: 'Atraso no pagamento' },
@@ -28,7 +29,7 @@ export default function PaginaTermosDeUso() {
 
     <DestaqueLegal titulo="O essencial em cinco linhas">
       <ul>
-        <li>São 7 dias de teste com tudo liberado, sem cartão e sem cobrança automática no fim.</li>
+        <li>São {TOTAL_DIAS_TESTE} dias de teste com tudo liberado, sem cartão e sem cobrança automática no fim.</li>
         <li>A assinatura custa R$ 119,90 por mês, cobrada no cartão pela operadora Asaas.</li>
         <li>Você cancela quando quiser; o acesso segue até o fim do período já pago.</li>
         <li>Os dados são seus e continuam seus. Exporte em Excel a qualquer momento.</li>
@@ -110,15 +111,15 @@ export default function PaginaTermosDeUso() {
     </section>
 
     <section id="teste">
-      <h2>4. Teste de 7 dias</h2>
+      <h2>4. Teste de {TOTAL_DIAS_TESTE} dias</h2>
       <p>
-        Toda conta nova começa com <strong>7 dias corridos</strong> de acesso completo, contados da
+        Toda conta nova começa com <strong>{TOTAL_DIAS_TESTE} dias corridos</strong> de acesso completo, contados da
         criação: cotações, comparativo, plano de compra, histórico e exportação, sem limitação de
         funcionalidade.
       </p>
       <ul>
         <li><strong>Não pedimos cartão de crédito</strong> para iniciar o teste.</li>
-        <li><strong>Não há cobrança automática</strong> quando os 7 dias terminam. O acesso simplesmente para até você decidir assinar.</li>
+        <li><strong>Não há cobrança automática</strong> quando os {TOTAL_DIAS_TESTE} dias terminam. O acesso simplesmente para até você decidir assinar.</li>
         <li>Enviamos um aviso por e-mail com antecedência de 2 dias do fim do teste.</li>
         <li>Terminado o teste, os seus dados continuam guardados: ao assinar, você retoma exatamente de onde parou.</li>
       </ul>

@@ -4,6 +4,7 @@ import { ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { IndicadorForcaSenha } from '../components/IndicadorForcaSenha'
 import { cnpjValido } from '../lib/cnpj'
+import { TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import RodapeSite from '../components/RodapeEmpresa'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 
@@ -20,7 +21,7 @@ const conferirSenhas = (senha:string, confirmacao:string):EstadoConferencia => {
 }
 
 const PROVAS = [
-  { icone: <ShieldCheck/>, titulo: 'Sem cartão de crédito', texto: 'Não pedimos cartão para começar e não há cobrança automática quando os 7 dias terminam.' },
+  { icone: <ShieldCheck/>, titulo: 'Sem cartão de crédito', texto: `Não pedimos cartão para começar e não há cobrança automática quando os ${TOTAL_DIAS_TESTE} dias terminam.` },
   { icone: <Clock3/>, titulo: 'Pronto para usar em minutos', texto: 'Funciona no navegador, no computador e no celular. Nada para instalar na loja.' },
   { icone: <Link2/>, titulo: 'A distribuidora responde por link', texto: 'Ela abre o link e preenche os preços. Sem contrato e sem mensalidade para ela.' },
 ]
@@ -97,9 +98,9 @@ export default function PaginaCadastroFarmacia() {
     <main className="cad-main">
       <div className="lp-container cad-grid">
         <div className="cad-apresentacao">
-          <p className="lp-selo"><BadgeCheck/> 7 dias grátis · sem cartão de crédito</p>
+          <p className="lp-selo"><BadgeCheck/> {TOTAL_DIAS_TESTE} dias grátis · sem cartão de crédito</p>
           <h1>Crie a conta da sua farmácia</h1>
-          <p className="cad-subtitulo">O sistema inteiro liberado por 7 dias: cotações, comparativo de preços, plano de compra, histórico e exportação em Excel.</p>
+          <p className="cad-subtitulo">O sistema inteiro liberado por {TOTAL_DIAS_TESTE} dias: cotações, comparativo de preços, plano de compra, histórico e exportação em Excel.</p>
         </div>
 
         <div className="cad-formulario">

@@ -1,4 +1,5 @@
 import LayoutLegal, { DestaqueLegal, type SecaoLegal } from '../components/LayoutLegal'
+import { TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import { LinkInterno } from '../roteamento'
 
 const INDICE: SecaoLegal[] = [
@@ -95,7 +96,7 @@ export default function PaginaPoliticaPrivacidade() {
         </tbody>
       </table></div>
       <p>
-        A conta funciona inteira, inclusive durante os 7 dias de teste, <strong>sem endereço e sem
+        A conta funciona inteira, inclusive durante os {TOTAL_DIAS_TESTE} dias de teste, <strong>sem endereço e sem
         telefone</strong>. Esses dois só passam a ser exigidos no momento em que a farmácia decide
         assinar, porque a operadora de pagamento recusa a cobrança sem eles.
       </p>

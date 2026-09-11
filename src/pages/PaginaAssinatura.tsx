@@ -106,7 +106,7 @@ export default function PaginaAssinatura() {
   const vencida = user.accessAllowed === false
   const emTeste = user.onTrial
   const diasRestantes = user.daysLeft ?? 0
-  /* Com 7 dias pela frente a pessoa está vivendo o dia 1, não o dia 0. */
+  /* Com TOTAL_DIAS_TESTE dias pela frente a pessoa está vivendo o dia 1, não o dia 0. */
   const diaAtual = Math.min(TOTAL_DIAS_TESTE, Math.max(1, TOTAL_DIAS_TESTE - diasRestantes + 1))
 
   const quantidadeParaAssinar = negociado && conta ? conta.farmaciasContratadas : quantidadeEstimada

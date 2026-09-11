@@ -8,7 +8,7 @@ import { LinkInterno } from '../roteamento'
 const PERGUNTAS = [
   {
     pergunta: 'Preciso cadastrar cartão de crédito para testar?',
-    resposta: 'Não. São 7 dias com o sistema inteiro liberado, sem cartão e sem cobrança automática no fim do teste.',
+    resposta: `Não. São ${TOTAL_DIAS_TESTE} dias com o sistema inteiro liberado, sem cartão e sem cobrança automática no fim do teste.`,
   },
   {
     pergunta: 'O preço muda de acordo com quantas pessoas usam?',
@@ -114,7 +114,7 @@ export default function PaginaLanding() {
   const precoEstimado = PLANO_PADRAO.value + PRECO_ADICIONAL_FARMACIA_PADRAO * Math.max(0, quantidade - 1)
 
   useEffect(() => {
-    document.title = 'CotaPreço · Cotação de medicamentos para farmácias | Teste 7 dias grátis'
+    document.title = `CotaPreço · Cotação de medicamentos para farmácias | Teste ${TOTAL_DIAS_TESTE} dias grátis`
   }, [])
 
   return <div className="lp">
@@ -136,7 +136,7 @@ export default function PaginaLanding() {
     <main id="conteudo">
       <section className="lp-hero">
         <div className="lp-container">
-          <p className="lp-selo"><BadgeCheck/> 7 dias grátis · sem cartão de crédito</p>
+          <p className="lp-selo"><BadgeCheck/> {TOTAL_DIAS_TESTE} dias grátis · sem cartão de crédito</p>
           <h1>Pare de comparar preço de distribuidora na planilha</h1>
           <p className="lp-subtitulo">
             O CotaPreço recebe as propostas das suas distribuidoras, compara item a item e monta o

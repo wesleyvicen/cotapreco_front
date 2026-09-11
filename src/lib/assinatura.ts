@@ -16,7 +16,9 @@ export const PLANO_PADRAO:PlanoAssinatura = { value:119.9, cycle:'MONTHLY', desc
    depois do login — aqui é só a estimativa mostrada antes de entrar. */
 export const PRECO_ADICIONAL_FARMACIA_PADRAO = 89.9
 
-export const TOTAL_DIAS_TESTE = 7
+/* Só exibição — o backend é quem de fato conta os dias (app.trial-days / TRIAL_DAYS).
+   Setar VITE_TRIAL_DAYS igual ao TRIAL_DAYS do backend evita a tela mostrar número errado. */
+export const TOTAL_DIAS_TESTE = Number(import.meta.env.VITE_TRIAL_DAYS) || 15
 
 /* Mesma lista usada na tela de assinatura (o que vem incluso e o resumo de cancelamento)
    e na landing (a vitrine de preço) — um único lugar para o que o plano entrega. */
