@@ -1,5 +1,5 @@
-import { AlertCircle, ArrowRight, BadgeCheck, Check, Clock3, Eye, EyeOff, Link2, ShieldCheck } from 'lucide-react'
-import { useRef, useState, type FormEvent } from 'react'
+import { AlertCircle, ArrowRight, BadgeCheck, Check, ChevronLeft, ChevronRight, Clock3, Eye, EyeOff, Gift, Link2, ShieldCheck } from 'lucide-react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { IndicadorForcaSenha } from '../components/IndicadorForcaSenha'
@@ -25,6 +25,7 @@ const PROVAS = [
   { icone: <Clock3/>, titulo: 'Pronto para usar em minutos', texto: 'Funciona no navegador, no computador e no celular. Nada para instalar na loja.' },
   { icone: <Link2/>, titulo: 'A distribuidora responde por link', texto: 'Ela abre o link e preenche os preços. Sem contrato e sem mensalidade para ela.' },
 ]
+const TOTAL_SLIDES = PROVAS.length + 1
 
 export default function PaginaCadastroFarmacia() {
   const { user, cadastrarFarmacia } = usarAutenticacao()
@@ -40,6 +41,13 @@ export default function PaginaCadastroFarmacia() {
   const [errosCampos, setErrosCampos] = useState<Partial<Record<CampoCadastro, string>>>({})
   const [ocupado, setOcupado] = useState(false)
   const formulario = useRef<HTMLFormElement>(null)
+  const [slideAtivo, setSlideAtivo] = useState(0)
+
+  useEffect(() => {
+    const intervalo = setInterval(() => setSlideAtivo(atual => (atual + 1) % TOTAL_SLIDES), 6000)
+    return () => clearInterval(intervalo)
+  }, [slideAtivo])
+  const irParaSlide = (indice:number) => setSlideAtivo(((indice % TOTAL_SLIDES) + TOTAL_SLIDES) % TOTAL_SLIDES)
 
   if (user) return <Redirecionar to="/" replace/>
 
@@ -88,20 +96,43 @@ export default function PaginaCadastroFarmacia() {
     : null
 
   return <div className="lp cad">
-    <header className="lp-topo">
-      <div className="lp-container lp-topo-interno">
+    <header className="lp-topo cad-topo">
+      <div className="lp-container cad-topo-interno">
         <LinkInterno to="/" className="lp-marca"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></LinkInterno>
+        <div className="cad-topo-centro">
+          <h1>Crie a conta da sua farmácia</h1>
+          <p className="cad-subtitulo">O sistema inteiro liberado por {TOTAL_DIAS_TESTE} dias: cotações, comparativo de preços, plano de compra, histórico e exportação em Excel.</p>
+          <p className="lp-selo"><BadgeCheck/> {TOTAL_DIAS_TESTE} dias grátis · sem cartão de crédito</p>
+        </div>
         <nav className="lp-topo-acoes" aria-label="Acesso ao sistema"><LinkInterno to="/login" className="lp-link-entrar">Entrar</LinkInterno></nav>
       </div>
     </header>
 
     <main className="cad-main">
       <div className="lp-container cad-grid">
-        <div className="cad-apresentacao">
-          <p className="lp-selo"><BadgeCheck/> {TOTAL_DIAS_TESTE} dias grátis · sem cartão de crédito</p>
-          <h1>Crie a conta da sua farmácia</h1>
-          <p className="cad-subtitulo">O sistema inteiro liberado por {TOTAL_DIAS_TESTE} dias: cotações, comparativo de preços, plano de compra, histórico e exportação em Excel.</p>
-        </div>
+        <aside className="cad-painel">
+          <div className="cad-painel-progresso">
+            {Array.from({ length: TOTAL_SLIDES }, (_, indice) => <span key={indice} className={`cad-painel-progresso-item${indice < slideAtivo ? ' preenchido' : indice === slideAtivo ? ' ativo' : ''}`}>
+              <span key={indice === slideAtivo ? `ativo-${slideAtivo}` : undefined}/>
+            </span>)}
+          </div>
+          {slideAtivo === 0
+            ? <div className="cad-painel-slide cad-painel-slide-hero" key={slideAtivo} aria-live="polite">
+                <p className="cad-painel-selo"><Gift/> Oferta de boas-vindas</p>
+                <h2>Teste grátis por {TOTAL_DIAS_TESTE}<br/>dias.</h2>
+                <p>Você não precisa de cartão de crédito para testar e vê com os próprios olhos como o CotaPreço muda a rotina de compra da sua farmácia.</p>
+                <p className="cad-painel-marca"><img src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></p>
+              </div>
+            : <div className="cad-painel-slide" key={slideAtivo} aria-live="polite">
+                <span className="cad-prova-icone" aria-hidden="true">{PROVAS[slideAtivo - 1].icone}</span>
+                <h2>{PROVAS[slideAtivo - 1].titulo}</h2>
+                <p>{PROVAS[slideAtivo - 1].texto}</p>
+              </div>}
+          <div className="cad-painel-nav">
+            <button type="button" aria-label="Vantagem anterior" onClick={() => irParaSlide(slideAtivo - 1)}><ChevronLeft/></button>
+            <button type="button" aria-label="Próxima vantagem" onClick={() => irParaSlide(slideAtivo + 1)}><ChevronRight/></button>
+          </div>
+        </aside>
 
         <div className="cad-formulario">
           <form className="cad-card" ref={formulario} onSubmit={cadastrar}>
@@ -132,30 +163,32 @@ export default function PaginaCadastroFarmacia() {
               {avisoCampo('email')}
             </label>
 
-            <label className="cad-campo">Senha
-              <span className="cad-senha">
-                <input {...campo('senha')} value={senha} required minLength={8} maxLength={72} type={mostrarSenha ? 'text' : 'password'} autoComplete="new-password"
-                  placeholder="No mínimo 8 caracteres" onChange={evento => { setSenha(evento.target.value); limparErroCampo('senha') }}/>
-                <button type="button" onClick={() => setMostrarSenha(valor => !valor)}
-                  aria-label={mostrarSenha ? 'Ocultar as senhas' : 'Mostrar as senhas'}>{mostrarSenha ? <EyeOff/> : <Eye/>}</button>
-              </span>
-              <IndicadorForcaSenha senha={senha}/>
-              {avisoCampo('senha')}
-            </label>
+            <div className="cad-senhas-linha">
+              <label className="cad-campo">Senha
+                <span className="cad-senha">
+                  <input {...campo('senha')} value={senha} required minLength={8} maxLength={72} type={mostrarSenha ? 'text' : 'password'} autoComplete="new-password"
+                    placeholder="No mínimo 8 caracteres" onChange={evento => { setSenha(evento.target.value); limparErroCampo('senha') }}/>
+                  <button type="button" onClick={() => setMostrarSenha(valor => !valor)}
+                    aria-label={mostrarSenha ? 'Ocultar as senhas' : 'Mostrar as senhas'}>{mostrarSenha ? <EyeOff/> : <Eye/>}</button>
+                </span>
+                <IndicadorForcaSenha senha={senha}/>
+                {avisoCampo('senha')}
+              </label>
 
-            <label className="cad-campo">Repita a senha
-              <span className="cad-senha">
-                <input {...campo('confirmacao')} value={confirmacao} required maxLength={72} type={mostrarSenha ? 'text' : 'password'} autoComplete="new-password"
-                  placeholder="A mesma senha de novo" onChange={evento => { setConfirmacao(evento.target.value); limparErroCampo('confirmacao') }}/>
-                <button type="button" onClick={() => setMostrarSenha(valor => !valor)}
-                  aria-label={mostrarSenha ? 'Ocultar as senhas' : 'Mostrar as senhas'}>{mostrarSenha ? <EyeOff/> : <Eye/>}</button>
-              </span>
-              <span className="cad-conferencia" aria-live="polite">
-                {conferencia === 'confere' && <span className="confere"><Check/> As senhas conferem</span>}
-                {conferencia === 'diverge' && <span className="diverge"><AlertCircle/> As senhas não conferem</span>}
-              </span>
-              {avisoCampo('confirmacao')}
-            </label>
+              <label className="cad-campo">Repita a senha
+                <span className="cad-senha">
+                  <input {...campo('confirmacao')} value={confirmacao} required maxLength={72} type={mostrarSenha ? 'text' : 'password'} autoComplete="new-password"
+                    placeholder="A mesma senha de novo" onChange={evento => { setConfirmacao(evento.target.value); limparErroCampo('confirmacao') }}/>
+                  <button type="button" onClick={() => setMostrarSenha(valor => !valor)}
+                    aria-label={mostrarSenha ? 'Ocultar as senhas' : 'Mostrar as senhas'}>{mostrarSenha ? <EyeOff/> : <Eye/>}</button>
+                </span>
+                <span className="cad-conferencia" aria-live="polite">
+                  {conferencia === 'confere' && <span className="confere"><Check/> As senhas conferem</span>}
+                  {conferencia === 'diverge' && <span className="diverge"><AlertCircle/> As senhas não conferem</span>}
+                </span>
+                {avisoCampo('confirmacao')}
+              </label>
+            </div>
 
             <button className="lp-botao lp-botao-primario cad-enviar" disabled={ocupado}>
               {ocupado ? 'Criando sua conta...' : <>Começar teste grátis <ArrowRight/></>}
@@ -169,13 +202,6 @@ export default function PaginaCadastroFarmacia() {
 
           <p className="cad-alternativa">Já tem conta? <LinkInterno to="/login">Entrar na minha farmácia</LinkInterno></p>
         </div>
-
-        <ul className="cad-provas">
-          {PROVAS.map(prova => <li key={prova.titulo}>
-            <span className="cad-prova-icone" aria-hidden="true">{prova.icone}</span>
-            <div><strong>{prova.titulo}</strong><span>{prova.texto}</span></div>
-          </li>)}
-        </ul>
       </div>
     </main>
 
