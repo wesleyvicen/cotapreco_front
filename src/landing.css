@@ -716,12 +716,12 @@
  * Mobile-first: a ordem natural do documento é apresentação, formulário e provas — quem
  * clicou em "testar grátis" já decidiu, e o formulário tem que aparecer sem rolagem longa.
  */
-.cad-main { padding: 26px 0 44px; background: linear-gradient(180deg, #f2f8f5 0%, #fff 60%); }
+.cad-main { padding: 26px 0 44px; background: #fff; }
 
 /* Topo do cadastro: logo, título/selo e "Entrar" cabem na mesma barra, como uma única
  * faixa de topo — não uma barra de navegação seguida de um bloco de título separado.
  * Sem sticky: ao rolar essa faixa some inteira, o card do formulário já assume o topo. */
-.cad-topo { position: static; }
+.cad-topo { position: static; border-bottom-color: #eef2f0; background: #fff; backdrop-filter: none; }
 .cad-topo-interno {
   display: flex;
   flex-wrap: wrap;
@@ -757,15 +757,15 @@
   font-size: 12.5px;
 }
 
+/* No mobile os campos ficam soltos na página, como no print de divulgação — sem borda,
+ * sombra ou fundo de card. O visual encaixotado volta a partir do tablet, ao lado do
+ * painel escuro, porque aí os dois precisam parecer dois blocos separados na mesma linha. */
+.cad-formulario { margin-top: 28px; }
 .cad-card {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding: 20px 18px 22px;
-  border: 1px solid var(--lp-linha);
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 14px 38px rgba(12, 58, 45, 0.09);
+  padding: 0;
 }
 .cad-campo {
   display: flex;
@@ -987,6 +987,14 @@
   .cad-painel-slide-hero h2 { font-size: 44px; line-height: 1.1; }
   .cad-painel-marca { display: inline-flex; }
   .cad-painel-marca img { height: 34px; }
-  .cad-formulario { display: flex; flex-direction: column; }
-  .cad-card { flex: 1; gap: 17px; padding: 26px 26px 28px; }
+  .cad-formulario { margin-top: 0; display: flex; flex-direction: column; }
+  .cad-card {
+    flex: 1;
+    gap: 17px;
+    padding: 26px 26px 28px;
+    border: 1px solid var(--lp-linha);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 14px 38px rgba(12, 58, 45, 0.09);
+  }
 }
