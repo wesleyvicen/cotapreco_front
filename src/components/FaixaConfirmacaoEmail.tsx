@@ -5,7 +5,7 @@ import { usarAutenticacao } from '../autenticacao'
 
 /*
  * Fica no layout, acima de qualquer tela: a pessoa acabou de criar a conta e precisa
- * saber já na primeira tela por que a cotação não abre — e onde procurar o e-mail.
+ * saber já na primeira tela por que a cotação não abre - e onde procurar o e-mail.
  */
 export default function FaixaConfirmacaoEmail() {
   const { user } = usarAutenticacao()
@@ -27,7 +27,7 @@ export default function FaixaConfirmacaoEmail() {
       <MailWarning/>
       <div>
         <strong>Confirme seu e-mail para criar cotações</strong>
-        <span>Enviamos um link para <b>{user.email}</b>. É só clicar nele e voltar — o resto do sistema continua liberado.</span>
+        <span>Enviamos um link para <b>{user.email}</b>. É só clicar nele e voltar, o resto do sistema continua liberado.</span>
       </div>
       <button type="button" className="button button-secondary" disabled={enviando} onClick={() => void reenviar()}>
         {enviando ? 'Enviando...' : 'Reenviar e-mail'}
@@ -35,7 +35,7 @@ export default function FaixaConfirmacaoEmail() {
     </div>
     <p className="faixa-confirmacao-spam">
       <strong>Não achou?</strong> Procure na caixa de <b>spam</b> ou <b>lixo eletrônico</b> por “CotaPreço”. Se estiver lá,
-      marque como <b>não é spam</b> — assim os avisos das suas cotações passam a chegar na caixa de entrada.
+      marque como <b>não é spam</b>. Assim os avisos das suas cotações passam a chegar na caixa de entrada.
     </p>
     {aviso && <p className="faixa-confirmacao-aviso">{aviso}</p>}
   </div>

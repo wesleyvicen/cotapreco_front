@@ -7,8 +7,8 @@ tela e a leitura dos diferenciais do produto. A página em si ainda não foi esc
 
 Ambiente local (`localhost:5173`) com a base de testes, em duas larguras:
 
-- **desktop** — janela de 1480px
-- **mobile** — janela de 480px (o Chrome renderiza a 500px, que é o mínimo dele)
+- **desktop**: janela de 1480px
+- **mobile**: janela de 480px (o Chrome renderiza a 500px, que é o mínimo dele)
 
 Antes de cada captura, os nomes das distribuidoras reais e o link de `localhost` foram
 substituídos no DOM por equivalentes fictícios. Isso não é maquiagem de vitrine: usar
@@ -32,15 +32,15 @@ mexer em preço e economia seria fabricar a promessa que a página está vendend
 
 A base de testes tem valores incoerentes, e isso aparece nas capturas:
 
-- `02-achados` — R$ 1.140,00 de economia num pacote de gaze com 30 unidades
-- `04-compra-sugerida` — economia estimada (R$ 2.220,39) maior que a própria compra (R$ 631,60)
-- `03-comparativo-precos` — R$ 45,00 e R$ 0,97 para o mesmo item
+- `02-achados`: R$ 1.140,00 de economia num pacote de gaze com 30 unidades
+- `04-compra-sugerida`: economia estimada (R$ 2.220,39) maior que a própria compra (R$ 631,60)
+- `03-comparativo-precos`: R$ 45,00 e R$ 0,97 para o mesmo item
 
 Um comprador de farmácia percebe isso em dois segundos, e é exatamente ele que a página
 precisa convencer. **Estas capturas servem para decidir enquadramento e leiaute, não para
 publicar.** Antes de ir ao ar, vale montar uma cotação de vitrine com 15–20 medicamentos
-reais e preços de mercado coerentes, e refazer os prints — aí todas as telas contam a
-mesma história.
+reais e preços de mercado coerentes, e refazer os prints depois: assim todas as telas
+contam a mesma história.
 
 Um detalhe menor no mesmo espírito: os avatares das distribuidoras usam a inicial do nome
 real ("E", "G", "r"), então continuam inconsistentes com os nomes fictícios.
@@ -51,13 +51,13 @@ real ("E", "G", "r"), então continuam inconsistentes com os nomes fictícios.
 `02-achados-desktop.jpg` · `02-achados-mobile.jpg`
 
 O sistema lê as respostas e destaca sozinho duas coisas: onde uma oferta está muito abaixo
-das outras (com o valor em reais, não só o percentual) e onde há **risco de ruptura** —
+das outras (com o valor em reais, não só o percentual) e onde há **risco de ruptura**:
 produto que nenhuma ou só uma distribuidora ofertou. O corte de percentual é configurável.
 
 É o diferencial mais forte porque ataca o que ninguém tem tempo de fazer: varrer 100 itens
 × 5 distribuidoras procurando o que fugiu do padrão.
 
-Repare que o alerta não promete só economia — quando a diferença é grande demais ele manda
+Repare que o alerta não promete só economia. Quando a diferença é grande demais, ele manda
 conferir embalagem e EAN, porque nessa faixa erro de digitação é mais provável que
 oportunidade. Isso é argumento de venda, não ressalva: mostra que a ferramenta protege de
 decidir errado.
@@ -67,7 +67,7 @@ decidir errado.
 
 No desktop, uma coluna por distribuidora com o melhor preço destacado, colunas
 arrastáveis, ordenação por fornecedor e possibilidade de ocultar quem não interessa.
-No celular a mesma informação vira cartão por produto — não é a tabela espremida, é outro
+No celular a mesma informação vira cartão por produto: não é a tabela espremida, é outro
 leiaute.
 
 O par de capturas desktop/mobile conta essa história sozinho.
@@ -96,25 +96,25 @@ melhor ele fica".
 `01-painel-desktop.jpg` · `01-painel-mobile.jpg`
 
 Cotações abertas, finalizadas, respostas no mês e economia estimada. Serve de abertura,
-mas é o mais genérico do conjunto — qualquer concorrente tem algo parecido. Usaria como
+mas é o mais genérico do conjunto, já que qualquer concorrente tem algo parecido. Usaria como
 apoio, não como argumento principal.
 
 ## Capturas que ainda faltam
 
-- **Importação de planilha** (Nova cotação, etapa 2) — "importe a lista que você já usa"
-- **Revisão editável** (Nova cotação, etapa 3) — corrigir produto errado sem reimportar
-- **Tela pública do representante** — o distribuidor responde pelo link, sem instalar nada.
+- **Importação de planilha** (Nova cotação, etapa 2): "importe a lista que você já usa"
+- **Revisão editável** (Nova cotação, etapa 3): corrigir produto errado sem reimportar
+- **Tela pública do representante**: o distribuidor responde pelo link, sem instalar nada.
   Provavelmente o segundo argumento mais forte e não está capturado. Exige um acesso de
   representante, que precisa ser criado por você.
-- **Cotação para OL** — exige importar planilhas na tela antes
-- **Modal "Tudo que vale olhar"** — a lista completa com busca e filtro por tipo
+- **Cotação para OL**: exige importar planilhas na tela antes
+- **Modal "Tudo que vale olhar"**: a lista completa com busca e filtro por tipo
 
 ## Estrutura sugerida da página
 
-1. **Hero** — a dor ("você compra no escuro") + `04-compra-sugerida-desktop`
-2. **Como funciona** — três passos: importa a lista, compartilha o link, recebe o comparativo
-3. **Diferencial 1** — os achados automáticos (`02`)
-4. **Diferencial 2** — o comparativo desktop + mobile lado a lado (`03`)
-5. **Diferencial 3** — histórico entre cotações, ancorando a recorrência (`05`)
+1. **Hero**: a dor ("você compra no escuro") + `04-compra-sugerida-desktop`
+2. **Como funciona**: três passos: importa a lista, compartilha o link, recebe o comparativo
+3. **Diferencial 1**: os achados automáticos (`02`)
+4. **Diferencial 2**: o comparativo desktop + mobile lado a lado (`03`)
+5. **Diferencial 3**: histórico entre cotações, ancorando a recorrência (`05`)
 6. **Planos e preços**
-7. **FAQ** — "minha distribuidora precisa se cadastrar?", "e se eu já uso planilha?"
+7. **FAQ**: "minha distribuidora precisa se cadastrar?", "e se eu já uso planilha?"

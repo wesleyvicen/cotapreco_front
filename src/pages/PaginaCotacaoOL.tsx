@@ -175,7 +175,7 @@ function rotuloMetodo(method:MetodoCorrespondencia|null):string {
 }
 
 function explicacaoMetodo(method:MetodoCorrespondencia|null):string {
-  if (method === 'ean') return 'O código de barras (EAN) da oferta é idêntico ao do pedido — a correspondência mais confiável que existe.'
+  if (method === 'ean') return 'O código de barras (EAN) da oferta é idêntico ao do pedido: é a correspondência mais confiável que existe.'
   if (method === 'dcb') return 'A oferta tem o mesmo princípio ativo (DCB) do item pedido, mesmo com EAN ou nome diferentes. Vem da base de equivalência DCB.'
   if (method === 'automatic-name') return 'O nome do produto da oferta bateu com o do pedido (mesmo princípio ativo, dose, forma e embalagem), mesmo com EANs diferentes.'
   if (method === 'auto-reviewed-name') return 'A correspondência por nome ficou próxima o suficiente que o sistema aceitou sozinho, porque a opção "Aceitar automaticamente equivalências seguras" está ativada.'
@@ -522,7 +522,7 @@ export default function PaginaCotacaoOL() {
   function avancarRevisao() {
     const proximo = filaRevisaoIds.find((id) => id !== reviewingLineId)
     if (proximo) { setReviewingLineId(proximo); setMatchSearch('') }
-    else { setReviewingLineId(''); setMatchSearch(''); setNotice('Revisão concluída — não há mais correspondências pendentes.') }
+    else { setReviewingLineId(''); setMatchSearch(''); setNotice('Revisão concluída: não há mais correspondências pendentes.') }
   }
 
   function limparVinculosProdutos() {
@@ -664,7 +664,7 @@ export default function PaginaCotacaoOL() {
     {notice && <div className="alert alert-success" role="status">{notice}<button type="button" className="ol-alert-close" onClick={() => setNotice('')}><X size={15}/></button></div>}
     {warnings.map((warning) => <div className="alert alert-warning" key={warning}>{warning}</div>)}
     <div className="ol-actions">
-      <label className="button button-primary" title="Envie a tabela de preços de UM fornecedor (com EAN, descrição e preço unitário). Pode importar quantos fornecedores quiser, um arquivo de cada vez — cada um aparece depois como uma aba separada."><Upload size={18}/>{loading === 'cotacao' ? 'Lendo planilha...' : 'Importar fornecedor'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('cotacao', event.target.files?.[0])}/></label>
+      <label className="button button-primary" title="Envie a tabela de preços de UM fornecedor (com EAN, descrição e preço unitário). Pode importar quantos fornecedores quiser, um arquivo de cada vez: cada um aparece depois como uma aba separada."><Upload size={18}/>{loading === 'cotacao' ? 'Lendo planilha...' : 'Importar fornecedor'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('cotacao', event.target.files?.[0])}/></label>
       <label className="button button-secondary" title="Envie a lista de produtos que você quer comprar, com a quantidade de cada um. É contra essa lista que o sistema compara os preços de todos os fornecedores já importados."><Upload size={18}/>{loading === 'pedido' ? 'Lendo planilha...' : 'Importar pedido'}<input type="file" accept=".xls,.xlsx" onChange={(event) => void iniciarImportacao('pedido', event.target.files?.[0])}/></label>
       <button type="button" className="button button-ghost" disabled={!exportRows.length} title="Baixa em CSV os dados exibidos na aba e no filtro atuais." onClick={() => baixarCsv(exportRows, 'cotacao_para_ol.csv')}><ArrowDownToLine size={18}/>Exportar aba</button>
       <button type="button" className="button button-danger-soft" title="Apaga as tabelas de fornecedores, o pedido e os ajustes salvos neste dispositivo. Não afeta outros computadores." onClick={() => setClearOpen(true)}><Trash2 size={18}/>Limpar dados</button>
@@ -679,7 +679,7 @@ export default function PaginaCotacaoOL() {
             : dcbErro
               ? 'Não foi possível carregar a base padrão'
               : 'Nenhuma base de DCB carregada'}</b>
-        <small className="ol-dcb-explainer"><Info size={13}/> DCB é o nome padronizado do princípio ativo (ex.: dipirona, paracetamol). Com essa base, o sistema reconhece que produtos de fornecedores diferentes são o mesmo remédio — mesmo com nomes e marcas diferentes — e escolhe sozinho a oferta mais barata entre eles.</small>
+        <small className="ol-dcb-explainer"><Info size={13}/> DCB é o nome padronizado do princípio ativo (ex.: dipirona, paracetamol). Com essa base, o sistema reconhece que produtos de fornecedores diferentes são o mesmo remédio, mesmo com nomes e marcas diferentes, e escolhe sozinho a oferta mais barata entre eles.</small>
         <small>{carregandoDcbPadrao
           ? 'Baixando e organizando os dados por princípio ativo. Isso só acontece uma vez, na primeira vez que você abre esta tela.'
           : dcbInfo
@@ -726,7 +726,7 @@ export default function PaginaCotacaoOL() {
 
       {activeTab === 'pedido' && <>
         <div className="stats-grid ol-kpis"><Stat label="Itens no pedido" value={String(pedido.length)}/><Stat label="Encontrados" value={String(resultado.filter((item) => item.precoUnitario !== null).length)} tone="green"/><Stat label="Para revisar" value={String(resultado.filter((item) => item.status === 'revisarCorrespondencia').length)}/><Stat label="Não encontrados" value={String(resultado.filter((item) => item.status === 'naoEncontrado').length)} tone="danger"/></div>
-        <TabelaOL headers={['Código', 'Medicamento', 'Laboratório', 'Qtd. original', 'Qtd. final', 'Preferência', 'Compra', 'Correspondência', 'Ação']} rows={pedidoRows.map((item) => [item.ean, item.nome, item.laboratorio || '—', item.quantidadeOriginal, item.quantidadeFinal, item.preferenciaFornecedorAtiva ? item.fornecedorPreferido : 'Menor preço', <StatusCompra item={item}/>, <BadgeCorrespondencia item={item}/>, <button type="button" key="acao" className="row-link" title="Revisar" onClick={() => { setReviewingLineId(item.id); setMatchSearch('') }}><ScanSearch size={16}/></button>])}/>
+        <TabelaOL headers={['Código', 'Medicamento', 'Laboratório', 'Qtd. original', 'Qtd. final', 'Preferência', 'Compra', 'Correspondência', 'Ação']} rows={pedidoRows.map((item) => [item.ean, item.nome, item.laboratorio || '-', item.quantidadeOriginal, item.quantidadeFinal, item.preferenciaFornecedorAtiva ? item.fornecedorPreferido : 'Menor preço', <StatusCompra item={item}/>, <BadgeCorrespondencia item={item}/>, <button type="button" key="acao" className="row-link" title="Revisar" onClick={() => { setReviewingLineId(item.id); setMatchSearch('') }}><ScanSearch size={16}/></button>])}/>
       </>}
 
       {activeTab === 'resultado' && <>
@@ -741,7 +741,7 @@ export default function PaginaCotacaoOL() {
           item.ean,
           <div className="ol-product-cell" key="produto"><b>{item.nome}</b>{(item.eanOferta !== item.ean || normalizeHeader(item.nomeOferta) !== normalizeHeader(item.nome)) && <small className="ol-offer-source">Oferta: {item.nomeOferta} · EAN {item.eanOferta}</small>}{item.temOfertaNomeMaisBarata && item.melhorOfertaNome && <small className="ol-cheaper-hint">EAN diferente: {item.melhorOfertaNome.fornecedor} por {formatBRL(item.melhorOfertaNome.precoUnitario)} · economia de {formatBRL(item.economiaNomeTotal)}</small>}{item.motivoAjuste && <small>{item.motivoAjuste}</small>}</div>,
           item.ajusteManual && item.quantidadeOriginal !== item.quantidadeFinal ? <span className="ol-quantity-change" key="qtd"><s>{item.quantidadeOriginal}</s><b>{item.quantidadeFinal}</b></span> : item.quantidadeFinal,
-          item.fornecedorSelecionado || '—',
+          item.fornecedorSelecionado || '-',
           formatBRL(item.precoUnitario),
           <CelulaHistorico key="historico" item={item} reference={findPriceHistoryReference(item, historicoPrecos, dcbCatalog)}/>,
           formatBRL(item.precoTotal),
@@ -852,7 +852,7 @@ function DialogoRevisaoCorrespondencia({ item, products, productLinks, search, o
     const mesmoItem = anterior.id === item.id
     estadoAnteriorRef.current = { id: item.id, contagem: contagemAtual }
     // Só avança sozinho quando a decisão que acabou de ser tomada zerou as sugestões deste
-    // item — nunca ao abrir o diálogo num item que já não tinha nada pendente.
+    // item. Nunca avança ao abrir o diálogo num item que já não tinha nada pendente.
     if (mesmoItem && anterior.contagem > 0 && contagemAtual === 0) onAvancar()
   }, [item.id, item.sugestoesCorrespondencia.length, onAvancar])
 
@@ -914,7 +914,7 @@ function DialogoMapeamento({ mapping, onChange, onCancel, onConfirm }:{
   mapping:EstadoMapeamento; onChange:(key:string, value:string) => void; onCancel:() => void; onConfirm:() => void
 }) {
   const title = mapping.kind === 'cotacao' ? 'Tabela do fornecedor' : mapping.kind === 'historico' ? 'Histórico de preço de custo' : mapping.kind === 'dcb' ? 'Base de equivalência DCB' : 'Tabela de pedido'
-  const description = mapping.kind === 'historico' ? 'Confirme as colunas que identificam o EAN e o último valor pago. Essa tabela só serve para comparar preços — não altera fornecedores nem quantidades.' : mapping.kind === 'dcb' ? 'Confirme as colunas que ligam cada código de barras ao seu princípio ativo (DCB). Essa base é opcional e substitui a que já estiver carregada.' : mapping.kind === 'cotacao' ? `Confirme quais colunas da planilha correspondem ao EAN, à descrição e ao preço. Se já existir uma tabela de "${mapping.values.nomeFornecedor || 'este fornecedor'}", ela será substituída por esta.` : 'Confirme quais colunas da planilha correspondem ao produto e à quantidade pedida. Esta lista substitui o pedido atual, se houver um.'
+  const description = mapping.kind === 'historico' ? 'Confirme as colunas que identificam o EAN e o último valor pago. Essa tabela só serve para comparar preços e não altera fornecedores nem quantidades.' : mapping.kind === 'dcb' ? 'Confirme as colunas que ligam cada código de barras ao seu princípio ativo (DCB). Essa base é opcional e substitui a que já estiver carregada.' : mapping.kind === 'cotacao' ? `Confirme quais colunas da planilha correspondem ao EAN, à descrição e ao preço. Se já existir uma tabela de "${mapping.values.nomeFornecedor || 'este fornecedor'}", ela será substituída por esta.` : 'Confirme quais colunas da planilha correspondem ao produto e à quantidade pedida. Esta lista substitui o pedido atual, se houver um.'
   const camposObrigatoriosFaltando = mapping.fields.filter((field) => field.required && field.type === 'text' ? !String(mapping.values[field.key] ?? '').trim() : field.required && (mapping.values[field.key] === undefined || mapping.values[field.key] === ''))
   const colunasEscolhidas = mapping.fields.filter((field) => field.type !== 'text').map((field) => mapping.values[field.key]).filter((value) => value !== undefined && value !== '')
   const colunasRepetidas = new Set(colunasEscolhidas).size !== colunasEscolhidas.length

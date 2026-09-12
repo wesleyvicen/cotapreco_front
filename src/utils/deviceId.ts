@@ -8,7 +8,7 @@ function gerarUuid(): string {
   })
 }
 
-/* Identifica a instalação do navegador (não a pessoa) — persiste em localStorage para
+/* Identifica a instalação do navegador (não a pessoa) - persiste em localStorage para
    sobreviver a fechar e reabrir o app, mas é local a este dispositivo/navegador. */
 export function obterDeviceId(): string {
   try {

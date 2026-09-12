@@ -17,7 +17,7 @@ function formatarCnpj(valor:string) {
 }
 
 /* Farmácias do grupo, o preço que elas somam na assinatura, e edição de nome/CNPJ de cada uma
-   (clicando na linha). Criar farmácia abre um checkout pelo valor novo — a farmácia só passa a
+   (clicando na linha). Criar farmácia abre um checkout pelo valor novo - a farmácia só passa a
    existir de fato quando o pagamento é confirmado, pra ninguém aumentar a rede sem pagar a
    mensalidade maior. */
 function CardFarmacias() {
@@ -49,7 +49,7 @@ function CardFarmacias() {
   useEffect(() => { if (admin) carregar() }, [admin])
 
   /* Limpa o parâmetro da URL pra o aviso não voltar a cada refresh, e enquanto o retorno é de
-     sucesso, tenta de novo por um tempo — o webhook do Asaas geralmente chega em segundos,
+     sucesso, tenta de novo por um tempo - o webhook do Asaas geralmente chega em segundos,
      mas a farmácia volta do checkout antes dele. */
   useEffect(() => {
     if (!retorno) return
@@ -125,13 +125,13 @@ function CardFarmacias() {
         method:'POST', body:JSON.stringify({ nome, cnpj:cnpj.replace(/\D/g, '') }),
       })
       if (checkout.checkoutUrl) {
-        /* Sai do app pro checkout do Asaas — o cartão é digitado lá, nada dele passa por aqui. */
+        /* Sai do app pro checkout do Asaas - o cartão é digitado lá, nada dele passa por aqui. */
         window.location.href = checkout.checkoutUrl
         return
       }
       /* Dentro da cota já paga: a farmácia nasceu na hora, sem pagamento nenhum. */
       setNome(''); setCnpj(''); setMostrarForm(false)
-      setMensagem('Farmácia criada — já estava dentro do que você contratou, sem cobrança extra.')
+      setMensagem('Farmácia criada. Já estava dentro do que você contratou, sem cobrança extra.')
       carregar()
       void recarregarUsuario()
     } catch (e) {
@@ -142,7 +142,7 @@ function CardFarmacias() {
   }
 
   return <>
-    {retorno === 'cancelado' && <div className="alert alert-warning">Você saiu do pagamento antes de terminar. Nada foi cobrado e a farmácia não foi criada — tente de novo quando quiser.</div>}
+    {retorno === 'cancelado' && <div className="alert alert-warning">Você saiu do pagamento antes de terminar. Nada foi cobrado e a farmácia não foi criada, tente de novo quando quiser.</div>}
     {retorno === 'expirado' && <div className="alert alert-warning">A página de pagamento expirou. Clique em "Nova farmácia" para tentar de novo.</div>}
     {retorno === 'sucesso' && <div className="alert alert-success">Pagamento confirmado! A farmácia nova aparece na lista abaixo em poucos segundos.</div>}
 
@@ -185,7 +185,7 @@ function CardFarmacias() {
 
     {pendencias.length > 0 && <div className="alert alert-warning farmacias-pendentes">
       <strong>Aguardando confirmação do pagamento:</strong>
-      <ul>{pendencias.map(p => <li key={p.cnpj ?? p.nome}>{p.nome} — aberto em {date(p.abertoEm)}</li>)}</ul>
+      <ul>{pendencias.map(p => <li key={p.cnpj ?? p.nome}>{p.nome} (aberto em {date(p.abertoEm)})</li>)}</ul>
       <p>Se o pagamento já foi feito, isso normalmente resolve sozinho em poucos minutos. Demorando muito mais que isso, fale com a gente.</p>
     </div>}
 
@@ -199,7 +199,7 @@ function CardFarmacias() {
         : <div className="table-wrap"><table><thead><tr><th>Farmácia</th><th>CNPJ</th><th>Status</th></tr></thead><tbody>
             {empresas.map(e => <>
               <tr key={e.id} className="farmacia-linha-clicavel" onClick={() => selecionar(e)}>
-                <td><strong>{e.nome}</strong></td><td>{e.cnpj ? formatarCnpj(e.cnpj) : '—'}</td>
+                <td><strong>{e.nome}</strong></td><td>{e.cnpj ? formatarCnpj(e.cnpj) : '-'}</td>
                 <td className="farmacia-linha-status">
                   <span className={e.ativo ? 'status-active' : 'status-inactive'}>{e.ativo ? 'Ativa' : 'Inativa'}</span>
                   <ChevronDown className={selecionada === e.id ? 'farmacia-chevron aberto' : 'farmacia-chevron'}/>
@@ -209,9 +209,9 @@ function CardFarmacias() {
                 <form className="stack-form settings-form" onSubmit={ev => salvarEdicao(ev, e.id)}>
                   {erroEdicao && <AvisoErro message={erroEdicao}/>}
                   {!e.ativo && conta && (semCotaLivre
-                    ? <p className="modal-nota">Você já está usando toda a cota contratada ({conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}) —
-                        aumente a quantidade em Assinatura antes de reativar esta.</p>
-                    : <p className="modal-nota">Reativar não cobra nada extra — ainda está dentro do que você já contratou.</p>)}
+                    ? <p className="modal-nota">Você já está usando toda a cota contratada ({conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}).
+                        Aumente a quantidade em Assinatura antes de reativar esta.</p>
+                    : <p className="modal-nota">Reativar não cobra nada extra, ainda está dentro do que você já contratou.</p>)}
                   <label>Nome da farmácia<input required maxLength={160} value={nomeEdicao} onChange={ev => setNomeEdicao(ev.target.value)}/></label>
                   <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpjEdicao} onChange={ev => setCnpjEdicao(formatarCnpj(ev.target.value))}/></label>
                   <div className="line-actions">
@@ -237,10 +237,10 @@ function CardFarmacias() {
         <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpj} onChange={e => setCnpj(formatarCnpj(e.target.value))}/><small>Informe os 14 dígitos do CNPJ.</small></label>
       </div>
       {conta && (dentroDaCota
-        ? <p className="modal-nota">Você já contratou {conta.farmaciasContratadas} farmácias e usou {conta.empresasAtivas} — esta entra dentro
+        ? <p className="modal-nota">Você já contratou {conta.farmaciasContratadas} farmácias e usou {conta.empresasAtivas}, esta entra dentro
             do que já foi pago, sem cobrança extra e sem precisar de pagamento agora.</p>
         : conta.precoNegociado
-          ? <p className="modal-nota">Sua conta tem um preço negociado com a equipe CotaPreço para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''} — para criar mais que isso, fale com a gente de novo.</p>
+          ? <p className="modal-nota">Sua conta tem um preço negociado com a equipe CotaPreço para {conta.farmaciasContratadas} farmácia{conta.farmaciasContratadas !== 1 ? 's' : ''}. Para criar mais que isso, fale com a gente de novo.</p>
           : <p className="modal-nota">Isso soma {money(conta.precoAdicionalPorFarmacia)}/mês na assinatura. Você vai pro pagamento agora, e a
               farmácia só é criada depois que ele for confirmado.</p>)}
       <div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => setMostrarForm(false)}>Cancelar</button>
@@ -252,7 +252,7 @@ function CardFarmacias() {
 }
 
 /* Quem representa a cobrança da assinatura: uma das farmácias do grupo. Nome e CNPJ dela
-   aparecem na fatura e não são digitados aqui — só escolhidos no seletor. Telefone e endereço
+   aparecem na fatura e não são digitados aqui - só escolhidos no seletor. Telefone e endereço
    são da conta (grupo) inteira, exigidos pelo Asaas. Quem administra qualquer farmácia do grupo
    pode alterar, mesmo sem ser admin da farmácia ativa agora. */
 function CardPagamento() {
@@ -298,7 +298,7 @@ function CardPagamento() {
     {erro && <AvisoErro message={erro}/>}
     {mensagem && <div className="alert alert-success">{mensagem}</div>}
     <section className="card settings-card">
-      <div className="card-header"><div><h2><Building2/> Quem paga a assinatura</h2><p>Escolha qual farmácia representa a cobrança — o nome e o CNPJ dela aparecem na fatura.</p></div></div>
+      <div className="card-header"><div><h2><Building2/> Quem paga a assinatura</h2><p>Escolha qual farmácia representa a cobrança: o nome e o CNPJ dela aparecem na fatura.</p></div></div>
       <div className="stack-form settings-form">
         <label>Farmácia pagadora
           <select disabled={somenteLeitura} value={empresaPagadoraId ?? ''} onChange={e => setEmpresaPagadoraId(Number(e.target.value))}>

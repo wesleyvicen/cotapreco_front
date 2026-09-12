@@ -3,13 +3,13 @@
 import { useEffect, useRef } from 'react'
 
 /* Modais e telas cheias do sistema vivem na mesma URL: são estado de componente, não rota.
- * Para o navegador, abrir um deles não é navegar — então o voltar (e o gesto de voltar do
+ * Para o navegador, abrir um deles não é navegar. Por isso o voltar (e o gesto de voltar do
  * Android, que é como boa parte das pessoas usa o sistema no celular) pulava a página
  * inteira em vez de apenas fechar o que estava na frente.
  *
  * Este hook faz a camada participar do histórico: abrir empilha uma entrada marcada com um
  * identificador próprio, o voltar do navegador fecha a camada, e fechar pela interface
- * desfaz a entrada — senão o histórico acumularia passos mortos, em que voltar não faz nada
+ * desfaz a entrada, pois senão o histórico acumularia passos mortos, em que voltar não faz nada
  * visível porque a camada já foi fechada.
  *
  * O identificador é o que sustenta camadas empilhadas. No voltar, cada camada aberta compara

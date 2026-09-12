@@ -4,7 +4,7 @@ import { empresaAtiva, trocarEmpresaAtiva } from '../lib/permissoes'
 import type { Usuario } from '../types'
 
 /* Troca a farmácia ativa. Antes era um <select> "invisível" (appearance:none, sem borda,
-   texto de 11px) — dava pra trocar, mas nada na tela sugeria que aquilo era clicável. Aqui
+   texto de 11px) - dava pra trocar, mas nada na tela sugeria que aquilo era clicável. Aqui
    é um botão de verdade que abre um menu com todas as farmácias do usuário. */
 export default function SeletorFarmacia({ user }:{ user:Usuario|null }) {
   const [aberto, setAberto] = useState(false)

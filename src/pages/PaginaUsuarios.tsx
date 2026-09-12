@@ -123,14 +123,14 @@ export default function PaginaUsuarios(){
         <label>Nome<input value={nome} onChange={e=>setNome(e.target.value)} autoComplete="name" maxLength={120} required/></label>
         <label>E-mail<input type="email" value={email} onChange={e=>setEmail(e.target.value)} autoComplete="email" maxLength={180} required/></label>
         <label>Perfil<select value={perfil} onChange={e=>setPerfil(e.target.value as typeof perfil)}>
-          <option value="BUYER">Comprador — cria e edita cotações</option>
-          <option value="VIEWER">Visualizador — somente consulta</option>
-          <option value="ADMIN">Administrador — gerencia conta e equipe</option>
+          <option value="BUYER">Comprador (cria e edita cotações)</option>
+          <option value="VIEWER">Visualizador (somente consulta)</option>
+          <option value="ADMIN">Administrador (gerencia conta e equipe)</option>
         </select></label>
         <label>Senha inicial<input type="password" value={senha} onChange={e=>setSenha(e.target.value)} autoComplete="new-password" minLength={8} required/><small>No mínimo 8 caracteres.</small></label>
       </div>
       {perfil==='ADMIN'
-        ? <p className="modal-nota">Administrador tem acesso a todas as farmácias do grupo — as de agora e as que forem criadas depois.</p>
+        ? <p className="modal-nota">Administrador tem acesso a todas as farmácias do grupo, as de agora e as que forem criadas depois.</p>
         : <div className="farmacia-checklist-campo">
             <span>Farmácias com acesso</span>
             {farmaciasAtivas.length===0
@@ -146,8 +146,8 @@ export default function PaginaUsuarios(){
       {erroEdicao&&<AvisoErro message={erroEdicao}/>}
       <div className="user-form">
         <label>Perfil<select value={perfilEdicao} onChange={e=>setPerfilEdicao(e.target.value as typeof perfilEdicao)}>
-          <option value="BUYER">Comprador — cria e edita cotações</option>
-          <option value="VIEWER">Visualizador — somente consulta</option>
+          <option value="BUYER">Comprador (cria e edita cotações)</option>
+          <option value="VIEWER">Visualizador (somente consulta)</option>
         </select></label>
       </div>
       <div className="farmacia-checklist-campo">

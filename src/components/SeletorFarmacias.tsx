@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Empresa } from '../types'
 
 /* Multi-seleção de farmácias para o cadastro de usuário. É um botão que abre um popover com
-   busca, em vez de uma lista de checkboxes sempre aberta no formulário — assim o modal não
+   busca, em vez de uma lista de checkboxes sempre aberta no formulário. Assim o modal não
    cresce conforme o grupo tem mais farmácias. */
 export default function SeletorFarmacias({ empresas, selecionadas, aoAlterar }:{ empresas:Empresa[]; selecionadas:number[]; aoAlterar:(ids:number[])=>void }) {
   const [aberto, setAberto] = useState(false)

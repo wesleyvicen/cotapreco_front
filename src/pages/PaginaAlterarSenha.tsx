@@ -35,7 +35,7 @@ function StatusConfirmacao({ novaSenha, confirmacao }:{ novaSenha:string; confir
   </small>
 }
 
-/* Cada campo de senha tem o próprio olhinho — um estado global de "mostrar" só confundia,
+/* Cada campo de senha tem o próprio olhinho. Um estado global de "mostrar" só confundia,
    porque revelava os três campos juntos mesmo clicando em só um. */
 function CampoSenha({ label, autoComplete, valor, aoAlterar, minLength, children }:
   { label:string; autoComplete:string; valor:string; aoAlterar:(v:string)=>void; minLength?:number; children?:ReactNode }) {

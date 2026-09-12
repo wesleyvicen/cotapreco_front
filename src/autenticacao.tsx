@@ -8,13 +8,13 @@ import { Redirecionar } from './roteamento'
 import type { PendenciaDoisFatores, Usuario } from './types'
 
 interface DadosCadastroFarmacia { nomeUsuario:string; nomeFarmacia:string; cnpj:string; email:string; senha:string }
-/* Mesmo endpoint, dois formatos possíveis: com "user" é login completo (igual sempre foi —
+/* Mesmo endpoint, dois formatos possíveis: com "user" é login completo (igual sempre foi -
    ninguém que já existe percebe diferença); sem "user" é pendência de segundo fator. */
 type RespostaLoginOuPendencia = {token:string;user:Usuario} | PendenciaDoisFatores
 interface ContextoAutenticacao {
   user:Usuario|null; loading:boolean; revalidating:boolean; recarregarUsuario:()=>Promise<void>
   /* Retorna null quando o login já completou (sessão iniciada); retorna a pendência quando a
-     conta exige segundo fator — nesse caso a sessão só começa depois de confirmarDoisFatores. */
+     conta exige segundo fator. Nesse caso a sessão só começa depois de confirmarDoisFatores. */
   login:(email:string,password:string)=>Promise<PendenciaDoisFatores|null>
   confirmarDoisFatores:(token:string,codigo:string)=>Promise<void>
   cadastrarFarmacia:(dados:DadosCadastroFarmacia)=>Promise<void>; logout:()=>Promise<void>

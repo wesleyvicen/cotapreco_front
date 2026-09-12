@@ -4,7 +4,7 @@ import { LinkInterno } from '../roteamento'
 
 const INDICE: SecaoLegal[] = [
   { id: 'aceite', titulo: 'Aceite destes termos' },
-  { id: 'o-que-e', titulo: 'O que o CotaPreço é — e o que não é' },
+  { id: 'o-que-e', titulo: 'O que o CotaPreço é (e o que não é)' },
   { id: 'conta', titulo: 'Conta, usuários e perfis' },
   { id: 'teste', titulo: `Teste de ${TOTAL_DIAS_TESTE} dias` },
   { id: 'assinatura', titulo: 'Assinatura, preço e cobrança' },
@@ -33,7 +33,7 @@ export default function PaginaTermosDeUso() {
         <li>A assinatura custa R$ 119,90 por mês, cobrada no cartão pela operadora Asaas.</li>
         <li>Você cancela quando quiser; o acesso segue até o fim do período já pago.</li>
         <li>Os dados são seus e continuam seus. Exporte em Excel a qualquer momento.</li>
-        <li>Os preços das propostas são informados pelas distribuidoras — nós comparamos, não os garantimos.</li>
+        <li>Os preços das propostas são informados pelas distribuidoras: nós comparamos, não os garantimos.</li>
       </ul>
     </DestaqueLegal>
 
@@ -53,7 +53,7 @@ export default function PaginaTermosDeUso() {
     </section>
 
     <section id="o-que-e">
-      <h2>2. O que o CotaPreço é — e o que não é</h2>
+      <h2>2. O que o CotaPreço é (e o que não é)</h2>
       <p>
         O CotaPreço é um <strong>software como serviço</strong>, acessado pelo navegador. Ele recebe a
         lista de produtos que a farmácia quer comprar, distribui essa lista para as distribuidoras por
@@ -71,7 +71,7 @@ export default function PaginaTermosDeUso() {
         <li>
           <strong>Não garantimos preço nem disponibilidade.</strong> Ambos são informados pelo
           representante da distribuidora e podem estar errados, desatualizados ou sujeitos a condições
-          que ele não digitou. O sistema chega a avisar quando um preço destoa demais dos outros — é um
+          que ele não digitou. O sistema chega a avisar quando um preço destoa demais dos outros: é um
           alerta para conferir, não uma validação.
         </li>
         <li>
@@ -94,9 +94,9 @@ export default function PaginaTermosDeUso() {
       </p>
       <p>Dentro da farmácia existem três perfis:</p>
       <ul>
-        <li><strong>Administrador</strong> — faz tudo, além de gerenciar usuários e os dados da empresa;</li>
-        <li><strong>Comprador</strong> — cria e conduz cotações, ajusta o plano de compra e gera pedidos;</li>
-        <li><strong>Consulta</strong> — apenas visualiza.</li>
+        <li><strong>Administrador:</strong> faz tudo, além de gerenciar usuários e os dados da empresa;</li>
+        <li><strong>Comprador:</strong> cria e conduz cotações, ajusta o plano de compra e gera pedidos;</li>
+        <li><strong>Consulta:</strong> apenas visualiza.</li>
       </ul>
       <p>
         Você é responsável por manter a senha em sigilo, por quem você convida para a conta e por tudo
@@ -132,7 +132,7 @@ export default function PaginaTermosDeUso() {
         <li><strong>Preço:</strong> R$ 119,90 por mês, por farmácia, com usuários ilimitados dentro dela.</li>
         <li><strong>Forma de pagamento:</strong> cartão de crédito, com renovação automática mensal.</li>
         <li><strong>Quem processa:</strong> Asaas, operadora de pagamento contratada por nós. Os dados do cartão são digitados no ambiente dela; não passam por nós e não são gravados por nós. Guardamos apenas os quatro últimos dígitos, para você identificar o cartão na tela de assinatura.</li>
-        <li><strong>Dados exigidos para assinar:</strong> endereço completo e telefone da farmácia — exigência da operadora para emitir a cobrança.</li>
+        <li><strong>Dados exigidos para assinar:</strong> endereço completo e telefone da farmácia, exigência da operadora para emitir a cobrança.</li>
         <li><strong>Vencimento:</strong> a cada mês, na data correspondente à da contratação.</li>
         <li><strong>Reajuste:</strong> no máximo uma vez a cada 12 meses, com aviso de pelo menos 30 dias por e-mail. Se o novo preço não servir para você, cancele antes de ele entrar em vigor.</li>
         <li><strong>Tributos:</strong> o valor anunciado já inclui os tributos aplicáveis.</li>
@@ -195,7 +195,7 @@ export default function PaginaTermosDeUso() {
         fidelidade para a distribuidora. Ao responder uma cotação, você concorda que:
       </p>
       <ul>
-        <li>As informações que preenche — preço, disponibilidade, pedido mínimo — são de sua responsabilidade e devem ser verdadeiras;</li>
+        <li>As informações que preenche (preço, disponibilidade, pedido mínimo) são de sua responsabilidade e devem ser verdadeiras;</li>
         <li>A farmácia que abriu a cotação verá a sua proposta e poderá compará-la com as demais que recebeu, exportá-la e usá-la para decidir a compra;</li>
         <li>Você tem autorização da distribuidora que representa para informar aqueles preços;</li>
         <li>Sua conta é pessoal: não a compartilhe com outro representante;</li>
@@ -236,7 +236,7 @@ export default function PaginaTermosDeUso() {
         </li>
         <li>
           <strong>Você nos autoriza</strong>, apenas na medida necessária para operar o sistema, a
-          armazenar, processar, exibir e transmitir esse conteúdo — inclusive a mostrar à farmácia a
+          armazenar, processar, exibir e transmitir esse conteúdo, inclusive mostrar à farmácia a
           proposta que o representante enviou.
         </li>
         <li>
@@ -260,8 +260,8 @@ export default function PaginaTermosDeUso() {
       <h2>11. Disponibilidade e suporte</h2>
       <p>
         Trabalhamos para manter o serviço no ar de forma contínua, mas <strong>não prometemos
-        disponibilidade ininterrupta</strong>. Pode haver parada para manutenção — anunciada com
-        antecedência sempre que possível e preferencialmente fora do horário comercial — e
+        disponibilidade ininterrupta</strong>. Pode haver parada para manutenção (anunciada com
+        antecedência sempre que possível e preferencialmente fora do horário comercial) e
         indisponibilidade causada por terceiros: provedor de infraestrutura, operadora de pagamento,
         provedor de e-mail, falha de rede.
       </p>
@@ -280,7 +280,7 @@ export default function PaginaTermosDeUso() {
       </p>
       <p>Dentro do que a lei permite, não respondemos por:</p>
       <ul>
-        <li>Preço, prazo, disponibilidade, qualidade ou entrega da mercadoria — que são da distribuidora;</li>
+        <li>Preço, prazo, disponibilidade, qualidade ou entrega da mercadoria, responsabilidade da distribuidora;</li>
         <li>Prejuízo decorrente de informação incorreta preenchida por qualquer usuário, incluindo erro de digitação em planilha importada;</li>
         <li>Lucro cessante, perda de oportunidade de compra ou dano indireto;</li>
         <li>Indisponibilidade causada por terceiros ou por caso fortuito e força maior;</li>
@@ -343,7 +343,7 @@ export default function PaginaTermosDeUso() {
       <ul className="legal-contato">
         <li><strong>E-mail:</strong> <a href="mailto:privacidade@cotapreco.com">privacidade@cotapreco.com</a></li>
         <li><strong>WhatsApp:</strong> <a href="https://wa.me/5581999441494" target="_blank" rel="noopener noreferrer">(81) 99944-1494</a></li>
-        <li><strong>Empresa:</strong> AppStarter Pro — CNPJ 61.296.087/0001-80</li>
+        <li><strong>Empresa:</strong> AppStarter Pro, CNPJ 61.296.087/0001-80</li>
       </ul>
       <p>
         Leia também a <LinkInterno to="/privacidade">Política de Privacidade</LinkInterno> e a

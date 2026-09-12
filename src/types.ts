@@ -57,7 +57,7 @@ export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:st
 export interface EnderecoEmpresa { cep:string; logradouro:string; numero:string; complemento:string|null; bairro:string; cidade:string; uf:string }
 export interface Empresa { id:number; nome:string; cnpj:string|null; ativo:boolean }
 /* Dados de cobrança da conta (grupo): nome/CNPJ/telefone/endereço usados no checkout do
-   Asaas. Distintos da Empresa — aqui é a conta toda, não uma farmácia. */
+   Asaas. Distintos da Empresa - aqui é a conta toda, não uma farmácia. */
 export interface Conta { id:number; empresaPagadoraId:number; nome:string; cnpj:string|null; telefone:string|null; endereco:EnderecoEmpresa|null; enderecoCompleto:boolean; empresasAtivas:number; farmaciasContratadas:number; farmaciasContratadasAgendadas:number|null; precoBase:number; precoAdicionalPorFarmacia:number; precoMensalAtual:number; sugerirContato:boolean; precoNegociado:boolean; cortesia:boolean }
 export type StatusPedido='GERADO'|'COMPARTILHADO'|'DESATUALIZADO'|'CANCELADO'
 export interface ItemPedido { quotationItemId:number; ean:string|null; productName:string; quantity:number; unitPrice:number; subtotal:number; stockOverrideNote:string|null; receivedQuantity:number|null; receivedUnitPrice:number|null; receivedSubtotal:number|null; receiptNote:string|null; reorderShortfall:boolean }

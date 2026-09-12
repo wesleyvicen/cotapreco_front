@@ -10,7 +10,7 @@ function isIosDevice(): boolean {
 function isStandalonePwa(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true
 }
-/* Web Push no iOS só funciona dentro do PWA instalado na Tela de Início — pedir
+/* Web Push no iOS só funciona dentro do PWA instalado na Tela de Início. Pedir
    permissão de dentro do Safari normal simplesmente não faz nada. */
 export function precisaInstalarNoIos(): boolean {
   return isIosDevice() && !isStandalonePwa()

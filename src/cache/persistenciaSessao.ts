@@ -47,7 +47,7 @@ export function lerUsuarioFarmacia():Usuario|null {
 
 /* Guarda a farmácia ativa junto do usuário para o cliente HTTP mandar X-Empresa-Id sem
    depender de estado do React. Só reseta para a primeira farmácia se a seleção guardada não
-   existir mais entre as farmácias do usuário — assim reabrir a aba ou recarregar o usuário
+   existir mais entre as farmácias do usuário. Assim, reabrir a aba ou recarregar o usuário
    (depois de criar uma farmácia nova, por exemplo) não desfaz a escolha de quem já trocou. */
 export function salvarUsuarioFarmacia(usuario:Usuario){
   const registro:UsuarioPersistido={versao:1,usuario,atualizadoEm:Date.now()}

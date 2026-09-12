@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 /*
  * Confirmar redireciona direto para dentro do sistema, então o "deu certo" precisa
- * aparecer no destino — senão o clique no e-mail parece não ter feito nada.
+ * aparecer no destino - senão o clique no e-mail parece não ter feito nada.
  */
 export default function AvisoEmailConfirmado() {
   const [visivel, setVisivel] = useState(false)

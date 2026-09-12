@@ -2,8 +2,8 @@ import { lerEmpresaAtivaId, salvarEmpresaAtiva } from '../cache/persistenciaSess
 import type { EmpresaAcesso, Usuario } from '../types'
 
 /* A empresa que a pessoa escolheu no seletor (persistida em localStorage); sem escolha
-   guardada, ou se a farmácia guardada não existe mais entre as do usuário, cai na primeira
-   — o mesmo padrão que o backend usa quando a requisição não manda X-Empresa-Id. */
+   guardada, ou se a farmácia guardada não existe mais entre as do usuário, cai na primeira,
+   o mesmo padrão que o backend usa quando a requisição não manda X-Empresa-Id. */
 export function empresaAtiva(user:Usuario|null):EmpresaAcesso|null {
   if (!user) return null
   const ativaId = lerEmpresaAtivaId()
@@ -19,7 +19,7 @@ export function isAdminAtivo(user:Usuario|null) {
 }
 
 /* Ações de conta (assinatura, dados de cobrança, criar farmácia) exigem ADMIN em qualquer
-   farmácia do grupo, não necessariamente na farmácia ativa — mesma regra do backend. */
+   farmácia do grupo, não necessariamente na farmácia ativa: mesma regra do backend. */
 export function isAdminDoGrupo(user:Usuario|null) {
   return user?.companies.some(c => c.role === 'ADMIN') ?? false
 }

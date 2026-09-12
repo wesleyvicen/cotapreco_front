@@ -11,11 +11,11 @@ import { isAdminAtivo, isAdminDoGrupo } from '../lib/permissoes'
 import SeletorFarmacia from './SeletorFarmacia'
 
 const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/cotacao-ol',label:'Cotação para OL',icon:PackageSearch},{to:'/produtos',label:'Produtos',icon:Boxes}]
-/* Staff não tem farmácia nenhuma — nada do menu normal (cotações, produtos, assinatura,
+/* Staff não tem farmácia nenhuma, então nada do menu normal (cotações, produtos, assinatura,
    seletor de farmácia) faz sentido pra essa conta, só a lista de contas e a própria senha. */
 const linksStaff=[{to:'/',label:'Contas',icon:Users,end:true}]
 const SIDEBAR_RECOLHIDA_KEY='cotapreco:sidebar-recolhida'
-/* Mesmo ponto de corte do menu em styles.css — abaixo dele o menu vira gaveta e o
+/* Mesmo ponto de corte do menu em styles.css. Abaixo dele o menu vira gaveta e o
    recolhimento em rail de ícones do desktop deixa de fazer sentido. */
 const CONSULTA_MOBILE='(max-width:760px)'
 
@@ -24,12 +24,12 @@ function lerPreferenciaMenu(){
 }
 
 /* No iOS, o Safari normal e o app adicionado à tela de início guardam localStorage em
-   compartimentos separados. Quem tocou sem querer no botão de recolher o menu — que
-   fica ao lado do X de fechar, no cabeçalho da gaveta mobile — carrega essa marca só
+   compartimentos separados. Quem tocou sem querer no botão de recolher o menu (que
+   fica ao lado do X de fechar, no cabeçalho da gaveta mobile) carrega essa marca só
    naquele Safari; o app instalado nunca a vê e por isso "funciona sozinho". A marca em
    si nunca devia valer no celular: o CSS do rail de ícones do desktop não tem tradução
    para a gaveta mobile. Em vez de tentar migrar quem já tem a marca salva, ignoramos o
-   valor sempre que a tela está no tamanho de celular — o que também corrige sozinho
+   valor sempre que a tela está no tamanho de celular, o que também corrige sozinho
    quem já ficou com o menu quebrado. */
 function lerMobile(){
   return window.matchMedia(CONSULTA_MOBILE).matches

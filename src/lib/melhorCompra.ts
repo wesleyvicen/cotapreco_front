@@ -173,7 +173,7 @@ export function toNumber(value:unknown):number|null {
 }
 
 export function formatBRL(value:number|null|undefined):string {
-  return value === null || value === undefined || Number.isNaN(value) ? '—' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  return value === null || value === undefined || Number.isNaN(value) ? '-' : value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export type LinhaPlanilha = unknown[]
@@ -741,7 +741,7 @@ export function findProductMatches(cotacoes:MapaCotacoes, item:ItemPedido, produ
 
   /*
    * Um candidato só vira correspondência ou sugestão quando tem EAN idêntico, o mesmo DCB,
-   * um vínculo já confirmado, ou quando divide algum princípio ativo com o item — porque
+   * um vínculo já confirmado, ou quando divide algum princípio ativo com o item - porque
    * tanto "automatic" quanto "suggestion" exigem similaridade de princípio ativo acima de
    * zero. Reunir esses quatro grupos dá um superconjunto seguro de quem precisa ser comparado.
    */

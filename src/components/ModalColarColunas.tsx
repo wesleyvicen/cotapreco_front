@@ -72,17 +72,17 @@ export default function ModalColarColunas({ colunas, setColunas, ignorarCabecalh
         {erro && <AvisoErro message={erro}/>}
         {comTabulacao.length > 0 && <div className="alert alert-warning">Parece que mais de uma coluna foi colada em {comTabulacao.join(' e ')}. Cole uma coluna de cada vez para os campos não se misturarem.</div>}
         {desalinhadas && <div className="alert alert-warning">As colunas coladas têm quantidades de linhas diferentes. Confira se alguma seleção pegou linhas a mais ou a menos antes de continuar.</div>}
-        {faltamObrigatorias.length > 0 && linhas.length > 0 && <div className="alert alert-warning">Cole também {faltamObrigatorias.join(' e ').toLowerCase()} — sem esses campos a cotação não pode ser criada.</div>}
+        {faltamObrigatorias.length > 0 && linhas.length > 0 && <div className="alert alert-warning">Cole também {faltamObrigatorias.join(' e ').toLowerCase()}, sem esses campos a cotação não pode ser criada.</div>}
 
         {linhas.length > 0 && <div className="colar-previa">
           <div className="section-caption"><TableProperties/><div><strong>Como ficou o alinhamento</strong><span>{linhas.length === 1 ? '1 produto capturado' : `${linhas.length} produtos capturados`}. Veja se cada linha juntou os dados certos.</span></div></div>
           <div className="table-wrap"><table><thead><tr><th>#</th><th>EAN</th><th>Produto</th><th>Laboratório</th><th>Qtd.</th></tr></thead><tbody>
             {linhas.slice(0, 5).map((linha, indice) => <tr key={indice}>
               <td>{indice + 1}</td>
-              <td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">—</span>}</td>
+              <td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">-</span>}</td>
               <td>{linha.productName || <span className="muted">Sem nome</span>}</td>
-              <td>{linha.laboratory || <span className="muted">—</span>}</td>
-              <td>{linha.quantity || <span className="muted">—</span>}</td>
+              <td>{linha.laboratory || <span className="muted">-</span>}</td>
+              <td>{linha.quantity || <span className="muted">-</span>}</td>
             </tr>)}
           </tbody></table></div>
           {linhas.length > 5 && <small className="colar-previa-resto">e mais {linhas.length - 5} {linhas.length - 5 === 1 ? 'produto' : 'produtos'} abaixo.</small>}

@@ -54,7 +54,7 @@ type CampoCadastro = keyof typeof dadosCadastro;
 const dadosLogin = { identificador: "", senha: "" };
 /* Item que a pessoa abriu para cotar e deixou sem preço. Era o estado invisível da tela:
    o cartão ficava verde como os cotados e o contador já somava o item, então dava para
-   enviar achando que estava tudo preenchido — ou tocar sem querer e nunca perceber. */
+   enviar achando que estava tudo preenchido, ou tocar sem querer e nunca perceber. */
 const precoPendente = (item: ItemRespostaPublica) =>
   item.disponivel && !(item.precoUnitario && item.precoUnitario > 0);
 

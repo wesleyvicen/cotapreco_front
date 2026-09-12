@@ -26,7 +26,7 @@ export default function PaginaConfirmarEmail() {
     api('/auth/confirmar-email', { method:'POST', body:JSON.stringify({ token }) })
       .then(async () => {
         /* Logado, o painel já é o destino natural. Sem sessão, mandar para a raiz cairia
-           na página de vendas — quem acabou de confirmar quer é entrar. */
+           na página de vendas, e quem acabou de confirmar quer é entrar. */
         await recarregarUsuario()
         navegar(possuiTokenFarmacia() ? '/?email-confirmado=1' : '/login?email-confirmado=1', { replace: true })
       })

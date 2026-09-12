@@ -15,9 +15,9 @@ import type { AjusteQuantidade, Assinatura, CheckoutAssinatura, Conta, Empresa }
 /* A mensagem já vai com o nome da farmácia: do outro lado, saber quem está pedindo
    evita a primeira ida e volta da conversa. */
 const linkComContexto = (farmacia:string, assunto:string) =>
-  'https://wa.me/5581999441494?text=' + encodeURIComponent(`Olá! ${assunto} — farmácia ${farmacia}.`)
+  'https://wa.me/5581999441494?text=' + encodeURIComponent(`Olá! ${assunto} - farmácia ${farmacia}.`)
 
-/* Mesma lista usada em "O que acontece quando vence" e na confirmação de cancelamento — os
+/* Mesma lista usada em "O que acontece quando vence" e na confirmação de cancelamento - os
    dois casos têm exatamente a mesma consequência (o acesso completo pausa quando o prazo
    pago acaba), só muda o que leva até lá. */
 const CONTINUA_FUNCIONANDO = [
@@ -71,7 +71,7 @@ export default function PaginaAssinatura() {
 
   useEffect(() => { void carregar() }, [carregar])
 
-  /* Só para calcular a estimativa de preço por quantidade de farmácia — não muda o que é
+  /* Só para calcular a estimativa de preço por quantidade de farmácia - não muda o que é
      cobrado de verdade, que o backend sempre calcula pela quantidade real na hora do checkout. */
   useEffect(() => { api<Conta>('/account').then(setConta).catch(() => {}) }, [])
 
@@ -94,7 +94,7 @@ export default function PaginaAssinatura() {
 
   const plano = precoDoPlano(assinatura)
   const negociado = conta?.precoNegociado ?? false
-  /* Preço estimado pela quantidade que a pessoa disser ter — some o adicional por farmácia
+  /* Preço estimado pela quantidade que a pessoa disser ter - some o adicional por farmácia
      igual o backend faz, só que aqui é cálculo de exibição, sem cobrar nada. Numa conta
      negociada não tem estimativa: o valor já é o combinado com a equipe. */
   const precoEstimado = negociado && conta
@@ -219,14 +219,14 @@ export default function PaginaAssinatura() {
 
     {erro && <AvisoErro message={erro}/>}
 
-    {retorno === 'cancelado' && <div className="alert alert-warning">Você saiu do pagamento antes de terminar. Nada foi cobrado — dá para recomeçar quando quiser.</div>}
+    {retorno === 'cancelado' && <div className="alert alert-warning">Você saiu do pagamento antes de terminar. Nada foi cobrado, dá para recomeçar quando quiser.</div>}
     {retorno === 'expirado' && <div className="alert alert-warning">A página de pagamento expirou por tempo. Clique em assinar de novo para abrir uma nova.</div>}
 
     {confirmando && !ativa && <section className="card assinatura-confirmando" role="status">
       <Loader2 className="spin"/>
       <div>
         <strong>Confirmando seu pagamento</strong>
-        <span>O Asaas está nos avisando. Isso leva alguns segundos e esta tela atualiza sozinha — não precisa pagar de novo.</span>
+        <span>O Asaas está nos avisando. Isso leva alguns segundos e esta tela atualiza sozinha, não precisa pagar de novo.</span>
       </div>
     </section>}
 
@@ -258,11 +258,11 @@ export default function PaginaAssinatura() {
     </section>}
 
     {status === 'OVERDUE' && <div className="alert alert-error">
-      A última cobrança não foi paga. Assim que o cartão for regularizado o acesso volta sozinho — pelo botão abaixo você atualiza o cartão.
+      A última cobrança não foi paga. Assim que o cartão for regularizado o acesso volta sozinho - pelo botão abaixo você atualiza o cartão.
     </div>}
 
     {completando && <section className="card assinatura-cadastro">
-      <div className="card-header"><div><h2>Falta só o endereço da farmácia</h2><p>A operadora de pagamento exige estes dados na cobrança. Você preenche uma vez — nas próximas vezes vai direto.</p></div></div>
+      <div className="card-header"><div><h2>Falta só o endereço da farmácia</h2><p>A operadora de pagamento exige estes dados na cobrança. Você preenche uma vez; nas próximas vezes vai direto.</p></div></div>
       <form onSubmit={salvarCadastroEAssinar}>
         <CamposEndereco telefone={telefone} setTelefone={setTelefone} endereco={endereco} setEndereco={setEndereco}/>
         <div className="assinatura-cadastro-acoes">
@@ -292,7 +292,7 @@ export default function PaginaAssinatura() {
                 onChange={e => setQuantidadeEstimada(Math.max(1, Number(e.target.value) || 1))}/>
             </label>
             <p>Com {quantidadeEstimada} farmácia{quantidadeEstimada !== 1 ? 's' : ''}, sua mensalidade é <strong>{money(precoEstimado)}</strong>.
-              {quantidadeEstimada > (user.companies.length || 1) && ' Você paga por todas agora e fica liberado para criar as que faltam — sem cobrança extra — pela tela Dados da Farmácia.'}
+              {quantidadeEstimada > (user.companies.length || 1) && ' Você paga por todas agora (sem cobrança extra) e fica liberado para criar as que faltam pela tela Dados da Farmácia.'}
             </p>
             {quantidadeEstimada > 3 && <p className="assinatura-estimador-contato">
               <MessageCircle/>
@@ -304,7 +304,7 @@ export default function PaginaAssinatura() {
       </button>
       <p className="assinatura-plano-nota">
         <ShieldCheck/>
-        O cartão é cadastrado na página do Asaas, nossa processadora — os dados dele não passam pelo CotaPreço.
+        O cartão é cadastrado na página do Asaas, nossa processadora - os dados dele não passam pelo CotaPreço.
         A cobrança se repete todo mês e você cancela quando quiser, aqui mesmo.
       </p>
     </section>}
@@ -326,7 +326,7 @@ export default function PaginaAssinatura() {
         <a href={linkComContexto(user.groupName, 'Preciso ajustar a quantidade de farmácias da minha negociação')} target="_blank" rel="noopener noreferrer">Para ajustar a quantidade, fale com a gente de novo pelo WhatsApp.</a>
       </p>}
       {conta.farmaciasContratadasAgendadas != null && <p className="assinatura-quantidade-agendada">
-        Já pago até {assinatura?.nextDueDate ? date(assinatura.nextDueDate) : 'a próxima cobrança'} — depois disso cai para <strong>{conta.farmaciasContratadasAgendadas}</strong> farmácia{conta.farmaciasContratadasAgendadas !== 1 ? 's' : ''}.
+        Já pago até {assinatura?.nextDueDate ? date(assinatura.nextDueDate) : 'a próxima cobrança'}. Depois disso cai para <strong>{conta.farmaciasContratadasAgendadas}</strong> farmácia{conta.farmaciasContratadasAgendadas !== 1 ? 's' : ''}.
       </p>}
 
       {editandoQuantidade && <div className="assinatura-editor-quantidade">
@@ -336,7 +336,7 @@ export default function PaginaAssinatura() {
             onChange={e => setNovaQuantidade(Math.max(1, Number(e.target.value) || 1))}/>
         </label>
         {precisaDesativar > 0 && <div className="assinatura-desativar-lista">
-          <p>Você tem {empresasAtivasLista.length} farmácias ativas — desative {precisaDesativar} para reduzir para {novaQuantidade}.</p>
+          <p>Você tem {empresasAtivasLista.length} farmácias ativas. Desative {precisaDesativar} para reduzir para {novaQuantidade}.</p>
           <ul>{empresasAtivasLista.map(e => <li key={e.id}>
             <span>{e.nome}</span>
             <button type="button" className="button button-ghost" disabled={desativando === e.id} onClick={() => void desativarEmpresa(e.id)}>
@@ -356,7 +356,7 @@ export default function PaginaAssinatura() {
     {ativa && <section className="card assinatura-acao">
       <div>
         <h2>Trocar o cartão ou cancelar</h2>
-        <p>Para trocar o cartão, abra um novo pagamento — a cobrança antiga é substituída. Para nota fiscal, fale com a gente.</p>
+        <p>Para trocar o cartão, abra um novo pagamento: a cobrança antiga é substituída. Para nota fiscal, fale com a gente.</p>
       </div>
       <div className="assinatura-acao-botoes">
         <button className="button button-secondary" disabled={enviando} onClick={() => void assinar()}><CreditCard/>{enviando ? 'Abrindo...' : 'Atualizar cartão'}</button>
@@ -379,7 +379,7 @@ export default function PaginaAssinatura() {
     </section>
 
     <p className="assinatura-rodape">
-      Precisa de nota fiscal, contrato, Pix ou boleto no lugar do cartão? É só chamar —
+      Precisa de nota fiscal, contrato, Pix ou boleto no lugar do cartão? É só chamar -
       <a href={LINK_WHATSAPP_ASSINATURA} target="_blank" rel="noopener noreferrer"> falar no WhatsApp</a>.
     </p>
 
@@ -400,7 +400,7 @@ function ModalCancelarAssinatura({ farmacia, preco, farmacias, ativaAte, ocupado
         <div>
           <span className="eyebrow warning">Cancelar assinatura</span>
           <h2 id="titulo-cancelar-assinatura">Antes de ir, veja o que muda</h2>
-          <p>{ativaAte ? <>Já está tudo pago até <strong>{date(ativaAte)}</strong> — o acesso continua até lá de qualquer forma, cancelando ou não. Cancelar só evita a próxima cobrança.</> : 'Cancelar evita a próxima cobrança.'}</p>
+          <p>{ativaAte ? <>Já está tudo pago até <strong>{date(ativaAte)}</strong>, e o acesso continua até lá de qualquer forma, cancelando ou não. Cancelar só evita a próxima cobrança.</> : 'Cancelar evita a próxima cobrança.'}</p>
         </div>
         <button className="icon-button" aria-label="Fechar" disabled={ocupado} onClick={aoFechar}><X/></button>
       </div>
@@ -422,7 +422,7 @@ function ModalCancelarAssinatura({ farmacia, preco, farmacias, ativaAte, ocupado
         <MessageCircle/>
         <div>
           <strong>É sobre o preço, ou falta algo no sistema?</strong>
-          <p>Fala com a gente antes — às vezes dá pra resolver sem cancelar.</p>
+          <p>Fala com a gente antes: às vezes dá pra resolver sem cancelar.</p>
         </div>
         <a className="button button-secondary" href={linkComContexto(farmacia, 'Antes de cancelar, quero ver se dá pra resolver de outro jeito')}
           target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>

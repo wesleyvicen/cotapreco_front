@@ -69,11 +69,11 @@ export default function App(){
   if(pathname==='/representante/redefinir-senha')return <ConteudoAssincrono><PaginaRedefinirSenhaRepresentante/></ConteudoAssincrono>
   const publicMatch=pathname.match(/^\/cotacao\/responder\/([^/]+)$/)
   if(publicMatch)return <ConteudoAssincrono><ProvedorParametros params={{token:decodeURIComponent(publicMatch[1])}}><PaginaRespostaPublica/></ProvedorParametros></ConteudoAssincrono>
-  /* Staff não tem farmácia nenhuma — nenhuma rota normal (cotações, produtos, assinatura...)
-     faz sentido pra essa conta, então qualquer caminho cai na tela própria dela. Mesmo
-     LayoutSistema de sempre (menu lateral, avatar, sair) — ele mesmo troca os links do menu
-     quando user.staff é true. Exceção: /alterar-senha, que o menu de staff também mostra (ver
-     LayoutSistema) e precisa cair na tela de verdade, não na de contas. */
+  /* Staff não tem farmácia nenhuma, então nenhuma rota normal (cotações, produtos,
+     assinatura...) faz sentido pra essa conta: qualquer caminho cai na tela própria dela.
+     O LayoutSistema é o mesmo de sempre (menu lateral, avatar, sair); ele mesmo troca os
+     links do menu quando user.staff é true. Exceção: /alterar-senha, que o menu de staff
+     também mostra (ver LayoutSistema) e precisa cair na tela de verdade, não na de contas. */
   if(user?.staff&&pathname!=='/alterar-senha')return <RotaProtegida><LayoutSistema><ConteudoAssincrono><PaginaStaff/></ConteudoAssincrono></LayoutSistema></RotaProtegida>
   let page:ReactNode
   if(pathname==='/')page=<PaginaPainel/>

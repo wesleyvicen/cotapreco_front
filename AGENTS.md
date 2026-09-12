@@ -1,4 +1,4 @@
-# Guia para agentes — frontend
+# Guia para agentes do frontend
 
 ## Escopo
 

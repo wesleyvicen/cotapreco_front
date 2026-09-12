@@ -1,4 +1,4 @@
-/* Mesmo algoritmo do backend (helper/Cnpj.java) — confere os dígitos verificadores antes de
+/* Mesmo algoritmo do backend (helper/Cnpj.java). Confere os dígitos verificadores antes de
    mandar pro servidor, pra dar o erro na hora em vez de depois de uma ida e volta. */
 export function cnpjValido(valor:string):boolean {
   const digitos = valor.replace(/\D/g, '')

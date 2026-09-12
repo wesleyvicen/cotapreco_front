@@ -260,7 +260,7 @@ export default function PaginaNovaCotacao() {
     <section className="card assinatura-bloqueio">
       <div className="assinatura-bloqueio-icone confirmacao-icone-neutro"><MailWarning/></div>
       <h1>Confirme seu e-mail primeiro</h1>
-      <p>Enviamos um link de confirmação para <b>{user?.email}</b>. Clique nele e volte aqui — leva menos de um minuto.</p>
+      <p>Enviamos um link de confirmação para <b>{user?.email}</b>. Clique nele e volte aqui. Leva menos de um minuto.</p>
       <p className="assinatura-bloqueio-spam"><b>Não achou?</b> Procure por “CotaPreço” na caixa de spam ou lixo eletrônico e marque como <b>não é spam</b>. Use o botão “Reenviar e-mail” no aviso do topo se precisar de um link novo.</p>
       <div className="assinatura-bloqueio-acoes">
         <LinkInterno className="button button-ghost" to="/cotacoes">Ver minhas cotações</LinkInterno>
@@ -320,7 +320,7 @@ export default function PaginaNovaCotacao() {
               </div>
               {colunasRepetidas && <small className="mapping-error">A mesma coluna não pode ser usada em dois campos.</small>}
             </div>
-            <div className="source-preview"><div className="section-caption"><TableProperties/><div><strong>Prévia original do arquivo</strong><span>As colunas não escolhidas serão ignoradas.</span></div></div><div className="table-wrap"><table><thead><tr>{analise.columns.map(coluna => <th key={coluna.index}>{coluna.name}</th>)}</tr></thead><tbody>{analise.sampleRows.map((linha, indice) => <tr key={indice}>{analise.columns.map(coluna => <td key={coluna.index}>{linha[coluna.index] || <span className="muted">—</span>}</td>)}</tr>)}</tbody></table></div></div>
+            <div className="source-preview"><div className="section-caption"><TableProperties/><div><strong>Prévia original do arquivo</strong><span>As colunas não escolhidas serão ignoradas.</span></div></div><div className="table-wrap"><table><thead><tr>{analise.columns.map(coluna => <th key={coluna.index}>{coluna.name}</th>)}</tr></thead><tbody>{analise.sampleRows.map((linha, indice) => <tr key={indice}>{analise.columns.map(coluna => <td key={coluna.index}>{linha[coluna.index] || <span className="muted">-</span>}</td>)}</tr>)}</tbody></table></div></div>
           </>}
         </div>}
 
@@ -374,7 +374,7 @@ export default function PaginaNovaCotacao() {
             <td><input className="review-cell-input" type="number" min="1" step="1" placeholder="0" aria-label="Quantidade" value={rascunho.quantity} onChange={event => setRascunho(atual => atual && ({ ...atual, quantity:event.target.value }))} onKeyDown={event => { if (event.key === 'Enter') void salvarEdicaoRevisao() }}/></td>
             <td><span className="mini-tag">Editando</span></td>
             <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado} title="Cancelar edição" aria-label="Cancelar edição" onClick={cancelarEdicaoRevisao}><XCircle/></button><button type="button" className="icon-button primary" disabled={ocupado} title="Salvar produto" aria-label="Salvar produto" onClick={() => void salvarEdicaoRevisao()}><Check/></button></div></td></tr>
-          return <tr key={item.id} className={!linha.valid ? 'invalid-row' : ''}><td>{linha.row}</td><td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">Sem EAN</span>}</td><td><strong>{linha.productName || 'Sem nome'}</strong>{linha.errors.map(mensagemErro => <small className="field-error" key={mensagemErro}>{mensagemErro}</small>)}</td><td>{linha.laboratory || <span className="muted">—</span>}</td><td>{linha.quantity ?? '—'}</td><td>{linha.valid ? <span className={`mini-tag ${linha.productExists ? '' : 'new'}`}>{linha.productExists ? 'Encontrado' : 'Será cadastrado'}</span> : <span className="mini-tag error">Corrigir</span>}</td>
+          return <tr key={item.id} className={!linha.valid ? 'invalid-row' : ''}><td>{linha.row}</td><td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">Sem EAN</span>}</td><td><strong>{linha.productName || 'Sem nome'}</strong>{linha.errors.map(mensagemErro => <small className="field-error" key={mensagemErro}>{mensagemErro}</small>)}</td><td>{linha.laboratory || <span className="muted">-</span>}</td><td>{linha.quantity ?? '-'}</td><td>{linha.valid ? <span className={`mini-tag ${linha.productExists ? '' : 'new'}`}>{linha.productExists ? 'Encontrado' : 'Será cadastrado'}</span> : <span className="mini-tag error">Corrigir</span>}</td>
             <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId)} title="Editar produto" aria-label={`Editar ${linha.productName || 'produto'}`} onClick={() => abrirEdicaoRevisao(item)}><PenLine/></button><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId) || itensRevisao.length === 1} title={itensRevisao.length === 1 ? 'A cotação precisa de pelo menos um produto' : 'Remover produto'} aria-label={`Remover ${linha.productName || 'produto'}`} onClick={() => void removerProdutoRevisao(item.id)}><Trash2/></button></div></td></tr>
         })}</tbody></table></div>
         {previa.invalidRows > 0 && <div className="alert alert-warning">Corrija os itens destacados usando o lápis na própria linha, ou remova o que não faz mais sentido.</div>}

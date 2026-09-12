@@ -1423,7 +1423,7 @@ tbody tr:hover {
 }
 /* Sugestão de domínio de e-mail: duas camadas do mesmo tamanho, uma em cima da outra. A
    de baixo (fantasma) desenha a caixa normal do campo e mostra o texto já digitado em
-   cor invisível seguido do resto do domínio sugerido em cinza — como o texto digitado é
+   cor invisível seguido do resto do domínio sugerido em cinza. Como o texto digitado é
    idêntico em ambas as camadas, ele nunca aparece duplicado. A de cima é o input de
    verdade, sem fundo nem borda próprios, só recebendo clique e teclado. */
 .email-autocompletar {
@@ -1935,7 +1935,7 @@ label small {
 }
 /*
  * As colunas "Produto" e "Qtd." ficam fixas à esquerda, e "Faixa de preço", "Economia" e
- * "Melhor" ficam fixas à direita, ao rolar a tabela horizontalmente — a rolagem fica
+ * "Melhor" ficam fixas à direita; ao rolar a tabela horizontalmente, a rolagem fica
  * restrita à área dos fornecedores no meio. Cada grupo pode ser redimensionado como um
  * bloco só (arrastando a borda entre o grupo fixo e a área de fornecedores).
  */
@@ -5408,7 +5408,7 @@ label small {
   box-shadow: 0 6px 12px -10px rgba(12, 58, 45, 0.5);
 }
 /* Barra própria, presa logo abaixo da busca. A nativa da tabela fica escondida: ela nasce
-   no rodapé do conteúdo, e com quinze produtos isso é bem abaixo da área visível — barra
+   no rodapé do conteúdo, e com quinze produtos isso é bem abaixo da área visível. Uma barra
    que exige rolar para ser encontrada não serve para quem não usa gestos. */
 .matriz-barra {
   position: sticky;
@@ -5449,7 +5449,7 @@ label small {
 .plan-corpo::-webkit-scrollbar-thumb { border: 3px solid #fff; border-radius: 999px; background: #c3d3cc; }
 .plan-corpo::-webkit-scrollbar-thumb:hover { background: #9db8ad; }
 /* Sem top: o sticky vertical não funciona aqui. A caixa de rolagem lateral vira o contexto
-   do sticky e ela não rola para baixo — manter a regra só enganaria quem lesse depois. O
+   do sticky e ela não rola para baixo. Manter a regra só enganaria quem lesse depois. O
    left continua valendo e é o que segura a coluna do produto ao rolar de lado. */
 .plan-items {
   padding-right: 7px;
@@ -7297,7 +7297,7 @@ label small {
 .comparison-column-toggles button svg { width: 14px; height: 14px; }
 .comparison-column-toggles button.hidden { border-color: var(--line); background: #f4f6f5; color: #8a9791; text-decoration: line-through; }
 /*
- * Só o nome do fornecedor fica sempre visível — os controles de mover/arrastar/ocultar
+ * Só o nome do fornecedor fica sempre visível; os controles de mover/arrastar/ocultar
  * só aparecem ao passar o mouse, senão não sobra espaço nenhum pra ler o nome quando a
  * coluna está fina (o objetivo de afinar é justamente caber mais fornecedores na tela).
  */
@@ -7318,7 +7318,7 @@ label small {
 .comparison-column-toggles > button:not([class]) svg { width: 14px; height: 14px; }
 /*
  * Arraste de coluna: a coluna inteira (cabeçalho e células) acompanha o cursor, e as vizinhas
- * deslizam para abrir o espaço — o mesmo gesto dos cartões no mobile. As colunas fixas têm
+ * deslizam para abrir o espaço, o mesmo gesto dos cartões no mobile. As colunas fixas têm
  * z-index 2, então a coluna arrastada passa por baixo delas em vez de vazar para fora.
  */
 .comparison-th-fornecedor,
@@ -8262,7 +8262,7 @@ label small {
 /* Aviso de privacidade ao representante ---------------------------------
  * Fica dentro do cartão de cadastro da página pública, onde a pessoa está prestes a
  * digitar telefone, e-mail e preço. O resumo é a resposta à pergunta que ela realmente
- * tem — quem vê o meu preço; o resto abre sob demanda. */
+ * tem: quem vê o meu preço; o resto abre sob demanda. */
 .aviso-privacidade {
   border: 1px solid #d5e5dd;
   border-radius: 12px;
@@ -8332,7 +8332,7 @@ label small {
 .product-pending-aviso button:focus-visible { outline: 2px solid #a97918; outline-offset: 2px; }
 .contador-pendente { color: #a97918; font-style: normal; font-weight: 800; }
 
-/* Tela de staff — mesmo LayoutSistema de sempre (sidebar, avatar, sair), só o conteúdo é
+/* Tela de staff: mesmo LayoutSistema de sempre (sidebar, avatar, sair), só o conteúdo é
    próprio: lista de contas de cliente em vez de cotações. */
 .staff-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 4px; }
 .staff-resumo > div { padding: 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }

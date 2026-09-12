@@ -7,14 +7,14 @@ import { ROTULO_STATUS } from '../lib/assinatura'
 import type { ContaStaff, PaginaAuditoriaStaff, PaginaContasStaff } from '../types'
 
 const TAMANHO_PAGINA = 20
-/* Espera a pessoa parar de digitar antes de ir ao banco — sem isso cada tecla vira uma
+/* Espera a pessoa parar de digitar antes de ir ao banco. Sem isso, cada tecla vira uma
    consulta nova. */
 const ATRASO_BUSCA_MS = 350
 
 const ROTULO_ACAO_AUDITORIA:Record<string,string> = { NEGOCIACAO:'Negociação', BRINDE:'Cortesia', TRIAL:'Trial' }
 
 function formatarCnpj(valor:string|null) {
-  if (!valor) return '—'
+  if (!valor) return '-'
   const digitos = valor.replace(/\D/g, '').slice(0, 14)
   return digitos.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2')
@@ -94,7 +94,7 @@ export default function PaginaStaff() {
       .finally(() => setCarregando(false))
   }, [buscaAplicada, pagina])
 
-  /* Só busca quando a aba está aberta — evita gastar a consulta em toda visita à tela. */
+  /* Só busca quando a aba está aberta, evitando gastar a consulta em toda visita à tela. */
   useEffect(() => {
     if (aba !== 'auditoria') return
     setAuditoriaCarregando(true); setAuditoriaErro('')
@@ -247,10 +247,10 @@ export default function PaginaStaff() {
                 <thead><tr><th>Farmácia</th><th>Responsável</th><th>Status</th><th>Farmácias</th><th>Mensalidade</th><th>Válido até</th><th>Desde</th><th/></tr></thead>
                 <tbody>{resultado.itens.map(c => <tr key={c.grupoId}>
                   <td><strong>{c.nomeFarmacia}</strong><br/><small>{formatarCnpj(c.cnpj)}</small></td>
-                  <td>{c.responsavelNome ?? '—'}{c.responsavelEmail && <><br/><small>{c.responsavelEmail}</small></>}</td>
+                  <td>{c.responsavelNome ?? '-'}{c.responsavelEmail && <><br/><small>{c.responsavelEmail}</small></>}</td>
                   <td>
                     {/* emTeste nunca convive com um pagamento de verdade (ver AssinaturaService.ativar,
-                        que zera emTeste ao confirmar) — então aqui é sempre "ainda não pagou, mas tem
+                        que zera emTeste ao confirmar). Então aqui é sempre "ainda não pagou, mas tem
                         prazo rodando", diferente de "sem assinatura" genérico (nunca assinou, ou cortesia). */}
                     <span className={`status-badge status-${c.emTeste ? 'trial' : c.statusAssinatura.toLowerCase()}`}>
                       {c.emTeste ? ROTULO_STATUS.TRIAL : ROTULO_STATUS[c.statusAssinatura]}
@@ -261,7 +261,7 @@ export default function PaginaStaff() {
                   <td>{c.cortesia
                     ? <><strong>Cortesia</strong><br/><small>sem cobrança</small></>
                     : <>{money(c.precoMensalAtual)}{c.precoMensalPersonalizado != null && <><br/><small>Negociado</small></>}</>}</td>
-                  <td>{c.assinaturaAte ? date(c.assinaturaAte) : '—'}</td>
+                  <td>{c.assinaturaAte ? date(c.assinaturaAte) : '-'}</td>
                   <td>{date(c.criadoEm)}</td>
                   <td className="staff-acoes">
                     {!c.cortesia && <button type="button" className="icon-button" title={c.precoMensalPersonalizado != null ? 'Editar negociação' : 'Negociar'} onClick={() => abrirNegociacao(c)}><HandCoins size={16}/></button>}
@@ -287,11 +287,11 @@ export default function PaginaStaff() {
       {erroNegociacao && <AvisoErro message={erroNegociacao}/>}
       <div className="user-form">
         <label>Farmácias contratadas<input type="number" min={1} step={1} value={quantidadeForm} onChange={e => setQuantidadeForm(e.target.value)} required/>
-          <small>Aplica na hora — diferente do autoatendimento do cliente, aqui não entra na fila do próximo ciclo.</small></label>
+          <small>Aplica na hora, diferente do autoatendimento do cliente: aqui não entra na fila do próximo ciclo.</small></label>
         <label>Preço mensal negociado<CampoPreco valor={precoForm} aoAlterar={setPrecoForm}/>
           <small>Em branco remove a negociação e volta para o cálculo padrão (base + adicional por farmácia).</small></label>
       </div>
-      <p className="modal-nota">Enquanto a conta tiver um preço negociado, o cliente não consegue mudar a quantidade sozinho — a tela dele vai pedir para falar com a equipe de novo.</p>
+      <p className="modal-nota">Enquanto a conta tiver um preço negociado, o cliente não consegue mudar a quantidade sozinho: a tela dele vai pedir para falar com a equipe de novo.</p>
       <div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => setNegociando(null)}>Cancelar</button>
         <button className="button button-primary" disabled={salvandoNegociacao}>{salvandoNegociacao ? 'Salvando...' : 'Salvar negociação'}</button></div>
     </form></div>}
@@ -303,7 +303,7 @@ export default function PaginaStaff() {
       <div className="user-form">
         <label>Farmácias liberadas<input type="number" min={1} step={1} value={quantidadeBrinde} onChange={e => setQuantidadeBrinde(e.target.value)} required/></label>
       </div>
-      <p className="modal-nota">Acesso liberado sem prazo e sem cobrança nenhuma — não é um preço negociado, é grátis mesmo.
+      <p className="modal-nota">Acesso liberado sem prazo e sem cobrança nenhuma: não é um preço negociado, é grátis mesmo.
         {!brindando.cortesia && brindando.statusAssinatura !== 'NONE' && brindando.statusAssinatura !== 'CANCELED' &&
           ' Se a conta tiver uma assinatura paga ativa no Asaas, ela é cancelada antes de liberar o brinde.'}</p>
       <div className="modal-actions"><button type="button" className="button button-ghost" onClick={() => setBrindando(null)}>Cancelar</button>

@@ -4,14 +4,14 @@ import { ativarNotificacoes, garantirInscricaoAtiva, isPushSuportado, permissaoA
 
 const CHAVE_DISPENSADA = 'cotapreco:push-faixa-dispensada'
 const VANTAGENS = [
-  { Icone: Timer, texto: 'Saiba na hora quando um representante responder — sem ficar atualizando a tela.' },
+  { Icone: Timer, texto: 'Saiba na hora quando um representante responder - sem ficar atualizando a tela.' },
   { Icone: Laptop, texto: 'Chega no computador e no celular, mesmo com o CotaPreço fechado.' },
   { Icone: ShieldCheck, texto: 'Só avisos de resposta de cotação. Sem spam, sem marketing.' },
 ]
 
 /*
  * Fica acima das páginas do sistema (como FaixaAssinatura) só enquanto a farmácia ainda
- * não decidiu nada sobre notificações. Depois de ativar, desativar ou dispensar, some —
+ * não decidiu nada sobre notificações. Depois de ativar, desativar ou dispensar, some -
  * quem já tem a permissão concedida continua sendo sincronizado em silêncio, sem faixa.
  */
 export default function FaixaNotificacoesPush() {
@@ -82,7 +82,7 @@ export default function FaixaNotificacoesPush() {
         <ul className="push-vantagens-lista">
           {VANTAGENS.map(({ Icone, texto }) => <li key={texto}><Icone/><span>{texto}</span></li>)}
         </ul>
-        <p className="push-vantagens-nota">O navegador vai pedir sua confirmação a seguir — você pode desativar quando quiser.</p>
+        <p className="push-vantagens-nota">O navegador vai pedir sua confirmação a seguir. Você pode desativar quando quiser.</p>
 
         <div className="modal-actions">
           <button type="button" className="button button-secondary" disabled={ativando} onClick={() => setModalAberto(false)}>Agora não</button>

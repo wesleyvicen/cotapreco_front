@@ -228,7 +228,7 @@
 .lp-passos-lista h3 svg { width: 19px; height: 19px; flex: none; color: var(--lp-verde); }
 .lp-passos-lista p { margin: 0; color: var(--lp-suave); font-size: 14px; line-height: 1.55; }
 
-/* Tempo — contraste antes/depois em vez de lista. -------------------- */
+/* Tempo: contraste antes/depois em vez de lista. -------------------- */
 .lp-tempo { background: #fff; }
 .lp-tempo-interno { max-width: 900px; }
 .lp-antes-depois { display: grid; gap: 12px; align-items: stretch; }
@@ -296,7 +296,7 @@
 /* Preços -------------------------------------------------------------
  * Vitrine de preço: cartão branco elevado sobre fundo verde-claro para o valor ser a
  * primeira coisa que o olho pega. Mostrar o preço na própria landing (em vez de só depois
- * do cadastro) é proposital — quem chega até aqui já decidiu que o produto resolve, e
+ * do cadastro) é proposital: quem chega até aqui já decidiu que o produto resolve, e
  * esconder o valor nessa hora só adia uma objeção que vai aparecer de qualquer jeito. */
 /* Depoimentos --------------------------------------------------------- */
 .lp-depoimentos { background: #f6faf8; }
@@ -448,7 +448,7 @@
 .lp-oferta-nota { margin: 16px auto 0 !important; font-size: 14px; }
 .lp-oferta-nota a { color: var(--lp-verde); font-weight: 700; }
 
-/* Barra fixa de CTA no celular: quem rolou até o meio da página já formou opinião — o
+/* Barra fixa de CTA no celular: quem rolou até o meio da página já formou opinião, então o
    preço e o botão ficam sempre a um toque, sem precisar voltar ao topo. Some no desktop,
    onde o cabeçalho já cumpre esse papel. */
 .lp-cta-fixa {
@@ -525,7 +525,7 @@
 
 /* Páginas de documento (privacidade, termos, cookies) --------------------
  * Texto longo que quase ninguém lê inteiro: a pessoa chega atrás de uma seção. Daí o
- * índice grudado ao lado no desktop e a medida de linha curta — 68ch é o que mantém a
+ * índice grudado ao lado no desktop e a medida de linha curta: 68ch é o que mantém a
  * leitura confortável sem transformar a página numa coluna estreita de jornal. */
 .legal-main { padding: 26px 0 56px; background: linear-gradient(180deg, #f2f8f5 0%, #fff 40%); }
 .legal-voltar {
@@ -713,13 +713,13 @@
 /* Cadastro ----------------------------------------------------------
  * Reaproveita os tokens e os botões da landing (a página inteira vive dentro de .lp),
  * porque quem chega aqui vem de lá e a troca de linguagem visual faz duvidar do caminho.
- * Mobile-first: a ordem natural do documento é apresentação, formulário e provas — quem
+ * Mobile-first: a ordem natural do documento é apresentação, formulário e provas, pois quem
  * clicou em "testar grátis" já decidiu, e o formulário tem que aparecer sem rolagem longa.
  */
 .cad-main { padding: 6px 0 44px; background: #fff; }
 
 /* Topo do cadastro: logo, título/selo e "Entrar" cabem na mesma barra, como uma única
- * faixa de topo — não uma barra de navegação seguida de um bloco de título separado.
+ * faixa de topo, não uma barra de navegação seguida de um bloco de título separado.
  * Sem sticky: ao rolar essa faixa some inteira, o card do formulário já assume o topo. */
 .cad-topo { position: static; border-bottom-color: #eef2f0; background: #fff; backdrop-filter: none; }
 .cad-topo-interno {
@@ -757,7 +757,7 @@
   font-size: 12.5px;
 }
 
-/* No mobile os campos ficam soltos na página, como no print de divulgação — sem borda,
+/* No mobile os campos ficam soltos na página, como no print de divulgação, sem borda,
  * sombra ou fundo de card. O visual encaixotado volta a partir do tablet, ao lado do
  * painel escuro, porque aí os dois precisam parecer dois blocos separados na mesma linha. */
 .cad-formulario { margin-top: 28px; }
@@ -833,7 +833,7 @@
 .cad-conferencia .diverge { color: #c0453c; }
 
 .cad-enviar { width: 100%; margin-top: 3px; min-height: 52px; border: 0; cursor: pointer; }
-.cad-enviar:disabled { opacity: 0.65; cursor: progress; transform: none; }
+.cad-enviar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .cad-garantia {
   display: flex;
   align-items: flex-start;
@@ -846,6 +846,7 @@
   text-align: left;
 }
 .cad-garantia svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; color: var(--lp-verde); }
+.cad-pendencias { margin: -8px 0 0; color: #9a6b1c; font-size: 12.5px; font-weight: 600; text-align: center; }
 .cad-alternativa { margin: 16px 0 0; color: var(--lp-suave); font-size: 14px; text-align: center; }
 .cad-alternativa a { color: var(--lp-verde); font-weight: 700; }
 
@@ -921,7 +922,7 @@
 .cad-painel-slide p { margin: 0; color: rgba(255, 255, 255, 0.78); font-size: 14.5px; line-height: 1.55; }
 
 /* Primeiro slide: abertura do carrossel, com o mesmo peso visual que a Santé Clinic dá
- * à oferta de teste grátis — selo, título grande e um parágrafo, sem ícone de item. */
+ * à oferta de teste grátis: selo, título grande e um parágrafo, sem ícone de item. */
 .cad-painel-selo {
   display: inline-flex;
   align-items: center;

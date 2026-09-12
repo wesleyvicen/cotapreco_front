@@ -1,5 +1,5 @@
 /* Service worker mínimo: só existe para receber push e abrir o app no link certo.
-   O texto do push é sempre genérico (sem preço, distribuidora, farmácia etc.) — o
+   O texto do push é sempre genérico (sem preço, distribuidora, farmácia etc.); o
    conteúdo real só aparece dentro do app autenticado. */
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()))

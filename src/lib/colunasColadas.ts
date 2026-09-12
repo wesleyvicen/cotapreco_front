@@ -48,7 +48,7 @@ export function montarLinhasColadas(colunas:ColunasColadas, ignorarCabecalho:boo
       ean:porCampo.ean[indice] ?? '', productName:porCampo.productName[indice] ?? '',
       quantity:porCampo.quantity[indice] ?? '', laboratory:porCampo.laboratory[indice] ?? '',
     }
-    /* Linha totalmente vazia nas quatro colunas não é produto nenhum — só sobra de seleção. */
+    /* Linha totalmente vazia nas quatro colunas não é produto nenhum, só sobra de seleção. */
     if (linha.ean || linha.productName || linha.quantity || linha.laboratory) linhas.push(linha)
   }
   return linhas

@@ -12,7 +12,7 @@ type CampoCadastro = 'nomeUsuario' | 'nomeFarmacia' | 'cnpj' | 'email' | 'senha'
 
 /* A conferência fica calada enquanto o que foi digitado ainda é começo da senha: acusar
    "não conferem" a cada tecla treina a pessoa a ignorar o aviso. Ela fala no instante em
-   que as duas divergem — que é onde está o erro de digitação — e confirma quando batem. */
+   que as duas divergem (é onde está o erro de digitação) e confirma quando batem. */
 type EstadoConferencia = 'vazio' | 'digitando' | 'confere' | 'diverge'
 const conferirSenhas = (senha:string, confirmacao:string):EstadoConferencia => {
   if (!confirmacao) return 'vazio'
@@ -61,7 +61,7 @@ export default function PaginaCadastroFarmacia() {
   const cadastrar = async (evento:FormEvent) => {
     evento.preventDefault(); setErro(''); setErrosCampos({})
     if (!cnpjValido(cnpj)) {
-      setErrosCampos({ cnpj:'Este CNPJ não é válido. Confira os números.' })
+      setErrosCampos({ cnpj:'Este CNPJ não parece válido. Confira se os números foram digitados certinho.' })
       formulario.current?.querySelector<HTMLInputElement>('[name="cnpj"]')?.focus()
       return
     }
@@ -91,9 +91,31 @@ export default function PaginaCadastroFarmacia() {
     'aria-describedby':errosCampos[nome] ? `erro-${nome}` : undefined,
   })
   const conferencia = conferirSenhas(senha, confirmacao)
-  const avisoCampo = (nome:CampoCadastro) => errosCampos[nome]
-    ? <small className="cad-erro-campo" id={`erro-${nome}`}>{errosCampos[nome]}</small>
-    : null
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+  /* Lista só o que falta, na ordem dos campos, assim quem olha sabe exatamente o próximo
+     passo em vez de adivinhar por que o botão continua apagado. */
+  const pendencias:string[] = []
+  if (!nomeUsuario.trim()) pendencias.push('seu nome')
+  if (!nomeFarmacia.trim()) pendencias.push('o nome da farmácia')
+  const cnpjDigitado = cnpj.replace(/\D/g, '').length === 14
+  const cnpjErrado = cnpjDigitado && !cnpjValido(cnpj)
+  /* CNPJ incompleto entra na lista igual aos outros campos vazios; já digitado por inteiro
+     mas com dígito verificador errado ganha aviso próprio, porque "falta um CNPJ válido"
+     soa como campo em branco, quando na verdade a pessoa só bateu um número errado. */
+  if (!cnpjDigitado) pendencias.push('um CNPJ válido')
+  if (!emailValido) pendencias.push('um e-mail válido')
+  if (senha.length < 8) pendencias.push('uma senha com pelo menos 8 caracteres')
+  else if (senha !== confirmacao) pendencias.push('a confirmação igual à senha')
+  const formularioValido = pendencias.length === 0 && !cnpjErrado
+  /* Só mostra o que falta depois que a pessoa começa a preencher. Numa tela em branco,
+     essa lista seria só ruído repetindo os campos que já estão logo ali em cima. */
+  const comecouAPreencher = Boolean(nomeUsuario || nomeFarmacia || cnpj || email || senha || confirmacao)
+  const avisoCampo = (nome:CampoCadastro) => {
+    if (errosCampos[nome]) return <small className="cad-erro-campo" id={`erro-${nome}`}>{errosCampos[nome]}</small>
+    if (nome === 'cnpj' && cnpjErrado) return <small className="cad-erro-campo">Este CNPJ não parece válido. Confira se os números foram digitados certinho.</small>
+    return null
+  }
 
   return <div className="lp cad">
     <header className="lp-topo cad-topo">
@@ -190,9 +212,12 @@ export default function PaginaCadastroFarmacia() {
               </label>
             </div>
 
-            <button className="lp-botao lp-botao-primario cad-enviar" disabled={ocupado}>
+            <button className="lp-botao lp-botao-primario cad-enviar" disabled={ocupado || !formularioValido}>
               {ocupado ? 'Criando sua conta...' : <>Começar teste grátis <ArrowRight/></>}
             </button>
+            {!ocupado && comecouAPreencher && pendencias.length > 0 && <p className="cad-pendencias" aria-live="polite">
+              Falta preencher {formatarLista(pendencias)}.
+            </p>}
             <p className="cad-garantia"><ShieldCheck/> Sem cartão de crédito. Sem cobrança quando o teste terminar.</p>
             <p className="cad-aceite">
               Ao criar a conta você concorda com os <LinkInterno to="/termos">Termos de Uso</LinkInterno> e
@@ -207,6 +232,11 @@ export default function PaginaCadastroFarmacia() {
 
     <RodapeSite mostrarCadastro={false}/>
   </div>
+}
+
+function formatarLista(itens:string[]) {
+  if (itens.length === 1) return itens[0]
+  return `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`
 }
 
 function formatarCnpj(valor:string) {

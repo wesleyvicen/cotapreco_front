@@ -31,7 +31,7 @@ export default function PaginaPoliticaPrivacidade() {
     <DestaqueLegal titulo="O essencial em cinco linhas">
       <ul>
         <li>Não vendemos, alugamos nem cedemos dados para publicidade. Nunca.</li>
-        <li>Os preços que uma distribuidora informa ficam visíveis para a farmácia que abriu a cotação — e não para as distribuidoras concorrentes.</li>
+        <li>Os preços que uma distribuidora informa ficam visíveis apenas para a farmácia que abriu a cotação, nunca para as distribuidoras concorrentes.</li>
         <li>Cada farmácia enxerga apenas os próprios dados; o isolamento é feito no banco, por empresa.</li>
         <li>Não usamos cookies de publicidade nem ferramentas de rastreamento de terceiros.</li>
         <li>Você pode exportar tudo em Excel a qualquer momento e pedir exclusão pelos canais do fim desta página.</li>
@@ -53,7 +53,7 @@ export default function PaginaPoliticaPrivacidade() {
       <p>
         Há uma inversão de papéis que vale explicar desde já: em relação aos dados da conta e do
         cadastro, somos <em>controladores</em>. Em relação ao conteúdo que a farmácia coloca dentro do
-        sistema — a lista de produtos que ela quer comprar, o histórico de compra dela — agimos como
+        sistema (a lista de produtos que ela quer comprar, o histórico de compra dela) agimos como
         <em> operadores</em>, tratando esse conteúdo por conta e ordem da farmácia, que decide o que
         entra, o que sai e quem da equipe dela tem acesso.
       </p>
@@ -64,16 +64,16 @@ export default function PaginaPoliticaPrivacidade() {
       <p>Três grupos de pessoas passam pelo CotaPreço, e o tratamento é diferente para cada um:</p>
       <ul>
         <li>
-          <strong>A farmácia que contrata</strong> — quem cria a conta, importa listas, abre cotações e
+          <strong>A farmácia que contrata</strong>: quem cria a conta, importa listas, abre cotações e
           fecha compras. Tem login, senha e assinatura.
         </li>
         <li>
-          <strong>O representante da distribuidora</strong> — quem recebe o link de uma cotação e
+          <strong>O representante da distribuidora</strong>: quem recebe o link de uma cotação e
           preenche preço e disponibilidade. Cria um acesso próprio na primeira vez que responde, e não
           paga nada para usar o sistema.
         </li>
         <li>
-          <strong>Quem apenas visita o site</strong> — a página inicial, a página de cadastro e estes
+          <strong>Quem apenas visita o site</strong>: a página inicial, a página de cadastro e estes
           documentos, sem entrar em conta nenhuma.
         </li>
       </ul>
@@ -88,7 +88,7 @@ export default function PaginaPoliticaPrivacidade() {
         <tbody>
           <tr><td>Nome da pessoa que usa o sistema</td><td>Criação da conta e cadastro de novos usuários</td><td>Sim</td></tr>
           <tr><td>E-mail</td><td>Criação da conta; é também o login</td><td>Sim</td></tr>
-          <tr><td>Senha</td><td>Criação da conta</td><td>Sim — guardada apenas como hash, ver a seção 12</td></tr>
+          <tr><td>Senha</td><td>Criação da conta</td><td>Sim (guardada apenas como hash, ver a seção 12)</td></tr>
           <tr><td>Nome da farmácia e CNPJ</td><td>Criação da conta</td><td>Sim</td></tr>
           <tr><td>Telefone da farmácia</td><td>Ao assinar</td><td>Só para assinar: a operadora de pagamento exige</td></tr>
           <tr><td>Endereço completo (CEP, logradouro, número, complemento, bairro, cidade, UF)</td><td>Ao assinar</td><td>Só para assinar: a operadora de pagamento exige</td></tr>
@@ -116,11 +116,11 @@ export default function PaginaPoliticaPrivacidade() {
         todas as cotações seguintes, de qualquer farmácia. Coletamos:
       </p>
       <ul>
-        <li><strong>Nome</strong> — para a farmácia saber com quem está falando;</li>
-        <li><strong>Telefone</strong> — serve também como login alternativo;</li>
-        <li><strong>E-mail</strong> — login e canal de recuperação de senha;</li>
-        <li><strong>Senha</strong> — guardada apenas como hash;</li>
-        <li><strong>Data do último acesso</strong> — para diagnóstico de suporte e segurança.</li>
+        <li><strong>Nome</strong>: para a farmácia saber com quem está falando;</li>
+        <li><strong>Telefone</strong>: serve também como login alternativo;</li>
+        <li><strong>E-mail</strong>: login e canal de recuperação de senha;</li>
+        <li><strong>Senha</strong>: guardada apenas como hash;</li>
+        <li><strong>Data do último acesso</strong>: para diagnóstico de suporte e segurança.</li>
       </ul>
       <p>
         Junto de cada proposta enviada, ficam gravados o nome da distribuidora, o CNPJ dela quando
@@ -130,8 +130,8 @@ export default function PaginaPoliticaPrivacidade() {
         <p>
           Os preços que você informa numa cotação são vistos <strong>apenas pela farmácia que abriu
           aquela cotação</strong>. Nenhuma outra distribuidora vê a sua proposta, nem sabe que você
-          respondeu. A farmácia vê o comparativo entre as propostas recebidas por ela — é o propósito
-          do sistema — e pode exportá-lo em Excel ou PDF para uso dela.
+          respondeu. A farmácia vê o comparativo entre as propostas recebidas por ela, que é o propósito
+          do sistema, e pode exportá-lo em Excel ou PDF para uso dela.
         </p>
       </DestaqueLegal>
       <p>
@@ -144,14 +144,14 @@ export default function PaginaPoliticaPrivacidade() {
     <section id="dados-operacao">
       <h2>5. Dados de cotação, preço e compra</h2>
       <p>
-        É o conteúdo de trabalho, e a maior parte dele não é dado pessoal — é dado comercial de empresa.
+        É o conteúdo de trabalho, e a maior parte dele não é dado pessoal, é dado comercial de empresa.
         Ainda assim, listamos com precisão o que fica gravado:
       </p>
       <ul>
         <li>
           <strong>A lista de produtos</strong> que a farmácia quer cotar: nome do produto, EAN,
           laboratório e quantidade. Vem de uma planilha que a farmácia importa (até 10 MB por arquivo)
-          ou de colunas coladas na tela. Depois da importação, guardamos os itens interpretados — não
+          ou de colunas coladas na tela. Depois da importação, guardamos os itens interpretados; não
           mantemos o arquivo original.
         </li>
         <li>
@@ -184,8 +184,8 @@ export default function PaginaPoliticaPrivacidade() {
       <p>Sem que ninguém digite, o sistema registra:</p>
       <ul>
         <li>
-          <strong>Registros de auditoria de negócio</strong>: quem fez o quê e quando — abriu uma
-          cotação, comparou propostas, gerou um pedido. Guardam nome e e-mail do usuário, ou nome e
+          <strong>Registros de auditoria de negócio</strong>: quem fez o quê e quando (abriu uma
+          cotação, comparou propostas, gerou um pedido). Guardam nome e e-mail do usuário, ou nome e
           telefone do representante, além da ação e do recurso envolvido. Não gravam senha, token,
           conteúdo de requisição nem dado de pagamento.
         </li>
@@ -236,24 +236,24 @@ export default function PaginaPoliticaPrivacidade() {
       <h2>8. Bases legais da LGPD</h2>
       <ul>
         <li>
-          <strong>Execução de contrato</strong> (art. 7º, V) — dados de conta, de cobrança e todo o
+          <strong>Execução de contrato</strong> (art. 7º, V): dados de conta, de cobrança e todo o
           conteúdo operacional. Sem eles, não há serviço a prestar.
         </li>
         <li>
-          <strong>Cumprimento de obrigação legal ou regulatória</strong> (art. 7º, II) — guarda de
+          <strong>Cumprimento de obrigação legal ou regulatória</strong> (art. 7º, II): guarda de
           registros fiscais e dos registros de acesso a aplicação exigidos pelo Marco Civil da Internet.
         </li>
         <li>
-          <strong>Legítimo interesse</strong> (art. 7º, IX) — segurança da plataforma, prevenção a
+          <strong>Legítimo interesse</strong> (art. 7º, IX): segurança da plataforma, prevenção a
           fraude, auditoria de quem fez o quê e melhoria do produto a partir de uso agregado. Sempre
           avaliado contra a sua expectativa razoável, e nunca para publicidade.
         </li>
         <li>
-          <strong>Exercício regular de direito</strong> (art. 7º, VI) — defesa em processo
+          <strong>Exercício regular de direito</strong> (art. 7º, VI): defesa em processo
           administrativo, judicial ou arbitral.
         </li>
         <li>
-          <strong>Consentimento</strong> (art. 7º, I) — reservado para o que fugir do acima, pedido de
+          <strong>Consentimento</strong> (art. 7º, I): reservado para o que fugir do acima, pedido de
           forma destacada e revogável a qualquer tempo. Hoje não dependemos dele para operar.
         </li>
       </ul>
@@ -303,7 +303,7 @@ export default function PaginaPoliticaPrivacidade() {
       </table></div>
       <p>
         Fora dessa lista, só compartilhamos com autorização expressa sua ou em caso de reorganização
-        societária — e, nesse caso, quem receber a base fica obrigado a esta mesma política, com aviso
+        societária, e nesse caso quem receber a base fica obrigado a esta mesma política, com aviso
         prévio a você.
       </p>
     </section>
@@ -321,7 +321,7 @@ export default function PaginaPoliticaPrivacidade() {
           o comparativo final, nem quem mais foi convidado para a cotação.
         </li>
         <li>
-          <strong>A farmácia vê as propostas que recebeu</strong> — todas elas, lado a lado. É para isso
+          <strong>A farmácia vê as propostas que recebeu</strong>, todas elas, lado a lado. É para isso
           que ela abriu a cotação, e o representante sabe disso ao responder.
         </li>
         <li>
@@ -334,7 +334,7 @@ export default function PaginaPoliticaPrivacidade() {
         </li>
       </ul>
       <p>
-        Uma ressalva honesta sobre o link da cotação: ele é público por desenho — o representante abre
+        Uma ressalva honesta sobre o link da cotação: ele é público por desenho, para o representante abrir
         sem instalar nada. Quem tiver o link consegue ver o nome da farmácia, o nome da cotação e a
         lista de produtos solicitados, e precisa se autenticar para enviar ou ver propostas. Trate o
         link como você trataria o pedido em si e mande só para quem deve responder.
@@ -363,7 +363,7 @@ export default function PaginaPoliticaPrivacidade() {
         clareza: dado necessário ao cumprimento de obrigação legal, ou ao exercício regular de direito
         em processo, é retido pelo prazo correspondente, ainda que você peça o apagamento. Uma proposta
         já usada numa compra fechada também permanece vinculada àquela compra, porque ela é o registro
-        do que foi negociado — o que fazemos, nesse caso, é desvincular os dados de contato da pessoa.
+        do que foi negociado. Nesse caso, o que fazemos é desvincular os dados de contato da pessoa.
       </p>
     </section>
 
@@ -373,7 +373,7 @@ export default function PaginaPoliticaPrivacidade() {
         <li>
           <strong>Senhas nunca são guardadas em texto puro.</strong> Guardamos um hash com algoritmo
           próprio para senha, que não permite recuperar o valor original. Nem nós conseguimos ver a sua
-          senha — por isso a recuperação é sempre por link, nunca por reenvio da senha antiga.
+          senha, por isso a recuperação é sempre por link, nunca por reenvio da senha antiga.
         </li>
         <li>
           <strong>Tráfego criptografado</strong> em HTTPS entre o seu navegador e os nossos servidores.
@@ -430,7 +430,7 @@ export default function PaginaPoliticaPrivacidade() {
         senha</em>. O representante ajusta os próprios dados na área dele.
       </p>
       <p>
-        Para o que não está na tela — exclusão de conta, portabilidade formal, oposição —, escreva para
+        Para o que não está na tela (exclusão de conta, portabilidade formal, oposição), escreva para
         os canais da seção 17. Respondemos em <strong>até 15 dias</strong>. Podemos pedir uma
         confirmação de identidade antes de atender: é proteção sua, não burocracia nossa. Se negarmos
         algum pedido, dizemos por escrito o motivo e a base legal.
@@ -454,8 +454,8 @@ export default function PaginaPoliticaPrivacidade() {
       <h2>15. Transferência internacional</h2>
       <p>
         A operação é brasileira e o banco de dados fica em infraestrutura contratada para atender o
-        Brasil. Alguns fornecedores de apoio — rede de distribuição de conteúdo, envio de e-mail,
-        fontes tipográficas — podem processar dados de conexão em servidores fora do país. Quando isso
+        Brasil. Alguns fornecedores de apoio (rede de distribuição de conteúdo, envio de e-mail,
+        fontes tipográficas) podem processar dados de conexão em servidores fora do país. Quando isso
         acontece, exigimos que o fornecedor ofereça grau de proteção compatível com a LGPD, na forma
         dos artigos 33 a 36.
       </p>
@@ -465,8 +465,8 @@ export default function PaginaPoliticaPrivacidade() {
       <h2>16. Mudanças nesta política</h2>
       <p>
         Esta política pode ser revisada para acompanhar mudanças no sistema ou na lei. A data de
-        vigência no topo da página sempre indica a versão atual. Quando a mudança for relevante — nova
-        finalidade, novo compartilhamento, prazo de guarda maior —, avisamos por e-mail ou por aviso
+        vigência no topo da página sempre indica a versão atual. Quando a mudança for relevante (nova
+        finalidade, novo compartilhamento, prazo de guarda maior), avisamos por e-mail ou por aviso
         dentro do sistema antes de ela passar a valer.
       </p>
     </section>
@@ -480,7 +480,7 @@ export default function PaginaPoliticaPrivacidade() {
       <ul className="legal-contato">
         <li><strong>E-mail:</strong> <a href="mailto:privacidade@cotapreco.com">privacidade@cotapreco.com</a></li>
         <li><strong>WhatsApp:</strong> <a href="https://wa.me/5581999441494" target="_blank" rel="noopener noreferrer">(81) 99944-1494</a></li>
-        <li><strong>Controladora:</strong> AppStarter Pro — CNPJ 61.296.087/0001-80</li>
+        <li><strong>Controladora:</strong> AppStarter Pro, CNPJ 61.296.087/0001-80</li>
       </ul>
       <p>
         Leia também os <LinkInterno to="/termos">Termos de Uso</LinkInterno> e a <LinkInterno to="/cookies">Política

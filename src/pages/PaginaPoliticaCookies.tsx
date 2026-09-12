@@ -22,7 +22,7 @@ export default function PaginaPoliticaCookies() {
       <p>
         O CotaPreço usa <strong>dois cookies</strong>, ambos estritamente necessários para manter você
         conectado. <strong>Não usamos cookie de publicidade, de rastreamento ou de análise de
-        audiência</strong> — nem nossos, nem de terceiros. Não há Google Analytics, pixel de rede
+        audiência</strong>: nem nossos, nem de terceiros. Não há Google Analytics, pixel de rede
         social, mapa de calor nem gravador de sessão.
       </p>
     </DestaqueLegal>
@@ -45,7 +45,7 @@ export default function PaginaPoliticaCookies() {
       <p>
         <strong>Armazenamento local</strong> (<code>localStorage</code> e <code>sessionStorage</code>) é
         outra coisa: fica no seu aparelho e <em>não é enviado automaticamente</em> a servidor nenhum. Só
-        vai para o servidor aquilo que a página resolver mandar — no nosso caso, o token de acesso no
+        vai para o servidor aquilo que a página resolver mandar: no nosso caso, o token de acesso no
         cabeçalho da requisição que você mesmo dispara ao usar o sistema.
       </p>
       <p>Explicamos os dois porque, para você, o efeito prático é o mesmo: são coisas guardadas no seu navegador.</p>
@@ -76,19 +76,19 @@ export default function PaginaPoliticaCookies() {
       <p>Os dois são gravados com proteções que vale conhecer:</p>
       <ul>
         <li>
-          <strong><code>HttpOnly</code></strong> — o JavaScript da página não consegue ler o valor.
+          <strong><code>HttpOnly</code></strong>: o JavaScript da página não consegue ler o valor.
           Isso reduz muito o estrago de um eventual ataque de injeção de script.
         </li>
         <li>
-          <strong><code>SameSite=Lax</code></strong> — o cookie não é enviado quando outro site dispara
+          <strong><code>SameSite=Lax</code></strong>: o cookie não é enviado quando outro site dispara
           uma requisição para nós, o que barra o uso da sua sessão por uma página de terceiro.
         </li>
         <li>
-          <strong>Caminho restrito</strong> — cada um vale apenas na rota de autenticação a que
+          <strong>Caminho restrito</strong>: cada um vale apenas na rota de autenticação a que
           pertence, e não acompanha o resto da navegação.
         </li>
         <li>
-          <strong><code>Secure</code></strong> em produção — só trafega por HTTPS.
+          <strong><code>Secure</code></strong> em produção: só trafega por HTTPS.
         </li>
         <li>
           <strong>Guardado como hash</strong> no nosso banco: o valor que vale é o que está no seu
@@ -97,7 +97,7 @@ export default function PaginaPoliticaCookies() {
         </li>
       </ul>
       <p>
-        Sair da conta apaga o cookie no navegador e revoga a sessão no servidor — as duas coisas, não
+        Sair da conta apaga o cookie no navegador e revoga a sessão no servidor: as duas coisas, não
         só uma.
       </p>
     </section>
@@ -144,7 +144,7 @@ export default function PaginaPoliticaCookies() {
       </table></div>
       <p>
         Nada disso é enviado para nós por conta própria, e nada disso identifica você para terceiros. Se
-        o seu navegador bloquear armazenamento, o sistema continua funcionando — você só perde as
+        o seu navegador bloquear armazenamento, o sistema continua funcionando, você só perde as
         conveniências: a sessão não sobrevive ao fechamento do navegador e o painel recarrega do zero.
       </p>
     </section>
@@ -159,7 +159,7 @@ export default function PaginaPoliticaCookies() {
         </li>
         <li>
           <strong>Google Fonts</strong>, de onde vêm as fontes das páginas. O carregamento da fonte
-          expõe dados de conexão — endereço IP e tipo de navegador — ao servidor do Google, sem gravar
+          expõe dados de conexão (endereço IP e tipo de navegador) ao servidor do Google, sem gravar
           cookie nosso.
         </li>
       </ul>
@@ -172,7 +172,7 @@ export default function PaginaPoliticaCookies() {
     <section id="gerenciar">
       <h2>6. Como apagar ou bloquear</h2>
       <p>
-        Você controla tudo isso pelo navegador — em geral no menu de configurações, na seção de
+        Você controla tudo isso pelo navegador, em geral no menu de configurações, na seção de
         privacidade, em “cookies e dados de sites”. Lá você apaga o que já está gravado, bloqueia novos
         registros ou define exceções por site.
       </p>
@@ -191,10 +191,10 @@ export default function PaginaPoliticaCookies() {
       <h2>7. Por que não há banner de cookies</h2>
       <p>
         Porque não temos nada a pedir a você. Banner de consentimento existe para cookies não
-        essenciais — publicidade, medição de audiência, perfil de comportamento. Como o CotaPreço usa
+        essenciais: publicidade, medição de audiência, perfil de comportamento. Como o CotaPreço usa
         <strong> apenas cookies estritamente necessários</strong> ao funcionamento de um serviço que
         você pediu para usar, o consentimento prévio não se aplica; a base legal é a execução do
-        contrato, e a obrigação que resta é a de informar — que é o que este documento faz.
+        contrato, e a obrigação que resta é a de informar, que é o que este documento faz.
       </p>
       <p>
         Se um dia adotarmos qualquer cookie não essencial, ele virá com pedido de consentimento
@@ -207,7 +207,7 @@ export default function PaginaPoliticaCookies() {
       <ul className="legal-contato">
         <li><strong>E-mail:</strong> <a href="mailto:privacidade@cotapreco.com">privacidade@cotapreco.com</a></li>
         <li><strong>WhatsApp:</strong> <a href="https://wa.me/5581999441494" target="_blank" rel="noopener noreferrer">(81) 99944-1494</a></li>
-        <li><strong>Empresa:</strong> AppStarter Pro — CNPJ 61.296.087/0001-80</li>
+        <li><strong>Empresa:</strong> AppStarter Pro, CNPJ 61.296.087/0001-80</li>
       </ul>
       <p>
         Leia também a <LinkInterno to="/privacidade">Política de Privacidade</LinkInterno> e os
