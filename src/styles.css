@@ -1995,9 +1995,11 @@ label small {
 .comparison-table tfoot td {
   background: #f8faf9;
 }
+/* Card lateral mais estreito no desktop: sobra mais largura para a tabela de produtos, que
+ * é onde nome, laboratório e selo de "melhor oferta"/"sua escolha" precisam de espaço. */
 .purchase-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 232px;
   gap: 18px;
 }
 .purchase-layout > .card {
@@ -4590,10 +4592,14 @@ label small {
   width: 16px;
   height: 16px;
 }
+/* Selo alinhado ao topo, não ao centro: com o nome em duas linhas, centralizar o selo o
+ * deixa flutuando no meio do texto, num ponto diferente em cada linha da tabela. Alinhado
+ * ao topo ele fica sempre rente à primeira linha do nome, sem esticar a altura da linha. */
 .allocation-title {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 8px;
   margin-bottom: 3px;
 }
 .allocation-badge {
@@ -7084,6 +7090,35 @@ label small {
   color: #a04a4d;
   font-size: 10px;
   font-weight: 700;
+}
+/* Laboratório vira ícone com dica ao passar o mouse (ou tocar, no celular), não linha
+ * extra: aparece em toda lista de produtos e uma linha a mais deixaria tudo mais alto. */
+.laboratorio-indicador {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  color: #9fb0aa;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.laboratorio-indicador:hover { color: var(--green); }
+.laboratorio-indicador svg { display: block; width: 13px; height: 13px; }
+.laboratorio-bolha {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  z-index: 20;
+  margin-bottom: 6px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: #173d31;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: 0 6px 16px rgba(12, 58, 45, 0.22);
 }
 .quotation-quantity-input {
   width: 82px;
