@@ -16,7 +16,7 @@
 
 .lp-container {
   width: 100%;
-  max-width: 1120px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -716,7 +716,7 @@
  * Mobile-first: a ordem natural do documento é apresentação, formulário e provas — quem
  * clicou em "testar grátis" já decidiu, e o formulário tem que aparecer sem rolagem longa.
  */
-.cad-main { padding: 26px 0 44px; background: #fff; }
+.cad-main { padding: 6px 0 44px; background: #fff; }
 
 /* Topo do cadastro: logo, título/selo e "Entrar" cabem na mesma barra, como uma única
  * faixa de topo — não uma barra de navegação seguida de um bloco de título separado.
@@ -976,7 +976,7 @@
   .cad-topo-centro h1 { font-size: 19px; }
   .cad-subtitulo { margin: 0 auto; font-size: 13.5px; }
 
-  .cad-main { padding: 46px 0 64px; }
+  .cad-main { padding: 16px 0 64px; }
   .cad-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
