@@ -5039,25 +5039,6 @@ label small {
   color: #8a620b !important;
   margin-top: 5px;
 }
-.supplier-note-pedido {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  color: var(--green) !important;
-  font-style: italic;
-  margin-top: 5px;
-  cursor: help;
-}
-.supplier-note-pedido span {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.supplier-note-pedido svg {
-  flex: none;
-  margin-top: 1px;
-}
 .order-actions {
   display: flex;
   align-items: center;
@@ -7091,34 +7072,43 @@ label small {
   font-size: 10px;
   font-weight: 700;
 }
-/* Laboratório vira ícone com dica ao passar o mouse (ou tocar, no celular), não linha
- * extra: aparece em toda lista de produtos e uma linha a mais deixaria tudo mais alto. */
-.laboratorio-indicador {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  margin-left: 2px;
-  color: #9fb0aa;
-  vertical-align: middle;
-  cursor: pointer;
+/* Laboratório aparece por extenso: é o que mais importa para quem compara produtos. */
+.produto-laboratorio {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted, #83918d);
+  font-size: 10.5px;
 }
-.laboratorio-indicador:hover { color: var(--green); }
-.laboratorio-indicador svg { display: block; width: 13px; height: 13px; }
-.laboratorio-bolha {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  z-index: 20;
-  margin-bottom: 6px;
-  padding: 4px 9px;
-  border-radius: 7px;
-  background: #173d31;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
+/* Laboratório e observação da distribuidora na mesma linha: os dois já cabem lado a lado,
+ * e cada um em sua própria linha empilhava três ou quatro linhas por produto na compra
+ * sugerida (nome, selo, laboratório, observação). Cada um com seu próprio estilo (um
+ * discreto e reto, o outro em itálico com ícone) para não lerem como uma frase só. */
+.produto-laboratorio-nota {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: 10.5px;
+}
+.produto-laboratorio-nota .lab-nome {
+  flex: none;
+  color: var(--muted, #83918d);
+}
+.produto-laboratorio-nota .nota-fornecedor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: var(--green);
+  font-style: italic;
+  cursor: help;
+}
+.produto-laboratorio-nota .nota-fornecedor svg { flex: none; }
+.produto-laboratorio-nota .nota-fornecedor span {
+  overflow: hidden;
   white-space: nowrap;
-  transform: translateX(-50%);
-  box-shadow: 0 6px 16px rgba(12, 58, 45, 0.22);
+  text-overflow: ellipsis;
 }
 .quotation-quantity-input {
   width: 82px;
