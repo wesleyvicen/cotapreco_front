@@ -1,6 +1,10 @@
 import { ArrowRight, BarChart3, CheckCircle2, Search } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { api, date } from '../api'
+import { usarAutenticacao } from '../autenticacao'
+import { criarChave } from '../cache/cacheConsulta'
+import { usarConsulta } from '../hooks/usarConsulta'
+import { empresaAtiva } from '../lib/permissoes'
 import { EstadoVazio, AvisoErro, Carregando, EtiquetaStatus } from '../components/ComponentesUI'
 import type { ResumoCotacao, StatusCotacao } from '../types'
 import BotaoNovaCotacao from '../components/BotaoNovaCotacao'
@@ -14,11 +18,21 @@ const MAX_COTACOES=8
 type Periodo='ALL'|'90'|'365'
 
 const idsDaBusca=(valor:string|null)=>valor?.split(',').map(Number).filter(Number.isFinite).slice(0,MAX_COTACOES)??[]
+/* A lista é da farmácia ativa, o mesmo recorte que o backend usa no cache COTACOES_EMPRESA. */
+function cotacoesValidas(valor:unknown):valor is ResumoCotacao[] {
+  return Array.isArray(valor)&&valor.every(item=>item!=null&&typeof item==='object'&&typeof (item as ResumoCotacao).id==='number'&&typeof (item as ResumoCotacao).name==='string')
+}
 
 export default function PaginaCotacoes(){
-  const [items,setItems]=useState<ResumoCotacao[]>([]);const[loading,setLoading]=useState(true);const[error,setError]=useState('');const[search,setSearch]=useState('');const[filter,setFilter]=useState<'ALL'|StatusCotacao>('ALL');const[periodo,setPeriodo]=useState<Periodo>('ALL');const[compradas,setCompradas]=useState<'ALL'|'ELIGIBLE'|'NOT_ELIGIBLE'>('ALL')
+  const{user}=usarAutenticacao();const empresa=empresaAtiva(user)
+  const{data,carregando:loading,erro:error}=usarConsulta<ResumoCotacao[]>(
+    empresa?criarChave('cotacoes',empresa.id):null,
+    ()=>api<ResumoCotacao[]>('/quotations'),
+    {valido:cotacoesValidas,revalidarComPush:true,mensagemErro:'Não foi possível carregar as cotações.'},
+  )
+  const items=useMemo(()=>data??[],[data])
+  const[search,setSearch]=useState('');const[filter,setFilter]=useState<'ALL'|StatusCotacao>('ALL');const[periodo,setPeriodo]=useState<Periodo>('ALL');const[compradas,setCompradas]=useState<'ALL'|'ELIGIBLE'|'NOT_ELIGIBLE'>('ALL')
   const[params,setParams]=usarParametrosBusca();const[selection,setSelection]=useState<number[]>(()=>idsDaBusca(params.get('ids')));const comparando=params.get('comparison')==='1'
-  useEffect(()=>{api<ResumoCotacao[]>('/quotations').then(setItems).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[])
   const filtered=useMemo(()=>{const limite=periodo==='ALL'?null:Date.now()-Number(periodo)*86400000;return items.filter(q=>(filter==='ALL'||q.status===filter)&&q.name.toLowerCase().includes(search.toLowerCase())&&(limite===null||new Date(q.createdAt).getTime()>=limite)&&(compradas==='ALL'||(compradas==='ELIGIBLE'?q.purchaseComparisonEligible:!q.purchaseComparisonEligible)))},[items,filter,search,periodo,compradas])
   const selecionadas=useMemo(()=>items.filter(q=>selection.includes(q.id)),[items,selection])
   const alterarSelecao=(id:number)=>setSelection(atual=>atual.includes(id)?atual.filter(valor=>valor!==id):(atual.length>=MAX_COTACOES?atual:[...atual,id]))

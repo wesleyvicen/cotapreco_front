@@ -1,5 +1,5 @@
 import { CHAVE_TOKEN_FARMACIA, lerEmpresaAtivaId, limparSessaoFarmaciaLocal } from './cache/persistenciaSessao'
-import { invalidarCachePainel, limparCachePainel } from './cache/cachePainel'
+import { invalidarCacheConsultas, limparCacheConsultas } from './cache/cacheConsulta'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
@@ -17,7 +17,7 @@ let renovacaoRepresentante:Promise<void>|null=null
 const limparSessao=(sessao:Sessao)=>{
   if(sessao==='farmacia'){
     limparSessaoFarmaciaLocal()
-    limparCachePainel()
+    limparCacheConsultas()
     return
   }
   localStorage.removeItem(chaves[sessao])
@@ -71,7 +71,7 @@ async function requisicao<T>(path:string,options:RequestInit,sessao:Sessao|null,
 
 export async function api<T>(path:string,options:RequestInit={}):Promise<T>{
   const resultado=await requisicao<T>(path,options,'farmacia',()=>{limparSessao('farmacia');window.location.href='/login'})
-  if(alteraDados(options))invalidarCachePainel()
+  if(alteraDados(options))invalidarCacheConsultas()
   return resultado
 }
 

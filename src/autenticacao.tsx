@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/rules-of-hooks, react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { api, encerrarSessaoFarmacia } from './api'
-import { limparCachePainel } from './cache/cachePainel'
+import { limparCacheConsultas } from './cache/cacheConsulta'
 import { lerUsuarioFarmacia, limparSessaoFarmaciaLocal, possuiTokenFarmacia, salvarTokenFarmacia, salvarUsuarioFarmacia } from './cache/persistenciaSessao'
 import { Redirecionar } from './roteamento'
 import type { PendenciaDoisFatores, Usuario } from './types'
@@ -74,7 +74,7 @@ export function ProvedorAutenticacao({children}:{children:ReactNode}) {
     aplicarLogin(resposta)
   }
   const aplicarLogin=(result:{token:string;user:Usuario})=>{
-    limparCachePainel()
+    limparCacheConsultas()
     salvarTokenFarmacia(result.token)
     salvarUsuarioFarmacia(result.user)
     setUser(result.user)
@@ -85,7 +85,7 @@ export function ProvedorAutenticacao({children}:{children:ReactNode}) {
     const ciclo=++cicloSessao.current
     const result=await api<{token:string;user:Usuario}>('/auth/register',{method:'POST',body:JSON.stringify(dados)})
     if(ciclo!==cicloSessao.current)return
-    limparCachePainel()
+    limparCacheConsultas()
     salvarTokenFarmacia(result.token)
     salvarUsuarioFarmacia(result.user)
     setUser(result.user)
