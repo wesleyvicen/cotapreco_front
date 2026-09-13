@@ -900,16 +900,18 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.22);
 }
-.cad-painel-progresso-item > span { display: block; height: 100%; width: 0; background: #fff; }
-.cad-painel-progresso-item.preenchido > span { width: 100%; }
+/* A barra cresce por transform, e não por width: são 6 segundos contínuos e animar width
+   refaz o layout a cada quadro, no carrossel que todo visitante da landing vê. */
+.cad-painel-progresso-item > span { display: block; height: 100%; width: 100%; transform: scaleX(0); transform-origin: left center; background: #fff; }
+.cad-painel-progresso-item.preenchido > span { transform: scaleX(1); }
 .cad-painel-progresso-item.ativo > span { animation: cadProgresso 6s linear forwards; }
-@keyframes cadProgresso { from { width: 0; } to { width: 100%; } }
+@keyframes cadProgresso { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 .cad-painel-slide { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; animation: cadSlideIn 0.4s ease; }
 @keyframes cadSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
   .cad-painel-slide { animation: none; }
-  .cad-painel-progresso-item.ativo > span { animation: none; width: 100%; }
+  .cad-painel-progresso-item.ativo > span { animation: none; transform: scaleX(1); }
 }
 .cad-painel .cad-prova-icone { background: rgba(255, 255, 255, 0.16); color: #fff; }
 .cad-painel-slide h2 {

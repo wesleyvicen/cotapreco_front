@@ -30,9 +30,14 @@ input,
 select {
   font: inherit;
 }
+/* As propriedades vão nomeadas de propósito. A forma curta equivale a transition-property: all,
+   que faz o navegador comparar toda propriedade animável de todo botão e link a cada mudança de
+   estilo, e ainda anima sem querer o que mudar por troca de classe. A lista cobre o que os
+   estados :hover, :focus e :disabled realmente alteram. */
 button,
 a {
-  transition: 0.18s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
 }
 a {
   color: inherit;
@@ -2865,7 +2870,7 @@ label small {
   height: 100%;
   background: var(--green-2);
   border-radius: 10px;
-  transition: 0.3s;
+  transition: width 0.3s ease;
 }
 .progress-line span {
   position: absolute;
@@ -3108,9 +3113,11 @@ label small {
   h1 {
     font-size: 26px;
   }
+  /* Só transform: a gaveta desliza, e a forma curta ainda arrastaria width, padding e a
+     box-shadow grande declarada logo abaixo, todas caras de animar num celular. */
   .sidebar {
     transform: translateX(-102%);
-    transition: 0.25s;
+    transition: transform 0.25s ease;
     box-shadow: 20px 0 50px rgba(4, 34, 25, 0.2);
   }
   .sidebar.sidebar-recolhida {
@@ -4500,7 +4507,7 @@ label small {
   grid-column: 4;
   width: 18px;
   color: var(--muted);
-  transition: 0.2s;
+  transition: transform 0.2s ease;
 }
 .supplier-purchase-card.expanded .supplier-toggle > svg {
   transform: rotate(180deg);
@@ -8368,3 +8375,25 @@ label small {
 .staff-paginacao > div { display: flex; gap: 8px; }
 .staff-paginacao .button { padding: 7px 12px; font-size: 13px; }
 .staff-acoes { display: flex; gap: 4px; white-space: nowrap; }
+
+/* Rede de segurança para quem pediu menos movimento no sistema operacional. Os blocos
+   prefers-reduced-motion espalhados pelo arquivo cobrem só o esqueleto, o comparativo e a
+   landing; tudo que for acrescentado depois já nasce coberto por aqui. Vai no fim do arquivo,
+   e com !important, porque precisa vencer regras de mesma especificidade declaradas antes. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Indicadores de carregamento seguem girando: parados não comunicam nada. Girar no próprio
+     eixo não desloca nada na tela, que é o que incomoda em desordem vestibular. */
+  .spinner,
+  .spin,
+  .girando {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
