@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api'
-import { criarChavePainel, criarChavePainelGeral, lerPainelCache, painelEstaFresco, revalidarPainelCache } from '../cache/cachePainel'
+import { criarChavePainel, criarChavePainelGeral, invalidarCachePainel, lerPainelCache, painelEstaFresco, revalidarPainelCache } from '../cache/cachePainel'
 import { empresaAtiva } from '../lib/permissoes'
 import type { Painel, Usuario } from '../types'
 
@@ -55,6 +55,20 @@ export function usarPainel(user:Usuario|null, geral=false){
     const aoMudarVisibilidade=()=>{if(document.visibilityState==='visible')void carregar()}
     document.addEventListener('visibilitychange',aoMudarVisibilidade)
     return()=>document.removeEventListener('visibilitychange',aoMudarVisibilidade)
+  },[carregar])
+
+  /* Fecha o caso que o visibilitychange não cobre: a aba está em foco e a pessoa não sai dela.
+     O service worker avisa quando chega o push de cotação respondida e o painel se atualiza
+     sozinho. Vale só para quem ativou as notificações; sem inscrição nada chega e nada muda. */
+  useEffect(()=>{
+    if(!('serviceWorker' in navigator))return
+    const aoReceberAviso=(evento:MessageEvent)=>{
+      if((evento.data as{tipo?:string}|null)?.tipo!=='cotacao-respondida')return
+      invalidarCachePainel()
+      void carregar(true)
+    }
+    navigator.serviceWorker.addEventListener('message',aoReceberAviso)
+    return()=>navigator.serviceWorker.removeEventListener('message',aoReceberAviso)
   },[carregar])
 
   const recarregar=useCallback(()=>carregar(true),[carregar])
