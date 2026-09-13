@@ -46,6 +46,17 @@ export function usarPainel(user:Usuario|null, geral=false){
 
   useEffect(()=>{void carregar()},[carregar])
 
+  /* Uma proposta enviada pela distribuidora invalida o painel no backend, mas nada avisa esta
+     aba: sem isto os números só mudariam no próximo recarregamento. Voltar ao painel depois de
+     trocar de aba, de destravar o celular ou de sair e voltar do app é o momento natural para
+     conferir. Vai sem forcar de propósito, então a janela de frescor continua valendo e alternar
+     de aba várias vezes seguidas não repete a consulta. */
+  useEffect(()=>{
+    const aoMudarVisibilidade=()=>{if(document.visibilityState==='visible')void carregar()}
+    document.addEventListener('visibilitychange',aoMudarVisibilidade)
+    return()=>document.removeEventListener('visibilitychange',aoMudarVisibilidade)
+  },[carregar])
+
   const recarregar=useCallback(()=>carregar(true),[carregar])
 
   return {data,carregando,revalidando,erro,recarregar}
