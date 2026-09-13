@@ -1,5 +1,10 @@
 import type { Painel } from '../types'
 
+/* O painel fica no localStorage, e não no sessionStorage, para acompanhar a sessão: o token e o
+   retrato do usuário também moram no localStorage (ver persistenciaSessao), então guardar o painel
+   por aba fazia toda primeira abertura do navegador cair no esqueleto mesmo com a sessão intacta e
+   com um painel anterior perfeitamente exibível enquanto a revalidação acontece. O logout continua
+   apagando tudo em limparCachePainel, então nada atravessa de uma conta para outra. */
 const PREFIXO_PAINEL='cotapreco:painel:'
 
 interface RegistroPainel {
@@ -10,6 +15,10 @@ interface RegistroPainel {
 
 const memoria=new Map<string,RegistroPainel>()
 const requisicoes=new Map<string,Promise<Painel>>()
+/* Em que geração cada chave foi salva. Só existe em memória de propósito: depois de um
+   recarregamento o mapa nasce vazio e nenhuma chave conta como fresca, que é o desejado,
+   pois abrir o app de novo deve sempre revalidar. */
+const geracaoPorChave=new Map<string,number>()
 let geracao=0
 let geracaoLimpeza=0
 
@@ -37,18 +46,18 @@ export function lerPainelCache(chave:string):Painel|null {
   const local=memoria.get(chave)
   if(local)return local.data
   try{
-    const texto=window.sessionStorage.getItem(chave)
+    const texto=window.localStorage.getItem(chave)
     if(!texto)return null
     const registro=JSON.parse(texto) as Partial<RegistroPainel>
     if(registro.versao!==1||!painelValido(registro.data)){
-      window.sessionStorage.removeItem(chave)
+      window.localStorage.removeItem(chave)
       return null
     }
     const normalizado:RegistroPainel={versao:1,data:registro.data,atualizadoEm:typeof registro.atualizadoEm==='number'?registro.atualizadoEm:0}
     memoria.set(chave,normalizado)
     return normalizado.data
   }catch{
-    try{window.sessionStorage.removeItem(chave)}catch{/* O cache é opcional. */}
+    try{window.localStorage.removeItem(chave)}catch{/* O cache é opcional. */}
     return null
   }
 }
@@ -56,7 +65,18 @@ export function lerPainelCache(chave:string):Painel|null {
 function salvarPainelCache(chave:string,data:Painel){
   const registro:RegistroPainel={versao:1,data,atualizadoEm:Date.now()}
   memoria.set(chave,registro)
-  try{window.sessionStorage.setItem(chave,JSON.stringify(registro))}catch{/* O painel continua disponível somente em memória. */}
+  geracaoPorChave.set(chave,geracao)
+  try{window.localStorage.setItem(chave,JSON.stringify(registro))}catch{/* O painel continua disponível somente em memória. */}
+}
+
+/* O painel é caro de calcular no backend, então voltar para ele logo depois de sair não precisa
+   consultar de novo. Fresco exige as duas coisas: ter sido salvo nesta geração, ou seja sem
+   nenhuma escrita depois dele, e ser recente. Qualquer mutação chama invalidarCachePainel e
+   derruba a geração, então este atalho nunca segura um painel desatualizado. */
+export function painelEstaFresco(chave:string,janelaMs:number){
+  if(geracaoPorChave.get(chave)!==geracao)return false
+  const registro=memoria.get(chave)
+  return registro!=null&&Date.now()-registro.atualizadoEm<janelaMs
 }
 
 export function revalidarPainelCache(chave:string,carregar:()=>Promise<Painel>):Promise<Painel>{
@@ -89,7 +109,8 @@ export function limparCachePainel(){
   geracaoLimpeza++
   memoria.clear()
   requisicoes.clear()
+  geracaoPorChave.clear()
   try{
-    Object.keys(window.sessionStorage).filter(chave=>chave.startsWith(PREFIXO_PAINEL)).forEach(chave=>window.sessionStorage.removeItem(chave))
+    Object.keys(window.localStorage).filter(chave=>chave.startsWith(PREFIXO_PAINEL)).forEach(chave=>window.localStorage.removeItem(chave))
   }catch{/* O navegador pode bloquear o armazenamento. */}
 }
