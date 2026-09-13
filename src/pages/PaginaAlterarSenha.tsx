@@ -51,6 +51,11 @@ export default function PaginaAlterarSenha(){
   const doisFatores=user?.doisFatoresAtivo??false
   const tamanhoMinimo=user?.staff?12:8
   const[senhaAtual,setSenhaAtual]=useState('');const[novaSenha,setNovaSenha]=useState('');const[confirmacao,setConfirmacao]=useState('');const[codigoTotp,setCodigoTotp]=useState('');const[erro,setErro]=useState('');const[mensagem,setMensagem]=useState('');const[ocupado,setOcupado]=useState(false)
+  /* Nada a enviar enquanto falta campo: sem baseline no servidor para comparar, "mexeu em algo"
+     aqui é ter preenchido o que a troca exige. Continuam valendo o minLength do input e o aviso
+     de confirmação que não confere, que explicam melhor que um botão apagado. */
+  const preenchido=Boolean(senhaAtual&&novaSenha&&confirmacao)&&(!doisFatores||codigoTotp.length===6)
+
   const salvar=async(event:FormEvent)=>{event.preventDefault();setErro('');setMensagem('');if(novaSenha!==confirmacao){setErro('A confirmação não corresponde à nova senha.');return}setOcupado(true);try{await api('/auth/password',{method:'PUT',body:JSON.stringify({senhaAtual,novaSenha,codigoTotp:doisFatores?codigoTotp:undefined})});setSenhaAtual('');setNovaSenha('');setConfirmacao('');setCodigoTotp('');setMensagem('Senha atualizada com sucesso.')}catch(e){setErro(e instanceof ErroApi?e.message:'Não foi possível alterar a senha.')}finally{setOcupado(false)}}
   return <div className="page"><div className="page-header"><div><span className="eyebrow green">Minha conta</span><h1>Alterar senha</h1><p>Atualize a senha usada para acessar o CotaPreço.</p></div></div><section className="card settings-card"><div className="card-header"><div><h2><KeyRound/> Segurança da conta</h2><p>Informe a senha atual para confirmar a alteração.</p></div></div><form className="stack-form settings-form" onSubmit={salvar}>
     {erro&&<AvisoErro message={erro}/>} {mensagem&&<div className="alert alert-success">{mensagem}</div>}
@@ -68,6 +73,6 @@ export default function PaginaAlterarSenha(){
       <p>Sua conta tem verificação em duas etapas ativada. Abra o Google Authenticator (ou outro app compatível) e digite o código de 6 dígitos exibido agora.</p>
       <input className="codigo-input" required type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} autoComplete="one-time-code" placeholder="000000" value={codigoTotp} onChange={e=>setCodigoTotp(e.target.value.replace(/\D/g,'').slice(0,6))}/>
     </div>}
-    <button className="button button-primary button-large" disabled={ocupado}><Save/>{ocupado?'Atualizando...':'Atualizar senha'}</button>
+    <button className="button button-primary button-large" disabled={ocupado||!preenchido} title={preenchido?undefined:'Preencha os campos para atualizar a senha.'}><Save/>{ocupado?'Atualizando...':'Atualizar senha'}</button>
   </form></section></div>
 }

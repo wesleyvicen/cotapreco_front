@@ -113,6 +113,11 @@ function CardFarmacias() {
     finally { setSalvandoEdicao(false) }
   }
 
+  /* O grupo não pode ficar sem nenhuma farmácia ativa: sem ela não há cotação, pedido nem
+     cobrança. Com uma só na lista, desativar fica fora de alcance em vez de falhar no servidor. */
+  const ativasNoGrupo = empresas?.filter(e => e.ativo).length ?? 0
+  const ultimaAtiva = ativasNoGrupo <= 1
+
   const dentroDaCota = conta != null && conta.empresasAtivas < conta.farmaciasContratadas
   const semCotaLivre = conta != null && conta.empresasAtivas >= conta.farmaciasContratadas
 
@@ -197,7 +202,17 @@ function CardFarmacias() {
       {!empresas
         ? <Carregando/>
         : <div className="table-wrap"><table><thead><tr><th>Farmácia</th><th>CNPJ</th><th>Status</th></tr></thead><tbody>
-            {empresas.map(e => <>
+            {empresas.map(e => {
+              /* Salvar só faz sentido com algo diferente do que já está gravado. */
+              const alterado = nomeEdicao !== e.nome || cnpjEdicao !== formatarCnpj(e.cnpj ?? '')
+              /* Os dois motivos que fazem o servidor recusar desativar (ver EmpresaService.desativar),
+                 ditos aqui antes do clique. Ser a única ativa vem primeiro: nesse caso trocar a
+                 pagadora nem seria possível, então mandar para Pagamento não ajudaria em nada. */
+              const motivoDesativar = !e.ativo ? null
+                : ultimaAtiva ? 'Esta é a única farmácia ativa do grupo, e o grupo precisa manter ao menos uma. Crie ou reative outra antes de desativar esta.'
+                : conta != null && conta.empresaPagadoraId === e.id ? 'Esta é a farmácia que representa a cobrança da assinatura: o nome e o CNPJ dela aparecem na fatura. Escolha outra pagadora na aba Pagamento antes de desativar esta.'
+                : null
+              return <>
               <tr key={e.id} className="farmacia-linha-clicavel" onClick={() => selecionar(e)}>
                 <td><strong>{e.nome}</strong></td><td>{e.cnpj ? formatarCnpj(e.cnpj) : '-'}</td>
                 <td className="farmacia-linha-status">
@@ -214,17 +229,19 @@ function CardFarmacias() {
                     : <p className="modal-nota">Reativar não cobra nada extra, ainda está dentro do que você já contratou.</p>)}
                   <label>Nome da farmácia<input required maxLength={160} value={nomeEdicao} onChange={ev => setNomeEdicao(ev.target.value)}/></label>
                   <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpjEdicao} onChange={ev => setCnpjEdicao(formatarCnpj(ev.target.value))}/></label>
+                  {motivoDesativar && <p className="modal-nota">{motivoDesativar}</p>}
                   <div className="line-actions">
-                    <button className="button button-primary" disabled={salvandoEdicao}><Save/>{salvandoEdicao ? 'Salvando...' : 'Salvar dados'}</button>
+                    <button className="button button-primary" disabled={salvandoEdicao || !alterado} title={alterado ? undefined : 'Altere o nome ou o CNPJ para salvar.'}><Save/>{salvandoEdicao ? 'Salvando...' : 'Salvar dados'}</button>
                     {e.ativo
-                      ? <button type="button" className="button button-ghost" disabled={salvandoEdicao} onClick={() => void desativarEmpresa(e.id)}>Desativar farmácia</button>
+                      ? <button type="button" className="button button-ghost" disabled={salvandoEdicao || motivoDesativar != null} title={motivoDesativar ?? undefined} onClick={() => void desativarEmpresa(e.id)}>Desativar farmácia</button>
                       : <button type="button" className="button button-secondary" disabled={salvandoEdicao || semCotaLivre} onClick={() => void reativarEmpresa(e.id)}>
                           {salvandoEdicao ? 'Reativando...' : 'Reativar farmácia'}
                         </button>}
                   </div>
                 </form>
               </td></tr>}
-            </>)}
+            </>
+            })}
           </tbody></table></div>}
     </section>
 
@@ -283,7 +300,8 @@ function CardPagamento() {
       const atualizada = await api<Conta>('/account', { method:'PUT', body:JSON.stringify({
         empresaPagadoraId, telefone:telefone.replace(/\D/g, ''), endereco:paraEnvio(endereco),
       }) })
-      setConta(atualizada); setEmpresaPagadoraId(atualizada.empresaPagadoraId); setEndereco(enderecoDoServidor(atualizada.endereco))
+      setConta(atualizada); setEmpresaPagadoraId(atualizada.empresaPagadoraId)
+      setTelefone(formatarTelefone(atualizada.telefone ?? '')); setEndereco(enderecoDoServidor(atualizada.endereco))
       setMensagem('Dados de cobrança atualizados.')
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar.') }
     finally { setOcupado(false) }
@@ -293,6 +311,14 @@ function CardPagamento() {
 
   const ativas = empresas.filter(e => e.ativo)
   const pagadoraSelecionada = ativas.find(e => e.id === empresaPagadoraId)
+
+  /* Compara o que seria enviado com o que o servidor já tem, e não os campos crus: assim
+     reformatar o telefone ou sobrar um espaço no endereço não conta como alteração, já que
+     geraria exatamente o mesmo PUT. */
+  const comoEnvio = (empresaId:number|null, tel:string, end:FormularioEndereco) =>
+    JSON.stringify({ empresaId, telefone:tel.replace(/\D/g, ''), endereco:paraEnvio(end) })
+  const alterado = comoEnvio(empresaPagadoraId, telefone, endereco)
+    !== comoEnvio(conta.empresaPagadoraId, conta.telefone ?? '', enderecoDoServidor(conta.endereco))
 
   return <form className="settings-form-wrap" onSubmit={salvar}>
     {erro && <AvisoErro message={erro}/>}
@@ -317,7 +343,7 @@ function CardPagamento() {
     </section>
     {somenteLeitura
       ? <div className="alert alert-warning">Somente administradores da conta podem alterar estes dados.</div>
-      : <button className="button button-primary" disabled={ocupado}><Save/>{ocupado ? 'Salvando...' : 'Salvar dados'}</button>}
+      : <button className="button button-primary" disabled={ocupado || !alterado} title={alterado ? undefined : 'Altere algum dado para salvar.'}><Save/>{ocupado ? 'Salvando...' : 'Salvar dados'}</button>}
   </form>
 }
 
