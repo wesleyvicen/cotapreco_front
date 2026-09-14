@@ -4,7 +4,7 @@ export interface EmpresaAcesso { id:number; name:string; role:'ADMIN'|'BUYER'|'V
 export interface Usuario { id:number; name:string; email:string; groupId:number; groupName:string; companies:EmpresaAcesso[]; subscriptionUntil:string|null; onTrial:boolean; accessAllowed:boolean; daysLeft:number|null; emailConfirmed:boolean; staff:boolean; doisFatoresAtivo:boolean }
 export interface PendenciaDoisFatores { token:string; configurando:boolean; otpauthUri:string|null; segredoManual:string|null }
 export interface ContaStaff {
-  grupoId:number; nomeFarmacia:string; cnpj:string|null; responsavelNome:string|null; responsavelEmail:string|null
+  grupoId:number; nomeFarmacia:string; cnpj:string|null; responsavelNome:string|null; responsavelEmail:string|null; telefone:string|null
   statusAssinatura:StatusAssinatura; emTeste:boolean; assinaturaAte:string|null
   farmaciasContratadas:number; farmaciasAtivas:number; contaAtiva:boolean; criadoEm:string
   precoMensalAtual:number; precoMensalPersonalizado:number|null; cortesia:boolean

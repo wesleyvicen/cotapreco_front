@@ -20,6 +20,14 @@ function formatarCnpj(valor:string|null) {
     .replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2')
 }
 
+/* WhatsApp informado no cadastro. Contas antigas, de antes do campo existir, vêm sem ele. */
+function formatarTelefone(valor:string|null) {
+  const d = (valor ?? '').replace(/\D/g, '')
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
+  return d
+}
+
 /* Mesma lógica de PaginaRespostaPublica/PaginaDetalheCotacao: os dígitos digitados são
    centavos, então backspace nunca deixa o cursor "no meio" de um valor formatado. */
 function interpretarPreco(digitos:string) {
@@ -233,7 +241,7 @@ export default function PaginaStaff() {
     {erro && <div className="alert alert-error">{erro}</div>}
 
     <div className="toolbar">
-      <label className="search"><Search/><input placeholder="Buscar por farmácia, CNPJ, responsável ou e-mail..." value={busca} onChange={e => setBusca(e.target.value)}/></label>
+      <label className="search"><Search/><input placeholder="Buscar por farmácia, CNPJ, responsável, e-mail ou WhatsApp..." value={busca} onChange={e => setBusca(e.target.value)}/></label>
     </div>
 
     <section className="card">
@@ -241,13 +249,18 @@ export default function PaginaStaff() {
         ? <Carregando/>
         : !resultado || resultado.itens.length === 0
           ? <EstadoVazio title={buscaAplicada ? 'Nenhuma conta encontrada' : 'Nenhuma conta ainda'}
-              description={buscaAplicada ? 'Tente buscar por outro nome, CNPJ ou e-mail.' : 'As contas de clientes aparecem aqui assim que alguém se cadastrar.'}/>
+              description={buscaAplicada ? 'Tente buscar por outro nome, CNPJ, e-mail ou WhatsApp.' : 'As contas de clientes aparecem aqui assim que alguém se cadastrar.'}/>
           : <>
               <div className="table-wrap"><table>
-                <thead><tr><th>Farmácia</th><th>Responsável</th><th>Status</th><th>Farmácias</th><th>Mensalidade</th><th>Válido até</th><th>Desde</th><th/></tr></thead>
+                <thead><tr><th>Farmácia</th><th>Responsável</th><th>WhatsApp</th><th>Status</th><th>Farmácias</th><th>Mensalidade</th><th>Válido até</th><th>Desde</th><th/></tr></thead>
                 <tbody>{resultado.itens.map(c => <tr key={c.grupoId}>
                   <td><strong>{c.nomeFarmacia}</strong><br/><small>{formatarCnpj(c.cnpj)}</small></td>
                   <td>{c.responsavelNome ?? '-'}{c.responsavelEmail && <><br/><small>{c.responsavelEmail}</small></>}</td>
+                  {/* Link direto pro WhatsApp: a conversa já abre com o 55 na frente, sem ninguém
+                      copiar número na mão. */}
+                  <td>{c.telefone
+                    ? <a className="text-link" href={`https://wa.me/55${c.telefone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">{formatarTelefone(c.telefone)}</a>
+                    : '-'}</td>
                   <td>
                     {/* emTeste nunca convive com um pagamento de verdade (ver AssinaturaService.ativar,
                         que zera emTeste ao confirmar). Então aqui é sempre "ainda não pagou, mas tem

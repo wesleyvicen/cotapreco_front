@@ -8,7 +8,7 @@ import { TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import RodapeSite from '../components/RodapeEmpresa'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 
-type CampoCadastro = 'nomeUsuario' | 'nomeFarmacia' | 'cnpj' | 'email' | 'senha' | 'confirmacao'
+type CampoCadastro = 'nomeUsuario' | 'nomeFarmacia' | 'cnpj' | 'email' | 'telefone' | 'senha' | 'confirmacao'
 
 /* A conferência fica calada enquanto o que foi digitado ainda é começo da senha: acusar
    "não conferem" a cada tecla treina a pessoa a ignorar o aviso. Ela fala no instante em
@@ -34,6 +34,7 @@ export default function PaginaCadastroFarmacia() {
   const [nomeFarmacia, setNomeFarmacia] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [email, setEmail] = useState('')
+  const [telefone, setTelefone] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmacao, setConfirmacao] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
@@ -65,6 +66,11 @@ export default function PaginaCadastroFarmacia() {
       formulario.current?.querySelector<HTMLInputElement>('[name="cnpj"]')?.focus()
       return
     }
+    if (!telefoneValido(telefone)) {
+      setErrosCampos({ telefone:'Informe o WhatsApp com DDD, por exemplo (81) 99999-9999.' })
+      formulario.current?.querySelector<HTMLInputElement>('[name="telefone"]')?.focus()
+      return
+    }
     if (senha !== confirmacao) {
       setErrosCampos({ confirmacao:'As senhas não conferem. Confira as duas usando o olho ao lado.' })
       formulario.current?.querySelector<HTMLInputElement>('[name="confirmacao"]')?.focus()
@@ -72,7 +78,7 @@ export default function PaginaCadastroFarmacia() {
     }
     setOcupado(true)
     try {
-      await cadastrarFarmacia({ nomeUsuario, nomeFarmacia, cnpj:cnpj.replace(/\D/g, ''), email, senha })
+      await cadastrarFarmacia({ nomeUsuario, nomeFarmacia, cnpj:cnpj.replace(/\D/g, ''), email, telefone:telefone.replace(/\D/g, ''), senha })
       navegar('/')
     } catch (e) {
       if (e instanceof ErroApi && Object.keys(e.fields).length) {
@@ -105,12 +111,13 @@ export default function PaginaCadastroFarmacia() {
      soa como campo em branco, quando na verdade a pessoa só bateu um número errado. */
   if (!cnpjDigitado) pendencias.push('um CNPJ válido')
   if (!emailValido) pendencias.push('um e-mail válido')
+  if (!telefoneValido(telefone)) pendencias.push('o WhatsApp com DDD')
   if (senha.length < 8) pendencias.push('uma senha com pelo menos 8 caracteres')
   else if (senha !== confirmacao) pendencias.push('a confirmação igual à senha')
   const formularioValido = pendencias.length === 0 && !cnpjErrado
   /* Só mostra o que falta depois que a pessoa começa a preencher. Numa tela em branco,
      essa lista seria só ruído repetindo os campos que já estão logo ali em cima. */
-  const comecouAPreencher = Boolean(nomeUsuario || nomeFarmacia || cnpj || email || senha || confirmacao)
+  const comecouAPreencher = Boolean(nomeUsuario || nomeFarmacia || cnpj || email || telefone || senha || confirmacao)
   const avisoCampo = (nome:CampoCadastro) => {
     if (errosCampos[nome]) return <small className="cad-erro-campo" id={`erro-${nome}`}>{errosCampos[nome]}</small>
     if (nome === 'cnpj' && cnpjErrado) return <small className="cad-erro-campo">Este CNPJ não parece válido. Confira se os números foram digitados certinho.</small>
@@ -185,6 +192,13 @@ export default function PaginaCadastroFarmacia() {
               {avisoCampo('email')}
             </label>
 
+            <label className="cad-campo">WhatsApp
+              <input {...campo('telefone')} value={telefone} required maxLength={16} type="tel" inputMode="numeric" autoComplete="tel-national"
+                placeholder="(00) 00000-0000" onChange={evento => { setTelefone(formatarTelefone(evento.target.value)); limparErroCampo('telefone') }}/>
+              <small className="cad-dica">Falamos com você por aqui para ajudar na primeira cotação. Nada de disparo em massa.</small>
+              {avisoCampo('telefone')}
+            </label>
+
             <div className="cad-senhas-linha">
               <label className="cad-campo">Senha
                 <span className="cad-senha">
@@ -237,6 +251,21 @@ export default function PaginaCadastroFarmacia() {
 function formatarLista(itens:string[]) {
   if (itens.length === 1) return itens[0]
   return `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`
+}
+
+/* DDD + 8 ou 9 dígitos. Fixo continua valendo: em farmácia pequena o número do balcão às
+   vezes é o que responde no WhatsApp Business. */
+function telefoneValido(valor:string) {
+  const digitos = valor.replace(/\D/g, '')
+  return digitos.length === 10 || digitos.length === 11
+}
+
+function formatarTelefone(valor:string) {
+  const digitos = valor.replace(/\D/g, '').slice(0, 11)
+  if (digitos.length <= 2) return digitos.replace(/^(\d{0,2})/, '($1')
+  if (digitos.length <= 6) return digitos.replace(/^(\d{2})(\d+)/, '($1) $2')
+  if (digitos.length <= 10) return digitos.replace(/^(\d{2})(\d{4})(\d+)/, '($1) $2-$3')
+  return digitos.replace(/^(\d{2})(\d{5})(\d+)/, '($1) $2-$3')
 }
 
 function formatarCnpj(valor:string) {
