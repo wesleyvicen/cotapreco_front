@@ -8383,6 +8383,21 @@ label small {
 .staff-filtro:hover { border-color: var(--brand, #12634a); color: inherit; }
 .staff-filtro.ativo { border-color: var(--brand, #12634a); background: #e7f4ef; color: #12634a; }
 .staff-filtro:focus-visible { outline: 2px solid var(--brand, #12634a); outline-offset: 2px; }
+/* No celular a toolbar já empilha (ver .toolbar em max-width 760px), então busca e filtros
+   viram duas faixas e a caixa fica alta. Os filtros passam a correr na horizontal numa faixa
+   só, e a busca perde a folga que ela não usa. */
+@media (max-width: 760px) {
+  .staff-toolbar { gap: 8px; padding: 8px; }
+  .staff-toolbar .search { flex: 1 1 auto; }
+  .staff-toolbar .search input { padding: 4px 2px; font-size: 14px; text-overflow: ellipsis; }
+  .staff-toolbar .search svg { width: 17px; flex-shrink: 0; }
+  .staff-filtros { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 0 2px; }
+  .staff-filtros::-webkit-scrollbar { display: none; }
+  .staff-filtro { padding: 6px 12px; font-size: 12.5px; white-space: nowrap; }
+  .staff-resumo { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .staff-resumo > button { padding: 12px; }
+  .staff-resumo strong { font-size: 19px; }
+}
 .staff-paginacao { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .staff-paginacao span { font-size: 12.5px; color: var(--muted); }
 .staff-paginacao > div { display: flex; gap: 8px; }

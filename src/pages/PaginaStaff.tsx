@@ -267,7 +267,7 @@ export default function PaginaStaff() {
     {erro && <div className="alert alert-error">{erro}</div>}
 
     <div className="toolbar staff-toolbar">
-      <label className="search"><Search/><input placeholder="Buscar por farmácia, CNPJ, responsável, e-mail ou WhatsApp..." value={busca} onChange={e => setBusca(e.target.value)}/></label>
+      <label className="search"><Search/><input placeholder="Buscar farmácia, CNPJ, e-mail ou WhatsApp" value={busca} onChange={e => setBusca(e.target.value)}/></label>
       <div className="staff-filtros" role="group" aria-label="Filtrar por condição comercial">
         {([['CORTESIA', 'Cortesia'], ['NEGOCIADA', 'Preço negociado']] as const).map(([chave, rotulo]) =>
           <button key={chave} type="button" className={`staff-filtro${situacao === chave ? ' ativo' : ''}`}
