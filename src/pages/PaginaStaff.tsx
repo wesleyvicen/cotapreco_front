@@ -4,7 +4,7 @@ import { api, ErroApi, money, date } from '../api'
 import { AvisoErro, Carregando, EstadoVazio } from '../components/ComponentesUI'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { ROTULO_STATUS } from '../lib/assinatura'
-import type { ContaStaff, PaginaAuditoriaStaff, PaginaContasStaff } from '../types'
+import type { ContaStaff, PaginaAuditoriaStaff, PaginaContasStaff, SituacaoConta } from '../types'
 
 const TAMANHO_PAGINA = 20
 /* Espera a pessoa parar de digitar antes de ir ao banco. Sem isso, cada tecla vira uma
@@ -18,6 +18,17 @@ function formatarCnpj(valor:string|null) {
   const digitos = valor.replace(/\D/g, '').slice(0, 14)
   return digitos.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2')
+}
+
+/* Teste que venceu sem assinatura continua com emTeste verdadeiro no banco, então é
+   acessoLiberado que separa quem está testando agora de quem só deixou o prazo passar. */
+function etiqueta(conta:ContaStaff):{ texto:string, tom:string } {
+  if (conta.emTeste) return conta.acessoLiberado
+    ? { texto:ROTULO_STATUS.TRIAL, tom:'trial' }
+    : { texto:'Teste expirado', tom:'overdue' }
+  if (!conta.acessoLiberado && conta.statusAssinatura !== 'OVERDUE')
+    return { texto:'Acesso expirado', tom:'overdue' }
+  return { texto:ROTULO_STATUS[conta.statusAssinatura], tom:conta.statusAssinatura.toLowerCase() }
 }
 
 /* WhatsApp informado no cadastro. Contas antigas, de antes do campo existir, vêm sem ele. */
@@ -65,6 +76,7 @@ export default function PaginaStaff() {
 
   const [busca, setBusca] = useState('')
   const [buscaAplicada, setBuscaAplicada] = useState('')
+  const [situacao, setSituacao] = useState<SituacaoConta>('TODAS')
   const [pagina, setPagina] = useState(0)
   const [resultado, setResultado] = useState<PaginaContasStaff|null>(null)
   const [carregando, setCarregando] = useState(true)
@@ -96,11 +108,17 @@ export default function PaginaStaff() {
     setCarregando(true); setErro('')
     const parametros = new URLSearchParams({ pagina: String(pagina), tamanho: String(TAMANHO_PAGINA) })
     if (buscaAplicada) parametros.set('busca', buscaAplicada)
+    if (situacao !== 'TODAS') parametros.set('situacao', situacao)
     api<PaginaContasStaff>(`/staff/accounts?${parametros}`)
       .then(setResultado)
       .catch(() => setErro('Não foi possível carregar as contas.'))
       .finally(() => setCarregando(false))
-  }, [buscaAplicada, pagina])
+  }, [buscaAplicada, situacao, pagina])
+
+  /* Trocar de filtro volta para a primeira página: manter a página 3 de uma lista que virou
+     outra mostra uma tabela vazia com contas existentes. */
+  const filtrar = (escolhida:SituacaoConta) =>
+    setSituacao(atual => { setPagina(0); return atual === escolhida ? 'TODAS' : escolhida })
 
   /* Só busca quando a aba está aberta, evitando gastar a consulta em toda visita à tela. */
   useEffect(() => {
@@ -231,25 +249,40 @@ export default function PaginaStaff() {
     </section>}
 
     {aba==='contas' && <>
+    {/* Cada cartão é o filtro do próprio número: ver "12 sem acesso hoje" e não conseguir
+        chegar nessas 12 é o caminho mais curto para a equipe exportar tudo e filtrar fora. */}
     {resultado && <div className="staff-resumo">
-      <div><strong>{resultado.totalContas}</strong><span>contas no total</span></div>
-      <div><strong>{resultado.totalPagando}</strong><span>pagando</span></div>
-      <div><strong>{resultado.totalEmTeste}</strong><span>em teste</span></div>
-      <div><strong>{resultado.totalVencidas}</strong><span>com pagamento atrasado</span></div>
+      {([
+        ['TODAS', resultado.totalContas, 'contas no total'],
+        ['PAGANDO', resultado.totalPagando, 'pagando'],
+        ['EM_TESTE', resultado.totalEmTeste, 'em teste'],
+        ['SEM_ACESSO', resultado.totalVencidas, 'sem acesso hoje'],
+      ] as const).map(([chave, valor, rotulo]) => <button key={chave} type="button"
+        className={situacao === chave ? 'ativo' : undefined} aria-pressed={situacao === chave}
+        onClick={() => filtrar(chave)}>
+        <strong>{valor}</strong><span>{rotulo}</span>
+      </button>)}
     </div>}
 
     {erro && <div className="alert alert-error">{erro}</div>}
 
-    <div className="toolbar">
+    <div className="toolbar staff-toolbar">
       <label className="search"><Search/><input placeholder="Buscar por farmácia, CNPJ, responsável, e-mail ou WhatsApp..." value={busca} onChange={e => setBusca(e.target.value)}/></label>
+      <div className="staff-filtros" role="group" aria-label="Filtrar por condição comercial">
+        {([['CORTESIA', 'Cortesia'], ['NEGOCIADA', 'Preço negociado']] as const).map(([chave, rotulo]) =>
+          <button key={chave} type="button" className={`staff-filtro${situacao === chave ? ' ativo' : ''}`}
+            aria-pressed={situacao === chave} onClick={() => filtrar(chave)}>{rotulo}</button>)}
+      </div>
     </div>
 
     <section className="card">
       {carregando && !resultado
         ? <Carregando/>
         : !resultado || resultado.itens.length === 0
-          ? <EstadoVazio title={buscaAplicada ? 'Nenhuma conta encontrada' : 'Nenhuma conta ainda'}
-              description={buscaAplicada ? 'Tente buscar por outro nome, CNPJ, e-mail ou WhatsApp.' : 'As contas de clientes aparecem aqui assim que alguém se cadastrar.'}/>
+          ? <EstadoVazio title={buscaAplicada || situacao !== 'TODAS' ? 'Nenhuma conta encontrada' : 'Nenhuma conta ainda'}
+              description={situacao !== 'TODAS' ? 'Nenhuma conta nesta situação. Toque no filtro de novo para ver todas.'
+                : buscaAplicada ? 'Tente buscar por outro nome, CNPJ, e-mail ou WhatsApp.'
+                : 'As contas de clientes aparecem aqui assim que alguém se cadastrar.'}/>
           : <>
               <div className="table-wrap"><table>
                 <thead><tr><th>Farmácia</th><th>Responsável</th><th>WhatsApp</th><th>Status</th><th>Farmácias</th><th>Mensalidade</th><th>Válido até</th><th>Desde</th><th/></tr></thead>
@@ -263,11 +296,10 @@ export default function PaginaStaff() {
                     : '-'}</td>
                   <td>
                     {/* emTeste nunca convive com um pagamento de verdade (ver AssinaturaService.ativar,
-                        que zera emTeste ao confirmar). Então aqui é sempre "ainda não pagou, mas tem
-                        prazo rodando", diferente de "sem assinatura" genérico (nunca assinou, ou cortesia). */}
-                    <span className={`status-badge status-${c.emTeste ? 'trial' : c.statusAssinatura.toLowerCase()}`}>
-                      {c.emTeste ? ROTULO_STATUS.TRIAL : ROTULO_STATUS[c.statusAssinatura]}
-                    </span>
+                        que zera emTeste ao confirmar), mas também não cai sozinho quando o prazo acaba:
+                        sem olhar acessoLiberado, quem parou meses atrás continuaria aparecendo como
+                        "Período de teste". */}
+                    <span className={`status-badge status-${etiqueta(c).tom}`}>{etiqueta(c).texto}</span>
                     {!c.contaAtiva && <><br/><small>Conta desativada</small></>}
                   </td>
                   <td>{c.farmaciasAtivas} de {c.farmaciasContratadas}</td>

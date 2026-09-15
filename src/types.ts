@@ -5,10 +5,13 @@ export interface Usuario { id:number; name:string; email:string; groupId:number;
 export interface PendenciaDoisFatores { token:string; configurando:boolean; otpauthUri:string|null; segredoManual:string|null }
 export interface ContaStaff {
   grupoId:number; nomeFarmacia:string; cnpj:string|null; responsavelNome:string|null; responsavelEmail:string|null; telefone:string|null
-  statusAssinatura:StatusAssinatura; emTeste:boolean; assinaturaAte:string|null
+  statusAssinatura:StatusAssinatura; emTeste:boolean; acessoLiberado:boolean; assinaturaAte:string|null
   farmaciasContratadas:number; farmaciasAtivas:number; contaAtiva:boolean; criadoEm:string
   precoMensalAtual:number; precoMensalPersonalizado:number|null; cortesia:boolean
 }
+/* Recortes da lista de contas na tela de staff. Os critérios vivem na consulta do backend
+   (ver GrupoRepository.buscarContasDeClientes) para os cartões e a tabela não discordarem. */
+export type SituacaoConta = 'TODAS' | 'PAGANDO' | 'EM_TESTE' | 'SEM_ACESSO' | 'CORTESIA' | 'NEGOCIADA'
 export interface SolicitacaoNegociacao { farmaciasContratadas:number; precoMensalPersonalizado:number|null }
 export interface SolicitacaoBrinde { farmaciasContratadas:number }
 export interface SolicitacaoTrial { dias:number }
