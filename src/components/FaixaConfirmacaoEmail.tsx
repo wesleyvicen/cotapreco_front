@@ -1,33 +1,33 @@
-import { MailWarning } from 'lucide-react'
+import { MailCheck } from 'lucide-react'
 import { useState } from 'react'
-import { api, ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
+import { MOTIVO_CONFIRMAR_EMAIL, reenviarConfirmacaoEmail } from '../lib/confirmacaoEmail'
 
 /*
- * Fica no layout, acima de qualquer tela: a pessoa acabou de criar a conta e precisa
- * saber já na primeira tela por que a cotação não abre - e onde procurar o e-mail.
+ * Fica no layout, acima de qualquer tela. Não é um bloqueio: quem não confirmou usa o sistema
+ * inteiro, cria cotação e compartilha o link normalmente. A faixa está aqui para lembrar do
+ * que a pessoa ganha ao confirmar, e continua visível até ela confirmar.
  */
 export default function FaixaConfirmacaoEmail() {
   const { user } = usarAutenticacao()
   const [enviando, setEnviando] = useState(false)
   const [aviso, setAviso] = useState('')
 
-  /* Indefinido em backend antigo: só avisa quando o servidor disse que falta confirmar. */
+  /* Indefinido em backend antigo: só convida quando o servidor disse que falta confirmar. */
   if (!user || user.emailConfirmed !== false) return null
 
   const reenviar = async () => {
     setEnviando(true); setAviso('')
-    try { setAviso((await api<{ message:string }>('/auth/reenviar-confirmacao', { method:'POST' })).message) }
-    catch (erro) { setAviso(erro instanceof ErroApi ? erro.message : 'Não foi possível reenviar agora.') }
-    finally { setEnviando(false) }
+    setAviso(await reenviarConfirmacaoEmail())
+    setEnviando(false)
   }
 
   return <div className="faixa-confirmacao" role="status">
     <div className="faixa-confirmacao-topo">
-      <MailWarning/>
+      <MailCheck/>
       <div>
-        <strong>Confirme seu e-mail para criar cotações</strong>
-        <span>Enviamos um link para <b>{user.email}</b>. É só clicar nele e voltar, o resto do sistema continua liberado.</span>
+        <strong>Confirme seu e-mail e garanta o acesso à sua conta</strong>
+        <span>Enviamos um link para <b>{user.email}</b>. {MOTIVO_CONFIRMAR_EMAIL} Leva um clique.</span>
       </div>
       <button type="button" className="button button-secondary" disabled={enviando} onClick={() => void reenviar()}>
         {enviando ? 'Enviando...' : 'Reenviar e-mail'}

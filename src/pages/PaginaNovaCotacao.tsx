@@ -1,5 +1,5 @@
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, Lock, MailWarning,
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, Lock,
   FileSpreadsheet, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
 } from 'lucide-react'
 import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
@@ -8,39 +8,13 @@ import { AvisoErro } from '../components/ComponentesUI'
 import ModalColarColunas from '../components/ModalColarColunas'
 import { colunasColadasVazias, type ColunasColadas, type LinhaColada } from '../lib/colunasColadas'
 import { usarAutenticacao } from '../autenticacao'
-import { acessoBloqueado, emailPendente } from '../lib/assinatura'
+import { acessoBloqueado } from '../lib/assinatura'
 import type {
   AnaliseArquivoImportacao, Cotacao, MapeamentoColunas, PreviaImportacao, Produto,
 } from '../types'
 import { LinkInterno, usarNavegacao } from '../roteamento'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
-
-function dataHoraLocal(data = new Date()) {
-  const doisDigitos = (valor:number) => String(valor).padStart(2, '0')
-  return `${data.getFullYear()}-${doisDigitos(data.getMonth() + 1)}-${doisDigitos(data.getDate())}T${doisDigitos(data.getHours())}:${doisDigitos(data.getMinutes())}`
-}
-
-const HORA_SUGERIDA = 18
-const DIAS_UTEIS_SUGERIDOS = 1
-const nomeSugerido = (hoje = new Date()) => `COTAÇÃO ${new Intl.DateTimeFormat('pt-BR', { dateStyle:'short' }).format(hoje)}`
-
-/* Fim de semana não conta: um prazo que cai no sábado só dá ao representante o tempo de
-   responder na segunda, e o que a farmácia quer é um dia de trabalho para as respostas. */
-const somarDiasUteis = (data:Date, dias:number) => {
-  const resultado = new Date(data)
-  for (let restantes = dias; restantes > 0;) {
-    resultado.setDate(resultado.getDate() + 1)
-    const diaDaSemana = resultado.getDay()
-    if (diaDaSemana !== 0 && diaDaSemana !== 6) restantes--
-  }
-  return resultado
-}
-
-const prazoSugerido = (agora = new Date()) => {
-  const data = somarDiasUteis(agora, DIAS_UTEIS_SUGERIDOS)
-  data.setHours(HORA_SUGERIDA, 0, 0, 0)
-  return dataHoraLocal(data)
-}
+import { dataHoraLocal, nomeSugerido, prazoSugerido } from '../lib/sugestoesCotacao'
 
 type ModoProdutos = 'planilha' | 'manual'
 type CampoMapeamento = keyof MapeamentoColunas
@@ -254,19 +228,6 @@ export default function PaginaNovaCotacao() {
   /* Quem chegou à revisão colando colunas volta para a colagem, não para o painel de planilha
      que nunca chegou a usar. */
   const voltarProdutos = () => { setErro(''); setEtapa(2); if (origemPrevia === 'colado') setColarAberto(true) }
-
-  if (emailPendente(user?.emailConfirmed)) return <div className="page narrow">
-    <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>
-    <section className="card assinatura-bloqueio">
-      <div className="assinatura-bloqueio-icone confirmacao-icone-neutro"><MailWarning/></div>
-      <h1>Confirme seu e-mail primeiro</h1>
-      <p>Enviamos um link de confirmação para <b>{user?.email}</b>. Clique nele e volte aqui. Leva menos de um minuto.</p>
-      <p className="assinatura-bloqueio-spam"><b>Não achou?</b> Procure por “CotaPreço” na caixa de spam ou lixo eletrônico e marque como <b>não é spam</b>. Use o botão “Reenviar e-mail” no aviso do topo se precisar de um link novo.</p>
-      <div className="assinatura-bloqueio-acoes">
-        <LinkInterno className="button button-ghost" to="/cotacoes">Ver minhas cotações</LinkInterno>
-      </div>
-    </section>
-  </div>
 
   if (acessoBloqueado(user?.accessAllowed)) return <div className="page narrow">
     <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>

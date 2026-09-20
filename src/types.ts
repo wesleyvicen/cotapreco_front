@@ -23,9 +23,16 @@ export interface RegistroAuditoriaStaff { id:number; grupoId:number; nomeFarmaci
 export interface PaginaAuditoriaStaff { itens:RegistroAuditoriaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number }
 export interface AcessoEmpresaUsuario { companyId:number; companyName:string; role:'ADMIN'|'BUYER'|'VIEWER' }
 export interface UsuarioAdministracao { id:number; name:string; email:string; active:boolean; createdAt:string; access:AcessoEmpresaUsuario[] }
-export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null }
+export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null; demo:boolean }
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'|'purchaseComparisonEligible'|'purchasedItemCount'|'lastPurchaseAt'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
+/* Primeira Cotação Assistida. O status e o ERP ficam na conta; o checklist é inferido pelo
+   backend a partir do que a farmácia realmente já fez. */
+export type StatusOnboarding='NOT_STARTED'|'IN_PROGRESS'|'COMPLETED'|'SKIPPED'
+export type SistemaErp='TRIER'|'LINX'|'SOFTPHARMA'|'OTHER'|'UNKNOWN'
+export type EtapaOnboarding='WELCOME'|'ERP_SELECTION'|'EXPORT_GUIDE'|'IMPORT'|'REVIEW'|'QUOTATION_CREATED'|'SHARED'
+export interface ChecklistOnboarding { accountCreated:boolean; orderImported:boolean; quotationCreated:boolean; quotationShared:boolean; supplierResponseReceived:boolean; resultViewed:boolean }
+export interface Onboarding { status:StatusOnboarding; erp:SistemaErp|null; currentStep:EtapaOnboarding|null; checklist:ChecklistOnboarding }
 export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number; minimumOrderValue:number|null; includedInSuggestedPurchase:boolean; active:boolean }
 export interface ItemPreviaResposta { quotationItemId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; available:boolean; unitPrice:number|null; availableQuantity:number|null; note:string|null }
 export interface PreviaResposta { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; quotedItems:number; total:number; minimumOrderValue:number|null; items:ItemPreviaResposta[] }

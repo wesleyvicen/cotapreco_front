@@ -79,7 +79,9 @@ export default function PaginaCadastroFarmacia() {
     setOcupado(true)
     try {
       await cadastrarFarmacia({ nomeUsuario, nomeFarmacia, cnpj:cnpj.replace(/\D/g, ''), email, telefone:telefone.replace(/\D/g, ''), senha })
-      navegar('/')
+      /* Conta nova cai direto na primeira cotação assistida. Quem preferir explorar sozinho
+         sai de lá num clique, e o painel mantém o atalho de volta. */
+      navegar('/primeira-cotacao')
     } catch (e) {
       if (e instanceof ErroApi && Object.keys(e.fields).length) {
         setErrosCampos(e.fields)
