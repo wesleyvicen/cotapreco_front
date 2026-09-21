@@ -1,0 +1,18 @@
+# CotaPreço
+
+> Sistema de cotação e compra de medicamentos para farmácias: recebe as propostas das distribuidoras, compara item a item e monta o pedido de cada uma pelo melhor preço.
+
+CotaPreço roda no navegador, sem instalação. A farmácia importa a planilha de itens que já usa, envia um link para as distribuidoras responderem preço e disponibilidade, e recebe o comparativo pronto com o plano de compra dividido por distribuidora. Depois da entrega, a conferência item a item fecha o ciclo e alimenta um histórico de preços da própria farmácia. Mensalidade é por farmácia (R$ 119,90/mês, R$ 89,90 por farmácia adicional na mesma conta), sem custo extra por usuário da equipe, com teste grátis de 15 dias sem cartão de crédito.
+
+## Páginas
+- [Início](https://cotapreco.com/): como funciona, diferenciais, preços e perguntas frequentes
+- [Criar conta](https://cotapreco.com/cadastro): cadastro da farmácia e início do teste grátis
+- [Entrar](https://cotapreco.com/login): acesso de farmácias já cadastradas
+
+## Políticas
+- [Privacidade](https://cotapreco.com/privacidade)
+- [Termos de uso](https://cotapreco.com/termos)
+- [Cookies](https://cotapreco.com/cookies)
+
+## Optional
+- [Sitemap](https://cotapreco.com/sitemap.xml)
