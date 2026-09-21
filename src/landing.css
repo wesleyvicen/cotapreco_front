@@ -247,7 +247,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.lp-antes .lp-etiqueta { color: #8d9a95; }
+.lp-antes .lp-etiqueta { color: var(--lp-suave); }
 .lp-depois .lp-etiqueta { color: var(--lp-verde); }
 .lp-antes p, .lp-depois p { margin: 0; font-size: 15px; line-height: 1.55; }
 .lp-antes p { color: var(--lp-suave); }
@@ -445,7 +445,7 @@
 .lp-preco-estimador-contato { display: flex !important; align-items: flex-start; gap: 6px; color: #8a6416 !important; }
 .lp-preco-estimador-contato svg { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 1px; color: #946817; }
 .lp-preco-estimador-contato a { color: #946817; font-weight: 700; text-decoration: underline; }
-.lp-oferta-nota { margin: 16px auto 0 !important; font-size: 14px; }
+.lp-oferta-nota { margin: 16px auto 0 !important; font-size: 14px; color: var(--lp-suave); }
 .lp-oferta-nota a { color: var(--lp-verde); font-weight: 700; }
 
 /* Barra fixa de CTA no celular: quem rolou até o meio da página já formou opinião, então o

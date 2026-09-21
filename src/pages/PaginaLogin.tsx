@@ -46,7 +46,7 @@ export default function PaginaLogin(){
 
   return <div className="login-page">
     <section className="login-hero">
-      <div className="brand light"><div className="brand-copy"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/><span>Compras inteligentes</span></div></div>
+      <div className="brand light"><div className="brand-copy"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" width="450" height="106" alt="CotaPreço"/><span>Compras inteligentes</span></div></div>
       <div className="hero-copy">
         <span className="eyebrow"><Sparkles size={16}/> Mais economia, menos planilhas</span>
         <h1>Compare propostas.<br/>Compre melhor.</h1>
@@ -56,7 +56,7 @@ export default function PaginaLogin(){
       <div className="hero-security"><ShieldCheck/><span>Seus dados protegidos e isolados por empresa</span></div>
     </section>
     <section className="login-panel">
-      <div className="login-panel-marca"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></div>
+      <div className="login-panel-marca"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" width="450" height="106" alt="CotaPreço"/></div>
       {pendencia
         ? <FormularioDoisFatores pendencia={pendencia} aoVoltar={() => { setPendencia(null); setError('') }}/>
         : <form className="login-card" onSubmit={submit}>

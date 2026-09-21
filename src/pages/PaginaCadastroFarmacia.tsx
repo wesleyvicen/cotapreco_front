@@ -129,7 +129,7 @@ export default function PaginaCadastroFarmacia() {
   return <div className="lp cad">
     <header className="lp-topo cad-topo">
       <div className="lp-container cad-topo-interno">
-        <LinkInterno to="/" className="lp-marca"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></LinkInterno>
+        <LinkInterno to="/" className="lp-marca"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" width="450" height="106" alt="CotaPreço"/></LinkInterno>
         <div className="cad-topo-centro">
           <h1>Crie a conta da sua farmácia</h1>
           <p className="cad-subtitulo">O sistema inteiro liberado por {TOTAL_DIAS_TESTE} dias: cotações, comparativo de preços, plano de compra, histórico e exportação em Excel.</p>
@@ -152,7 +152,7 @@ export default function PaginaCadastroFarmacia() {
                 <p className="cad-painel-selo"><Gift/> Oferta de boas-vindas</p>
                 <h2>Teste grátis por {TOTAL_DIAS_TESTE}<br/>dias.</h2>
                 <p>Você não precisa de cartão de crédito para testar e vê com os próprios olhos como o CotaPreço muda a rotina de compra da sua farmácia.</p>
-                <p className="cad-painel-marca"><img src="/cotapreco-logo.png?v=20260905-1" alt="CotaPreço"/></p>
+                <p className="cad-painel-marca"><img src="/cotapreco-logo.png?v=20260905-1" width="450" height="106" alt="CotaPreço"/></p>
               </div>
             : <div className="cad-painel-slide" key={slideAtivo} aria-live="polite">
                 <span className="cad-prova-icone" aria-hidden="true">{PROVAS[slideAtivo - 1].icone}</span>
