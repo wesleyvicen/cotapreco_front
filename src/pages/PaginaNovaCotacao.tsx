@@ -1,8 +1,8 @@
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, Lock,
-  FileSpreadsheet, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
+  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, HelpCircle, Lock,
+  FileSpreadsheet, Layers, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
 } from 'lucide-react'
-import { useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
+import { Fragment, useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
 import { api, apiArquivo, ErroApi } from '../api'
 import { AvisoErro } from '../components/ComponentesUI'
 import ModalColarColunas from '../components/ModalColarColunas'
@@ -20,17 +20,25 @@ type ModoProdutos = 'planilha' | 'manual'
 type CampoMapeamento = keyof MapeamentoColunas
 type OrigemItem = 'planilha' | 'manual' | 'colado'
 interface ItemManual { id:string; ean:string; productName:string; quantity:string; laboratory:string }
-interface ItemRevisao extends ItemManual { origem:OrigemItem }
+interface ItemRevisao extends ItemManual { origem:OrigemItem; confirmedSameProduct:boolean }
 
 const novoItemManual = ():ItemManual => ({ id:crypto.randomUUID(), ean:'', productName:'', quantity:'', laboratory:'' })
 const normalizar = (valor:string) => valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
+/* Mesma prioridade EAN > nome normalizado usada no backend para identificar o produto de uma
+   linha - permite achar, na pr\u00e9via consolidada, a linha correspondente a um item enviado, mesmo
+   quando ela mudou de posi\u00e7\u00e3o por ter sido somada a outra. */
+const identificadorLinha = (ean:string, nome:string) => { const digitos = ean.replace(/\D/g, ''); return digitos ? `ean:${digitos}` : `nome:${normalizar(nome)}` }
 const completarPeloCatalogo = (item:ItemManual, campo:keyof Omit<ItemManual, 'id'>, valor:string, produtos:Produto[]):ItemManual => {
   const alterado = { ...item, [campo]:valor }
   if (campo === 'ean') {
     const encontrado = produtos.find(produto => produto.ean === valor.replace(/\D/g, ''))
     if (encontrado) return { ...alterado, ean:encontrado.ean ?? '', productName:encontrado.name, laboratory:encontrado.laboratory ?? '' }
   }
-  if (campo === 'productName') {
+  /* Só autocompleta com espaço/pontuação sobrando no fim, o normalizar() do match ignora essa
+     borda e o auto-preenchimento dispara no meio da digitação - por exemplo, ao tentar diferenciar
+     duas linhas de mesmo nome digitando um espaço antes de completar o resto, o sistema "seleciona"
+     o produto do catálogo que ainda bate e substitui nome e EAN pelos dele, no meio da edição. */
+  if (campo === 'productName' && valor === valor.trim()) {
     const encontrados = produtos.filter(produto => normalizar(produto.name) === normalizar(valor))
     if (encontrados.length === 1) return { ...alterado, ean:encontrados[0].ean ?? '', productName:encontrados[0].name, laboratory:encontrados[0].laboratory ?? '' }
   }
@@ -56,13 +64,13 @@ export default function PaginaNovaCotacao() {
   usarCamadaNoHistorico(colarAberto, () => setColarAberto(false))
   const [colunasColadas, setColunasColadas] = useState<ColunasColadas>(colunasColadasVazias)
   const [ignorarCabecalho, setIgnorarCabecalho] = useState(false)
-  const [origemPrevia, setOrigemPrevia] = useState<OrigemItem>('planilha')
   const [previa, setPrevia] = useState<PreviaImportacao|null>(null)
   const [itensRevisao, setItensRevisao] = useState<ItemRevisao[]>([])
   const [adicionandoExtra, setAdicionandoExtra] = useState(false)
   const [itemExtra, setItemExtra] = useState<ItemManual>(novoItemManual())
   const [editandoId, setEditandoId] = useState('')
   const [rascunho, setRascunho] = useState<ItemManual|null>(null)
+  const [avisoEdicao, setAvisoEdicao] = useState('')
   const [cotacao, setCotacao] = useState<Cotacao|null>(null)
   const [erro, setErro] = useState('')
   const [ocupado, setOcupado] = useState(false)
@@ -144,12 +152,17 @@ export default function PaginaNovaCotacao() {
     }))
   }
 
+  /* A prévia do servidor pode ter menos linhas do que os itens enviados quando produtos são
+     consolidados (mesmo EAN/nome e mesmo laboratório somam quantidade em uma única linha). Por
+     isso a lista local é sempre reconstruída a partir de resultado.lines - nunca por índice -
+     senão a tabela desalinha com itensRevisao após uma consolidação. */
+  const itensDePrevia = (resultado:PreviaImportacao, origem:OrigemItem):ItemRevisao[] => resultado.lines.map(linha => ({
+    id:crypto.randomUUID(), origem, ean:linha.ean ?? '', productName:linha.productName,
+    quantity:linha.quantity?.toString() ?? '', laboratory:linha.laboratory ?? '', confirmedSameProduct:false,
+  }))
+
   const iniciarRevisao = (resultado:PreviaImportacao, origem:OrigemItem) => {
-    setPrevia(resultado); setOrigemPrevia(origem)
-    setItensRevisao(resultado.lines.map(linha => ({
-      id:crypto.randomUUID(), origem, ean:linha.ean ?? '', productName:linha.productName,
-      quantity:linha.quantity?.toString() ?? '', laboratory:linha.laboratory ?? '',
-    })))
+    setPrevia(resultado); setItensRevisao(itensDePrevia(resultado, origem))
     setAdicionandoExtra(false); setEditandoId(''); setRascunho(null); setEtapa(3)
   }
 
@@ -158,17 +171,33 @@ export default function PaginaNovaCotacao() {
     method:'POST',
     body:JSON.stringify({ items:itens.map((item, index) => ({
       row:index + 1, ean:item.ean, productName:item.productName, quantity:item.quantity, laboratory:item.laboratory,
+      confirmedSameProduct:item.confirmedSameProduct,
     })) }),
   })
 
+  /* Quando o backend não consegue confirmar sozinho que duas linhas sem EAN são o mesmo produto
+     (mesmo nome e laboratório, mas sem o código de barras das duas concordando), ele devolve
+     pendingConfirmation pedindo pra quem está operando confirmar. "Sim" marca as linhas do grupo
+     e reenvia; a soma só acontece depois dessa confirmação. */
+  const confirmarMesmoProduto = async (linhas:number[]) => {
+    setErro(''); setOcupado(true)
+    try {
+      const proximos = itensRevisao.map((item, indice) => linhas.includes(indice + 1) ? { ...item, confirmedSameProduct:true } : item)
+      const resultado = await validarItens(proximos)
+      setPrevia(resultado); setItensRevisao(itensDePrevia(resultado, 'manual')); setEditandoId(''); setRascunho(null)
+    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível confirmar o produto.') }
+    finally { setOcupado(false) }
+  }
+
   const adicionarProdutoRevisao = async (event:FormEvent) => {
     event.preventDefault(); setErro(''); setOcupado(true)
-    const proximos:ItemRevisao[] = [...itensRevisao, { ...itemExtra, origem:'manual' }]
+    const proximos:ItemRevisao[] = [...itensRevisao, { ...itemExtra, origem:'manual', confirmedSameProduct:false }]
     try {
       const resultado = await validarItens(proximos)
-      const ultimaLinha = resultado.lines.at(-1)
-      if (!ultimaLinha?.valid) { setErro(ultimaLinha?.errors.join(' ') || 'Confira o produto informado.'); return }
-      setItensRevisao(proximos); setPrevia(resultado); setItemExtra(novoItemManual()); setAdicionandoExtra(false)
+      const identificador = identificadorLinha(itemExtra.ean, itemExtra.productName)
+      const linhaAdicionada = resultado.lines.find(linha => identificadorLinha(linha.ean ?? '', linha.productName) === identificador)
+      if (!linhaAdicionada?.valid) { setErro(linhaAdicionada?.errors.join(' ') || 'Confira o produto informado.'); return }
+      setItensRevisao(itensDePrevia(resultado, 'manual')); setPrevia(resultado); setItemExtra(novoItemManual()); setAdicionandoExtra(false)
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível adicionar o produto.') }
     finally { setOcupado(false) }
   }
@@ -178,18 +207,29 @@ export default function PaginaNovaCotacao() {
     if (!proximos.length) { setErro('A cotação precisa de pelo menos um produto.'); return }
     setErro(''); setOcupado(true)
     try {
-      setPrevia(await validarItens(proximos)); setItensRevisao(proximos)
+      const resultado = await validarItens(proximos)
+      setPrevia(resultado); setItensRevisao(itensDePrevia(resultado, 'manual'))
       if (editandoId === id) { setEditandoId(''); setRascunho(null) }
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível remover o produto.') }
     finally { setOcupado(false) }
   }
 
   const abrirEdicaoRevisao = (item:ItemRevisao) => {
-    setErro(''); setAdicionandoExtra(false); setEditandoId(item.id)
+    setErro(''); setAdicionandoExtra(false); setEditandoId(item.id); setAvisoEdicao('')
     setRascunho({ id:item.id, ean:item.ean, productName:item.productName, quantity:item.quantity, laboratory:item.laboratory })
   }
 
-  const cancelarEdicaoRevisao = () => { setEditandoId(''); setRascunho(null); setErro('') }
+  /* "Não, são diferentes" também abre a edição, mas sem dizer o que muda o motivo de
+     não conseguir editar sem entender o porquê - deixa explícito o que precisa mudar
+     pra deixar de bater com a outra linha do grupo. Salvar sem alterar nada volta a
+     cair na mesma pergunta, então o aviso fica visível até o campo realmente mudar. */
+  const naoSaoOMesmoProduto = (item:ItemRevisao, outrasLinhas:number[]) => {
+    abrirEdicaoRevisao(item)
+    const rotulo = outrasLinhas.length > 1 ? `linhas ${outrasLinhas.join(' e ')}` : `linha ${outrasLinhas[0]}`
+    setAvisoEdicao(`Mude o nome deste produto pra não ficar igual ao da ${rotulo} - isso resolve na hora. Só o EAN não é suficiente sozinho aqui: a ${rotulo} também precisaria do dela. Trocar só o laboratório não resolve.`)
+  }
+
+  const cancelarEdicaoRevisao = () => { setEditandoId(''); setRascunho(null); setErro(''); setAvisoEdicao('') }
 
   const salvarEdicaoRevisao = async () => {
     if (!rascunho) return
@@ -199,9 +239,15 @@ export default function PaginaNovaCotacao() {
     setErro(''); setOcupado(true)
     try {
       const resultado = await validarItens(proximos)
-      const linha = resultado.lines[indice]
+      /* Busca por identificador (EAN/nome), não por posição: o item editado pode ter sido
+         consolidado com outra linha e mudado de posição na prévia, ou até de índice. */
+      const identificador = identificadorLinha(rascunho.ean, rascunho.productName)
+      const linha = resultado.lines.find(candidata => identificadorLinha(candidata.ean ?? '', candidata.productName) === identificador)
+      /* pendingConfirmation também deixa a linha com valid=false, mas sem errors - checa
+         primeiro, senão cai no genérico "Confira os dados do produto." sem dizer o motivo real. */
+      if (linha?.pendingConfirmation) { setAvisoEdicao('Ainda bate com a outra linha. Mude o nome pra resolver na hora - só o EAN aqui não basta, a outra linha também precisaria do dela.'); return }
       if (!linha?.valid) { setErro(linha?.errors.join(' ') || 'Confira os dados do produto.'); return }
-      setItensRevisao(proximos); setPrevia(resultado); setEditandoId(''); setRascunho(null)
+      setItensRevisao(itensDePrevia(resultado, 'manual')); setPrevia(resultado); setEditandoId(''); setRascunho(null); setAvisoEdicao('')
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar o produto.') }
     finally { setOcupado(false) }
   }
@@ -225,9 +271,18 @@ export default function PaginaNovaCotacao() {
     await navigator.clipboard.writeText(valor); setCopiado(tipo); setTimeout(() => setCopiado(''), 1800)
   }
   const mensagem = cotacao?.publicUrl ? `Olá! Estamos realizando uma nova cotação.\nVocê pode enviar seus preços através do link abaixo:\n${cotacao.publicUrl}\nObrigado!` : ''
-  /* Quem chegou à revisão colando colunas volta para a colagem, não para o painel de planilha
-     que nunca chegou a usar. */
-  const voltarProdutos = () => { setErro(''); setEtapa(2); if (origemPrevia === 'colado') setColarAberto(true) }
+  /* "Corrigir produtos" reabre a etapa 2 já com a lista atual da revisão (com o que foi somado,
+     editado ou excluído) em modo manual, em vez de reprocessar de novo o arquivo ou a colagem
+     originais - senão avançar de novo jogava fora toda mesclagem e confirmação já resolvida
+     na revisão e voltava pros dados brutos importados. */
+  const voltarProdutos = () => {
+    setErro('')
+    if (itensRevisao.length) {
+      setModo('manual')
+      setItensManuais(itensRevisao.map(item => ({ id:item.id, ean:item.ean, productName:item.productName, quantity:item.quantity, laboratory:item.laboratory })))
+    }
+    setEtapa(2)
+  }
 
   if (acessoBloqueado(user?.accessAllowed)) return <div className="page narrow">
     <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>
@@ -324,21 +379,32 @@ export default function PaginaNovaCotacao() {
             <div className="review-extra-actions"><button type="button" className="button button-ghost" disabled={ocupado} onClick={() => { setAdicionandoExtra(false); setItemExtra(novoItemManual()); setErro('') }}>Cancelar</button><button className="button button-primary" disabled={ocupado}>{ocupado ? 'Adicionando...' : <><Plus/>Adicionar à cotação</>}</button></div>
           </form>}
         </div>
-        <div className="import-summary"><div><CheckCircle2/><strong>{previa.validRows}</strong><span>linhas válidas</span></div><div className={previa.invalidRows ? 'danger' : ''}><XCircle/><strong>{previa.invalidRows}</strong><span>com problema</span></div><div><Clipboard/><strong>{previa.lines.filter(linha => !linha.productExists && linha.valid).length}</strong><span>novos produtos</span></div></div>
+        <div className="import-summary"><div><CheckCircle2/><strong>{previa.validRows}</strong><span>linhas válidas</span></div><div className={previa.invalidRows ? 'danger' : ''}><XCircle/><strong>{previa.invalidRows}</strong><span>com problema</span></div><div><Clipboard/><strong>{previa.lines.filter(linha => !linha.productExists && linha.valid).length}</strong><span>novos produtos</span></div>{previa.lines.some(linha => linha.consolidation) && <div><Layers/><strong>{previa.lines.filter(linha => linha.consolidation).length}</strong><span>produtos consolidados</span></div>}</div>
         <div className="table-wrap import-table"><table><thead><tr><th>Linha</th><th>EAN</th><th>Produto</th><th>Laboratório</th><th>Qtd.</th><th>Cadastro</th><th aria-label="Ações"/></tr></thead><tbody>{itensRevisao.map((item, indice) => {
           const linha = previa.lines[indice]
           if (!linha) return null
-          if (editandoId === item.id && rascunho) return <tr key={item.id} className="editing-row"><td>{linha.row}</td>
+          if (editandoId === item.id && rascunho) return <Fragment key={item.id}><tr className="editing-row"><td>{linha.row}</td>
             <td><input className="review-cell-input" list="revisao-produtos-eans" inputMode="numeric" maxLength={14} placeholder="Sem EAN" aria-label="EAN" value={rascunho.ean} onChange={event => setRascunho(atual => atual && completarPeloCatalogo(atual, 'ean', event.target.value.replace(/\D/g, ''), produtos))}/></td>
             <td><input className="review-cell-input" list="revisao-produtos-nomes" maxLength={240} placeholder="Nome ou descrição" aria-label="Descrição do produto" autoFocus value={rascunho.productName} onChange={event => setRascunho(atual => atual && completarPeloCatalogo(atual, 'productName', event.target.value, produtos))}/></td>
             <td><input className="review-cell-input" maxLength={160} placeholder="Fabricante" aria-label="Laboratório" value={rascunho.laboratory} onChange={event => setRascunho(atual => atual && ({ ...atual, laboratory:event.target.value }))}/></td>
             <td><input className="review-cell-input" type="number" min="1" step="1" placeholder="0" aria-label="Quantidade" value={rascunho.quantity} onChange={event => setRascunho(atual => atual && ({ ...atual, quantity:event.target.value }))} onKeyDown={event => { if (event.key === 'Enter') void salvarEdicaoRevisao() }}/></td>
             <td><span className="mini-tag">Editando</span></td>
             <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado} title="Cancelar edição" aria-label="Cancelar edição" onClick={cancelarEdicaoRevisao}><XCircle/></button><button type="button" className="icon-button primary" disabled={ocupado} title="Salvar produto" aria-label="Salvar produto" onClick={() => void salvarEdicaoRevisao()}><Check/></button></div></td></tr>
-          return <tr key={item.id} className={!linha.valid ? 'invalid-row' : ''}><td>{linha.row}</td><td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">Sem EAN</span>}</td><td><strong>{linha.productName || 'Sem nome'}</strong>{linha.errors.map(mensagemErro => <small className="field-error" key={mensagemErro}>{mensagemErro}</small>)}</td><td>{linha.laboratory || <span className="muted">-</span>}</td><td>{linha.quantity ?? '-'}</td><td>{linha.valid ? <span className={`mini-tag ${linha.productExists ? '' : 'new'}`}>{linha.productExists ? 'Encontrado' : 'Será cadastrado'}</span> : <span className="mini-tag error">Corrigir</span>}</td>
+            {avisoEdicao && <tr className="editing-hint-row"><td colSpan={7}><div className="confirmation-note confirmation-note-primary"><small><HelpCircle/>{avisoEdicao}</small></div></td></tr>}</Fragment>
+          const pendente = linha.pendingConfirmation
+          const linhasPendentes = pendente?.rows ?? []
+          const outrasLinhas = linhasPendentes.filter(numero => numero !== linha.row)
+          const rotuloOutras = outrasLinhas.length > 1 ? `linhas ${outrasLinhas.join(' e ')}` : `linha ${outrasLinhas[0]}`
+          const éPrimeiraDoGrupo = pendente ? linhasPendentes[0] === linha.row : false
+          const classeLinha = pendente ? `pending-row${éPrimeiraDoGrupo ? ' pending-row-first' : ' pending-row-last'}` : !linha.valid ? 'invalid-row' : ''
+          /* Cada linha do grupo tem seus próprios botões - se uma delas for editada ou removida
+             no meio do caminho, a outra ainda resolve o par sozinha. Clicar "sim" em qualquer uma
+             confirma o grupo inteiro (mesma lista de linhas é enviada). Card de uma linha só - a
+             versão anterior com texto completo em cada linha do par tomava quase a tabela toda. */
+          return <tr key={item.id} className={classeLinha}><td>{linha.row}</td><td>{linha.ean ? <code>{linha.ean}</code> : <span className="muted">Sem EAN</span>}</td><td><strong>{linha.productName || 'Sem nome'}</strong>{linha.errors.map(mensagemErro => <small className="field-error" key={mensagemErro}>{mensagemErro}</small>)}{linha.consolidation && <small className="consolidation-note" title={`Linhas ${linha.consolidation.rows.join(', ')} da importação`}><Layers/>Consolidado: {linha.consolidation.quantities.join(' + ')} = {linha.consolidation.total} un.</small>}{pendente && <div className="confirmation-note-compact" title="Mesmo nome e laboratório, mas sem EAN pra provar que é o mesmo item."><HelpCircle/><span>Mesmo produto da {rotuloOutras}?</span><button type="button" className="button-mini" disabled={ocupado || Boolean(editandoId)} aria-label="Não, são produtos diferentes" title="Não, são diferentes" onClick={() => naoSaoOMesmoProduto(item, outrasLinhas)}><XCircle/></button><button type="button" className="button-mini primary" disabled={ocupado || Boolean(editandoId)} aria-label="Sim, é o mesmo produto" title="Sim, é o mesmo" onClick={() => void confirmarMesmoProduto(linhasPendentes)}><Check/></button></div>}</td><td>{linha.laboratory || <span className="muted">-</span>}</td><td>{linha.quantity ?? '-'}</td><td>{pendente ? <span className="mini-tag warning">Confirmar</span> : linha.valid ? <span className={`mini-tag ${linha.productExists ? '' : 'new'}`}>{linha.productExists ? 'Encontrado' : 'Será cadastrado'}</span> : <span className="mini-tag error">Corrigir</span>}</td>
             <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId)} title="Editar produto" aria-label={`Editar ${linha.productName || 'produto'}`} onClick={() => abrirEdicaoRevisao(item)}><PenLine/></button><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId) || itensRevisao.length === 1} title={itensRevisao.length === 1 ? 'A cotação precisa de pelo menos um produto' : 'Remover produto'} aria-label={`Remover ${linha.productName || 'produto'}`} onClick={() => void removerProdutoRevisao(item.id)}><Trash2/></button></div></td></tr>
         })}</tbody></table></div>
-        {previa.invalidRows > 0 && <div className="alert alert-warning">Corrija os itens destacados usando o lápis na própria linha, ou remova o que não faz mais sentido.</div>}
+        {previa.invalidRows > 0 && <div className="alert alert-warning">Responda as confirmações pendentes e corrija os itens destacados usando o lápis na própria linha, ou remova o que não faz mais sentido.</div>}
         <div className="wizard-actions"><button className="button button-ghost" onClick={voltarProdutos}><ArrowLeft/>Corrigir produtos</button><button className="button button-primary" disabled={previa.invalidRows > 0 || ocupado || adicionandoExtra || Boolean(editandoId)} onClick={() => setEtapa(4)}>Revisar criação <ArrowRight/></button></div>
       </div>}
 

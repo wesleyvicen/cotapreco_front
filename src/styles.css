@@ -1230,6 +1230,10 @@ tbody tr:hover {
   background: #fae8e8;
   color: #ac3f44;
 }
+.mini-tag.warning {
+  background: #fff8e5;
+  color: #795b17;
+}
 .alert {
   padding: 12px 14px;
   border-radius: 10px;
@@ -1706,6 +1710,118 @@ label small {
   color: var(--danger);
   font-size: 10px;
   margin-top: 4px;
+}
+.consolidation-note {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--green-2);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.consolidation-note svg {
+  width: 12px;
+  height: 12px;
+}
+/* O fundo âmbar contínuo de .pending-row-first a .pending-row-last e a borda esquerda colorida
+   deixam claro, visualmente, que aquelas linhas formam um único par em comparação. */
+.pending-row td {
+  background: #fffcf2;
+}
+.pending-row td:first-child {
+  border-left: 3px solid #e3b341;
+}
+.pending-row-first td {
+  border-top: 2px solid #f0dfad;
+}
+.pending-row-last td {
+  border-top: none;
+  border-bottom: 2px solid #f0dfad;
+}
+/* Pílula de uma linha só, com o texto curto ("Mesmo produto da linha X?") e a explicação completa
+   só no title. A versão anterior, com parágrafo + botões em bloco por linha, tomava boa parte da
+   tabela de revisão. */
+.confirmation-note-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 6px 3px 8px;
+  border-radius: 999px;
+  background: #fff2cc;
+  border: 1px solid #e3c467;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b4f10;
+  white-space: nowrap;
+}
+.confirmation-note-compact > svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.button-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #dcc584;
+  background: #fff;
+  color: #93752f;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.button-mini svg {
+  width: 12px;
+  height: 12px;
+}
+.button-mini.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.button-mini:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.confirmation-note {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.confirmation-note-primary {
+  background: #fff2cc;
+  border: 1px solid #e3c467;
+}
+.confirmation-note small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #6b4f10;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.confirmation-note svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.confirmation-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.button-small {
+  padding: 5px 10px;
+  font-size: 11px;
+}
+.button-small svg {
+  width: 14px;
+  height: 14px;
 }
 .review-box {
   display: grid;

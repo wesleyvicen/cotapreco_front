@@ -36,7 +36,9 @@ export interface Onboarding { status:StatusOnboarding; erp:SistemaErp|null; curr
 export interface RespostaCotacao { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; submittedAt:string|null; createdAt:string; quotedItems:number; total:number; minimumOrderValue:number|null; includedInSuggestedPurchase:boolean; active:boolean }
 export interface ItemPreviaResposta { quotationItemId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; available:boolean; unitPrice:number|null; availableQuantity:number|null; note:string|null }
 export interface PreviaResposta { id:number; supplierName:string; representativeName:string; phone:string; email:string|null; status:StatusResposta; quotedItems:number; total:number; minimumOrderValue:number|null; items:ItemPreviaResposta[] }
-export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[] }
+export interface Consolidacao { rows:number[]; quantities:number[]; total:number }
+export interface ConfirmacaoPendente { rows:number[] }
+export interface LinhaImportacao { row:number; ean:string|null; productName:string; quantity:number|null; laboratory:string|null; valid:boolean; productExists:boolean; productId:number|null; errors:string[]; consolidation:Consolidacao|null; pendingConfirmation:ConfirmacaoPendente|null }
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
 export type StatusAssinatura='NONE'|'TRIAL'|'PENDING'|'ACTIVE'|'OVERDUE'|'CANCELED'
 export interface PlanoAssinatura { value:number; cycle:'MONTHLY'; description:string }
