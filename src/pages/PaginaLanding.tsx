@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, MessageCircle, PackageCheck, Quote, Search, ShieldCheck, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, MessageCircle, PackageCheck, Quote, Search, ShieldCheck, Sparkles, Tag, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { money } from '../api'
 import RodapeSite from '../components/RodapeEmpresa'
@@ -148,6 +148,7 @@ export default function PaginaLanding() {
             <LinkInterno to="/login" className="lp-botao lp-botao-secundario">Já tenho conta</LinkInterno>
           </div>
           <ul className="lp-hero-provas">
+            <li><Tag/> A partir de R$ {PRECO_REAIS},{PRECO_CENTAVOS}/mês por farmácia</li>
             <li><ShieldCheck/> Sem cartão para testar</li>
             <li><Clock3/> Pronto para usar em minutos</li>
             <li><Link2/> Distribuidora responde por link</li>
@@ -268,7 +269,7 @@ export default function PaginaLanding() {
 
           <div className="lp-preco-estimador">
             <label><Users/> Quantas farmácias você tem?
-              <input type="number" min={1} max={99} value={quantidade}
+              <input type="number" inputMode="numeric" min={1} max={99} value={quantidade}
                 onChange={e => setQuantidade(Math.max(1, Number(e.target.value) || 1))}/>
             </label>
             {quantidade === 1
@@ -297,10 +298,10 @@ export default function PaginaLanding() {
 
     <RodapeSite/>
 
-    <div className="lp-cta-fixa" role="complementary" aria-label="Começar teste grátis">
+    <div className="lp-cta-fixa" role="region" aria-label="Começar teste grátis">
       <div>
-        <strong>R$ {PRECO_REAIS},{PRECO_CENTAVOS}/mês</strong>
-        <span>{TOTAL_DIAS_TESTE} dias grátis, sem cartão</span>
+        <strong>{TOTAL_DIAS_TESTE} dias grátis</strong>
+        <span>Sem cartão de crédito</span>
       </div>
       <LinkInterno to="/cadastro" className="lp-botao lp-botao-primario lp-botao-compacto">Testar grátis</LinkInterno>
     </div>
