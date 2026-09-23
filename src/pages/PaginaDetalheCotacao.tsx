@@ -1,5 +1,5 @@
 import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, CheckCircle2, Sparkles, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Clipboard, Clock3, Download, Edit3, ExternalLink, Eye, EyeOff, FileImage, FileSpreadsheet, FileText, FoldHorizontal, GripVertical, History, Link2, Lock, PackageCheck, Power, RefreshCw, RotateCcw, Save, Search, Send, Share2, ShoppingCart, SlidersHorizontal, StickyNote, Trash2, Trophy, Users, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as EventoPonteiroReact } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as EventoPonteiroReact } from 'react'
 import { api, apiArquivo, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { EstadoVazio, AvisoErro, Carregando, EtiquetaStatus } from '../components/ComponentesUI'
@@ -929,6 +929,16 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
     for(const produto of produtos)for(const oferta of produto.offers)if(!mapa.has(oferta.responseId))mapa.set(oferta.responseId,oferta.supplierName)
     return [...mapa].map(([responseId,supplierName])=>({responseId,supplierName}))
   },[produtos])
+  /* Com muitas distribuidoras o texto dentro da célula esticaria todas as linhas. A célula
+     só sinaliza; o texto completo abre numa faixa abaixo do produto, sob demanda. */
+  const [notasAbertas,setNotasAbertas]=useState<Set<number>>(new Set())
+  const produtosComNota=produtos.filter(produto=>produto.offers.some(oferta=>oferta.note?.trim()))
+  const todasNotasAbertas=produtosComNota.length>0&&produtosComNota.every(produto=>notasAbertas.has(produto.quotationItemId))
+  const alternarNotas=(itemId:number)=>setNotasAbertas(atuais=>{
+    const proximo=new Set(atuais)
+    if(proximo.has(itemId))proximo.delete(itemId);else proximo.add(itemId)
+    return proximo
+  })
 
   const definir=(itemId:number,responseId:number,valor:string)=>{
     const edicao=edicoes.find(e=>e.quotationItemId===itemId)!
@@ -967,6 +977,12 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
 
   if(colunas.length===0)return <div className="plan-search-empty"><strong>Nenhuma distribuidora respondeu</strong><span>Sem oferta não há o que dividir.</span></div>
   return <>
+  {produtosComNota.length>0&&<div className="matriz-notas-barra">
+    <span><StickyNote size={13}/>{produtosComNota.length} {produtosComNota.length===1?'produto tem':'produtos têm'} observação de representante</span>
+    <button type="button" className="button button-ghost compact-action" onClick={()=>setNotasAbertas(todasNotasAbertas?new Set():new Set(produtosComNota.map(produto=>produto.quotationItemId)))}>
+      {todasNotasAbertas?'Recolher observações':'Mostrar todas'}
+    </button>
+  </div>}
   {transborda&&<div className="matriz-barra" ref={barra} onScroll={()=>espelhar(barra.current,area.current)}
     role="scrollbar" aria-label="Rolar as distribuidoras para o lado" aria-controls="matriz-plano" aria-orientation="horizontal">
     <div style={{width:larguraTabela}}/>
@@ -981,8 +997,14 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
       const maisBarata=produto.offers[0]?.responseId
       const prefixo=`itens.${produto.quotationItemId}.`
       const erroLinha=Object.entries(erros).find(([chave])=>chave.startsWith(prefixo))?.[1]
-      return <tr key={produto.quotationItemId} ref={produto.quotationItemId===primeiroRecusado?primeiraComErro:undefined} className={erroLinha?'matriz-linha-erro':''}>
-        <th scope="row"><strong>{produto.productName}<SeloRecebido produto={produto}/></strong><TextoLaboratorio laboratory={produto.laboratory}/><span>pedido {produto.requestedQuantity} un.</span></th>
+      const notas=produto.offers.filter(oferta=>oferta.note?.trim())
+      const notasVisiveis=notasAbertas.has(produto.quotationItemId)
+      return <Fragment key={produto.quotationItemId}><tr ref={produto.quotationItemId===primeiroRecusado?primeiraComErro:undefined} className={erroLinha?'matriz-linha-erro':''}>
+        <th scope="row"><strong>{produto.productName}<SeloRecebido produto={produto}/></strong><TextoLaboratorio laboratory={produto.laboratory}/><span>pedido {produto.requestedQuantity} un.</span>
+          {notas.length>0&&<button type="button" className={`matriz-notas-toggle ${notasVisiveis?'aberto':''}`} aria-expanded={notasVisiveis}
+            onClick={()=>alternarNotas(produto.quotationItemId)}>
+            <StickyNote size={11}/>{notas.length} {notas.length===1?'observação':'observações'}<ChevronDown size={11}/>
+          </button>}</th>
         {colunas.map(coluna=>{
           const oferta=produto.offers.find(o=>o.responseId===coluna.responseId)
           if(!oferta)return <td key={coluna.responseId} className="matriz-vazia"><span aria-label="sem oferta">-</span></td>
@@ -993,6 +1015,8 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
               aria-label={`${produto.productName} - ${coluna.supplierName}`}
               onChange={evento=>definir(produto.quotationItemId,coluna.responseId,evento.target.value)}/>
             <small>{oferta.responseId===maisBarata&&<b title="menor preço">☆</b>}{money(oferta.unitPrice)} · {oferta.availableQuantity}un</small>
+            {oferta.note?.trim()&&<button type="button" className="matriz-nota-marca" title={oferta.note}
+              aria-label={`Ver observação de ${coluna.supplierName}`} onClick={()=>alternarNotas(produto.quotationItemId)}><StickyNote size={11}/></button>}
           </td>
         })}
         <td className={`matriz-total ${somado===produto.requestedQuantity?'ok':'alerta'}`}>
@@ -1000,6 +1024,15 @@ function MatrizDistribuidoras({produtos,edicoes,erros,alterar}:{produtos:Compara
           {erroLinha&&<em title={erroLinha}>!</em>}
         </td>
       </tr>
+      {notasVisiveis&&notas.length>0&&<tr className="matriz-notas-linha">
+        <th scope="row"><span>Observações</span></th>
+        {colunas.map(coluna=>{
+          const nota=produto.offers.find(o=>o.responseId===coluna.responseId)?.note?.trim()
+          return <td key={coluna.responseId}>{nota&&<p aria-label={`Observação de ${coluna.supplierName}`}>{nota}</p>}</td>
+        })}
+        <td className="matriz-total"/>
+      </tr>}
+      </Fragment>
     })}</tbody>
   </table></div>
   </>
@@ -1063,11 +1096,12 @@ function ModalPlano({produtos,edicoes,setEdicoes,erros,erroGeral,ocupado,focado,
       return <article key={p.quotationItemId} ref={p.quotationItemId===itemRecusado?primeiraRecusada:undefined} className={`plan-item guided-plan-item ${linhaRecusada?'plan-item-recusado':''}`}>
       <div className="plan-product"><strong>{p.productName}<SeloRecebido produto={p}/></strong><TextoLaboratorio laboratory={p.laboratory}/><span>Pedido original: {p.requestedQuantity} {p.requestedQuantity===1?'unidade':'unidades'}</span></div>
       <><div className="guided-fields quick-guided-fields">
-        <div className="guided-field"><label className="sr-only" htmlFor={`distribuidora-rapida-${p.quotationItemId}`}>Comprar {p.productName} de</label><select id={`distribuidora-rapida-${p.quotationItemId}`} value={idRapido??''} disabled={p.offers.length===0} onChange={x=>{const id=x.target.value?Number(x.target.value):null;alterar(p.quotationItemId,{selectedResponseId:id,manualSelection:!!id,championQuantity:id&&e.desiredQuantity>0?e.desiredQuantity:null,allocations:id&&e.desiredQuantity>0?[{responseId:id,quantity:e.desiredQuantity}]:[],stockOverrideNote:''})}}><option value="">Selecione uma distribuidora</option>{p.offers.map(o=><option key={o.responseId} value={o.responseId}>{o.supplierName} - {money(o.unitPrice)} · estoque informado {o.availableQuantity} un.</option>)}</select>{p.offers.length===0&&<span className="guided-hint warning">Nenhuma distribuidora ofereceu este produto.</span>}</div>
+        <div className="guided-field"><label className="sr-only" htmlFor={`distribuidora-rapida-${p.quotationItemId}`}>Comprar {p.productName} de</label><select id={`distribuidora-rapida-${p.quotationItemId}`} value={idRapido??''} disabled={p.offers.length===0} onChange={x=>{const id=x.target.value?Number(x.target.value):null;alterar(p.quotationItemId,{selectedResponseId:id,manualSelection:!!id,championQuantity:id&&e.desiredQuantity>0?e.desiredQuantity:null,allocations:id&&e.desiredQuantity>0?[{responseId:id,quantity:e.desiredQuantity}]:[],stockOverrideNote:''})}}><option value="">Selecione uma distribuidora</option>{p.offers.map(o=><option key={o.responseId} value={o.responseId}>{o.supplierName} - {money(o.unitPrice)} · estoque informado {o.availableQuantity} un.{o.note?' · tem observação':''}</option>)}</select>{p.offers.length===0&&<span className="guided-hint warning">Nenhuma distribuidora ofereceu este produto.</span>}</div>
         <div className="guided-field guided-field-quantidade"><label className="sr-only" htmlFor={`quantidade-rapida-${p.quotationItemId}`}>Quantidade de {p.productName}</label><input id={`quantidade-rapida-${p.quotationItemId}`} type="number" min="0" disabled={!idRapido} value={quantidadeRapida} onChange={x=>{const quantidade=Math.max(0,Number(x.target.value));const selecionada=p.offers.find(o=>o.responseId===idRapido);alterar(p.quotationItemId,{desiredQuantity:quantidade,selectedResponseId:quantidade>0?idRapido:null,manualSelection:quantidade>0&&!!idRapido,championQuantity:quantidade>0&&idRapido?quantidade:null,allocations:quantidade>0&&idRapido?[{responseId:idRapido,quantity:quantidade}]:[],stockOverrideNote:selecionada&&quantidade<=selecionada.availableQuantity?'':e.stockOverrideNote})}}/></div>
       </div>{produtoAlterado&&e.manualSelection&&e.championQuantity===e.desiredQuantity
         ?<p className="plan-resultado">{e.desiredQuantity} un. de {oferta?.supplierName??'a distribuidora'}</p>
         :<p className="plan-resultado neutro">{previsao.parcelas.length>1?`Dividido hoje entre ${previsao.parcelas.length} distribuidoras`:'Sem alteração'}</p>}</>
+      {oferta?.note&&<p className="plan-nota-fornecedor"><StickyNote/><span><b>Observação de {oferta.supplierName}:</b> {oferta.note}</span></p>}
       {linhaRecusada&&<p className="plan-item-motivo" role="alert">
         <AlertTriangle/><span>{erroQuantidade??erros[`${prefixo}selectedResponseId`]??erros[`${prefixo}stockOverrideNote`]}</span>
       </p>}
@@ -1088,7 +1122,7 @@ function ModalPlano({produtos,edicoes,setEdicoes,erros,erroGeral,ocupado,focado,
 function ModalTroca({produto,ocupado,aoFechar,aoEscolher,aoAutomatico}:{produto:ComparacaoProduto;ocupado:boolean;aoFechar:()=>void;aoEscolher:(id:number)=>void;aoAutomatico:()=>void}){
   return <div className="modal-backdrop"><section className="modal winner-modal">
     <div className="modal-header modal-header-simple"><div><h2>Trocar campeão</h2><div className="winner-product-title"><PackageCheck/><span>{produto.productName}</span><TextoLaboratorio laboratory={produto.laboratory}/></div></div><button className="icon-button" aria-label="Fechar" onClick={aoFechar}><X/></button></div>
-    <div className="winner-options">{produto.offers.map(o=><button key={o.responseId} className="winner-option" disabled={ocupado} onClick={()=>aoEscolher(o.responseId)}><span className="offer-position">{o.position}º</span><div><strong>{o.supplierName}</strong><small>{o.availableQuantity} unidades disponíveis</small></div><strong>{money(o.unitPrice)}</strong></button>)}</div>
+    <div className="winner-options">{produto.offers.map(o=><button key={o.responseId} className="winner-option" disabled={ocupado} onClick={()=>aoEscolher(o.responseId)}><span className="offer-position">{o.position}º</span><div><strong>{o.supplierName}</strong><small>{o.availableQuantity} unidades disponíveis</small>{o.note&&<small className="winner-option-nota" title={o.note}><StickyNote size={11}/>{o.note}</small>}</div><strong>{money(o.unitPrice)}</strong></button>)}</div>
     <div className="modal-actions"><button className="button button-ghost" onClick={aoFechar}>Cancelar</button>{produto.manualSelection&&<button className="button button-secondary" onClick={aoAutomatico}><RotateCcw/>Voltar ao automático</button>}</div>
   </section></div>
 }

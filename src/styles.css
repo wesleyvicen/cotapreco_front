@@ -8657,3 +8657,100 @@ label small {
     animation-iteration-count: infinite !important;
   }
 }
+/* Observação do representante sobre a oferta escolhida: aparece no plano para a farmácia
+   não decidir quantidade ou distribuidora sem ver o que foi avisado na resposta. */
+.plan-nota-fornecedor {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  color: var(--green);
+  font-size: 11.5px;
+  font-style: italic;
+  line-height: 1.4;
+}
+.plan-nota-fornecedor svg { flex: 0 0 auto; width: 13px; height: 13px; margin-top: 2px; }
+.plan-nota-fornecedor b { font-style: normal; font-weight: 700; }
+/* Na matriz a célula só marca quem deixou observação; o texto fica numa faixa abaixo
+   do produto, para dez ou vinte distribuidoras não esticarem todas as linhas. */
+.matriz-plano td { position: relative; }
+.matriz-nota-marca {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: #e8f4ef;
+  color: var(--green);
+  cursor: pointer;
+}
+.matriz-nota-marca:hover, .matriz-nota-marca:focus-visible { background: #d3ebe1; outline: none; }
+.matriz-notas-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 7px;
+  border: 1px solid #cfe5db;
+  border-radius: 999px;
+  background: #f3faf7;
+  color: var(--green);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.matriz-notas-toggle svg:last-child { transition: transform 0.15s ease; }
+.matriz-notas-toggle.aberto svg:last-child { transform: rotate(180deg); }
+.matriz-notas-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+}
+.matriz-notas-barra > span { display: inline-flex; align-items: center; gap: 6px; }
+/* Faixa com uma célula por distribuidora: cada observação fica embaixo da resposta dela. */
+.matriz-plano tr.matriz-notas-linha th,
+.matriz-plano tr.matriz-notas-linha td { padding: 0 9px 10px; vertical-align: top; background: #fbfdfc; }
+.matriz-plano tr.matriz-notas-linha th span {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.matriz-notas-linha p {
+  max-width: 190px;
+  margin: 0 auto;
+  padding: 6px 8px;
+  border-top: 2px solid #9fd0bc;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 11.5px;
+  font-style: italic;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.winner-option small.winner-option-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  color: var(--green);
+  font-style: italic;
+  white-space: normal;
+}
+.winner-option-nota svg { flex: none; margin-top: 2px; }
