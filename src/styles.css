@@ -8754,3 +8754,137 @@ label small {
   white-space: normal;
 }
 .winner-option-nota svg { flex: none; margin-top: 2px; }
+
+/* Raio-X da economia: o plano de compra contra cada colocação de preço. */
+.raiox-gatilho { flex: 0 0 auto; gap: 6px; white-space: nowrap; }
+.raiox-gatilho svg { width: 16px; height: 16px; }
+.purchase-summary > button.summary-economia {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  border-top: 1px solid #edf1ef;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.purchase-summary > button.summary-economia:hover { background: #f3faf7; }
+.summary-economia small {
+  display: inline-flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: var(--green-2);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.summary-economia small svg { width: 14px; height: 14px; }
+
+.raiox-modal { width: min(920px, calc(100vw - 32px)); max-height: min(92vh, 940px); display: flex; flex-direction: column; }
+.raiox-modal > .modal-header, .raiox-modal > .modal-actions { flex: 0 0 auto; }
+.raiox-modal > .modal-actions { display: flex; margin-top: 14px; }
+.raiox-modal .modal-actions .button svg { width: 15px; height: 15px; }
+.raiox-corpo { display: flex; flex: 1 1 auto; flex-direction: column; gap: 16px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px; }
+
+.raiox-destaque {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0e4d3b 0%, #12634a 100%);
+  color: #fff;
+}
+.raiox-destaque-icone { flex: 0 0 auto; width: 46px; height: 46px; padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.1); color: #f0ca6b; }
+.raiox-destaque span { color: #a8c6bc; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.raiox-destaque-valor { display: block; margin: 4px 0 2px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.raiox-destaque-valor small { color: #a8c6bc; font-size: 0.55em; font-weight: 600; }
+.raiox-destaque p { margin: 0; color: #cfe3dc; font-size: 12.5px; line-height: 1.45; }
+
+.raiox-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.raiox-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.raiox-kpi:hover:not(:disabled) { border-color: #9fd0bc; box-shadow: 0 4px 14px rgba(20, 57, 45, 0.06); }
+.raiox-kpi:disabled { cursor: default; opacity: 0.6; }
+.raiox-kpi span { color: var(--muted); font-size: 11.5px; font-weight: 700; }
+.raiox-kpi strong { color: var(--green); font-size: 20px; font-variant-numeric: tabular-nums; }
+.raiox-kpi small { color: var(--muted); font-size: 11px; }
+
+.raiox-bloco { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: #fbfdfc; }
+.raiox-bloco-cabecalho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.raiox-bloco-cabecalho h3 { margin: 0; font-size: 15px; }
+.raiox-bloco-cabecalho p { width: 100%; margin: -4px 0 0; color: var(--muted); font-size: 12px; }
+.raiox-atalhos { display: flex; flex-wrap: wrap; gap: 6px; }
+.raiox-atalhos button { padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #526a62; font: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
+.raiox-atalhos button:hover { border-color: #b9cfc6; }
+.raiox-atalhos button.ativo { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+
+.raiox-seletores { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.raiox-seletores label { display: flex; flex: 1 1 180px; flex-direction: column; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+.raiox-seletores select { min-height: 38px; padding: 7px 10px; border: 1px solid #d7e1dd; border-radius: 9px; background: #fff; color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; text-transform: none; letter-spacing: normal; }
+.raiox-inverter { flex: 0 0 auto; margin-bottom: 1px; }
+
+.raiox-aviso { margin: 0; color: var(--muted); font-size: 12.5px; }
+.raiox-veredito { margin: 0; padding: 10px 12px; border-radius: 10px; background: #f1f4f3; color: var(--ink); font-size: 13.5px; line-height: 1.5; }
+.raiox-veredito.bom { background: var(--green-soft); }
+.raiox-veredito.ruim { background: #fdf1e4; }
+.raiox-veredito.bom b:nth-of-type(2) { color: var(--green); }
+.raiox-veredito.ruim b:nth-of-type(2) { color: #96650a; }
+
+.raiox-barras { display: flex; flex-direction: column; gap: 8px; }
+.raiox-barra-linha, .raiox-umaso li { display: grid; grid-template-columns: minmax(110px, 180px) minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 12.5px; }
+.raiox-barra-linha > span { color: #425c54; font-weight: 700; }
+.raiox-barra-linha > strong, .raiox-umaso li > strong { min-width: 96px; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+.raiox-barra-trilho { height: 12px; overflow: hidden; border-radius: 4px; background: #edf1ef; }
+.raiox-barra { height: 100%; border-radius: 4px; transition: width .3s ease; }
+.raiox-barra-a { background: var(--green-2); }
+.raiox-barra-b { background: #c9a14a; }
+.raiox-contagem { margin: 0; color: var(--muted); font-size: 11.5px; }
+
+.raiox-tabela-wrap { border: 1px solid #edf1ef; border-radius: 10px; background: #fff; }
+.raiox-tabela { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.raiox-tabela th, .raiox-tabela td { padding: 8px 10px; border-bottom: 1px solid #edf1ef; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.raiox-tabela thead th { background: #f4f8f6; color: #425c54; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
+.raiox-tabela th:first-child { text-align: left; }
+.raiox-tabela tbody th { max-width: 320px; overflow: hidden; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; letter-spacing: normal; text-overflow: ellipsis; text-transform: none; }
+.raiox-tabela tbody tr:last-child > * { border-bottom: 0; }
+.raiox-tabela td.bom { color: var(--green); font-weight: 800; }
+.raiox-tabela td.ruim { color: #96650a; font-weight: 800; }
+.raiox-ver-todos { align-self: flex-start; }
+
+.raiox-umaso { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.raiox-umaso-nome { display: grid; grid-template-columns: auto 1fr; column-gap: 6px; align-items: center; min-width: 0; }
+.raiox-umaso-nome svg { grid-row: span 2; width: 16px; height: 16px; color: var(--muted); }
+.raiox-umaso-nome b { overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; }
+.raiox-umaso-nome small { color: var(--muted); font-size: 10.5px; }
+.raiox-umaso li > strong.ruim { color: #96650a; }
+.raiox-nota { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+@media (max-width: 720px) {
+  .raiox-kpis { grid-template-columns: 1fr; }
+  .raiox-destaque { padding: 18px; }
+  .raiox-destaque-icone { display: none; }
+  .raiox-barra-linha, .raiox-umaso li { grid-template-columns: 1fr auto; }
+  .raiox-barra-linha .raiox-barra-trilho, .raiox-umaso li .raiox-barra-trilho { grid-column: 1 / -1; grid-row: 2; }
+  .raiox-seletores label { flex-basis: 100%; }
+  .raiox-inverter { align-self: center; }
+  .card-header:has(.raiox-gatilho) { flex-wrap: wrap; gap: 12px; }
+}
