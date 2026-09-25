@@ -1,5 +1,5 @@
 import {
-  ArrowRight, BadgeCheck, CalendarClock, CircleAlert, CreditCard, Loader2, MessageCircle, ShieldCheck, X,
+  ArrowRight, BadgeCheck, CalendarClock, CircleAlert, CreditCard, Loader2, MessageCircle, ShieldCheck, Ticket, X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, date, ErroApi, money } from '../api'
@@ -9,8 +9,9 @@ import {
   assinaturaEmConfirmacao, INCLUSO, LINK_WHATSAPP_ASSINATURA, precoDoPlano, ROTULO_STATUS, TOTAL_DIAS_TESTE,
 } from '../lib/assinatura'
 import CamposEndereco from '../components/CamposEndereco'
+import { periodoDoDesconto, precoComCupom } from '../lib/cupom'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
-import type { AjusteQuantidade, Assinatura, CheckoutAssinatura, Conta, Empresa } from '../types'
+import type { AjusteQuantidade, Assinatura, CheckoutAssinatura, Conta, Empresa, PreviaCupom } from '../types'
 
 /* A mensagem já vai com o nome da farmácia: do outro lado, saber quem está pedindo
    evita a primeira ida e volta da conversa. */
@@ -59,6 +60,12 @@ export default function PaginaAssinatura() {
   const [cancelando, setCancelando] = useState(false)
   const [cancelandoEnviando, setCancelandoEnviando] = useState(false)
   const [erroCancelamento, setErroCancelamento] = useState('')
+  const [cupomAberto, setCupomAberto] = useState(false)
+  const [codigoCupom, setCodigoCupom] = useState('')
+  const [previaCupom, setPreviaCupom] = useState<PreviaCupom|null>(null)
+  const [erroCupom, setErroCupom] = useState('')
+  const [enviandoCupom, setEnviandoCupom] = useState(false)
+  const [cupomUsado, setCupomUsado] = useState('')
   const tentativas = useRef(0)
 
   const carregar = useCallback(async () => {
@@ -97,17 +104,31 @@ export default function PaginaAssinatura() {
   /* Preço estimado pela quantidade que a pessoa disser ter - some o adicional por farmácia
      igual o backend faz, só que aqui é cálculo de exibição, sem cobrar nada. Numa conta
      negociada não tem estimativa: o valor já é o combinado com a equipe. */
+  const cupomAtivo = assinatura?.cupom ?? null
+  const precoSemCupom = conta && !negociado
+    ? conta.precoBase + conta.precoAdicionalPorFarmacia * Math.max(0, quantidadeEstimada - 1)
+    : null
+  /* plan.value já vem com o desconto do backend; a estimativa por quantidade refaz a mesma
+     conta do cupom (lib/cupom.ts) para a pessoa ver o preço certo ao simular. */
   const precoEstimado = negociado && conta
     ? conta.precoMensalAtual
-    : conta
-      ? conta.precoBase + conta.precoAdicionalPorFarmacia * Math.max(0, quantidadeEstimada - 1)
+    : conta && precoSemCupom != null
+      ? precoComCupom(precoSemCupom, cupomAtivo, quantidadeEstimada, conta.precoAdicionalPorFarmacia)
       : plano.value
+  const temDesconto = precoSemCupom != null && precoEstimado < precoSemCupom
+  /* Cupom com prazo: o preço com desconto só vale por algumas mensalidades. */
+  const periodoCupom = temDesconto && cupomAtivo?.mesesRestantes != null
+    ? periodoDoDesconto(cupomAtivo.mesesRestantes, assinatura?.status === 'ACTIVE') : null
   const semPrazo = user.subscriptionUntil == null
   const vencida = user.accessAllowed === false
   const emTeste = user.onTrial
   const diasRestantes = user.daysLeft ?? 0
-  /* Com TOTAL_DIAS_TESTE dias pela frente a pessoa está vivendo o dia 1, não o dia 0. */
-  const diaAtual = Math.min(TOTAL_DIAS_TESTE, Math.max(1, TOTAL_DIAS_TESTE - diasRestantes + 1))
+  /* Cupom de teste estendido deixa mais dias pela frente do que o teste padrão: o total
+     acompanha, senão a barra ficaria presa no "dia 1". */
+  const totalDiasTeste = Math.max(TOTAL_DIAS_TESTE, diasRestantes)
+  /* Com totalDiasTeste dias pela frente a pessoa está vivendo o dia 1, não o dia 0. */
+  const diaAtual = Math.min(totalDiasTeste, Math.max(1, totalDiasTeste - diasRestantes + 1))
+  const administrador = user.companies.some(empresa => empresa.role === 'ADMIN')
 
   const quantidadeParaAssinar = negociado && conta ? conta.farmaciasContratadas : quantidadeEstimada
 
@@ -198,6 +219,30 @@ export default function PaginaAssinatura() {
     finally { setSalvandoQuantidade(false) }
   }
 
+  /* Duas etapas: primeiro mostra o que o cupom dá (sem gastar), depois aplica. */
+  const conferirCupom = async (evento:FormEvent) => {
+    evento.preventDefault(); setErroCupom(''); setPreviaCupom(null)
+    const codigo = codigoCupom.trim()
+    if (!codigo) return
+    setEnviandoCupom(true)
+    try { setPreviaCupom(await api<PreviaCupom>(`/subscription/cupom/${encodeURIComponent(codigo)}`)) }
+    catch (e) { setErroCupom(e instanceof ErroApi ? e.message : 'Não foi possível conferir o cupom agora.') }
+    finally { setEnviandoCupom(false) }
+  }
+
+  const aplicarCupom = async () => {
+    if (!previaCupom) return
+    setErroCupom(''); setEnviandoCupom(true)
+    try {
+      setAssinatura(await api<Assinatura>('/subscription/cupom', { method:'POST', body:JSON.stringify({ codigo:previaCupom.codigo }) }))
+      setCupomUsado(`Cupom ${previaCupom.codigo} aplicado: ${previaCupom.beneficio}.`)
+      setCupomAberto(false); setPreviaCupom(null); setCodigoCupom('')
+      api<Conta>('/account').then(setConta).catch(() => {})
+      void recarregarUsuario()
+    } catch (e) { setErroCupom(e instanceof ErroApi ? e.message : 'Não foi possível aplicar o cupom agora.') }
+    finally { setEnviandoCupom(false) }
+  }
+
   const confirmarCancelamento = async () => {
     setErroCancelamento(''); setCancelandoEnviando(true)
     try {
@@ -249,12 +294,50 @@ export default function PaginaAssinatura() {
 
     {estado === 'teste' && <section className="card assinatura-progresso">
       <div className="assinatura-progresso-topo">
-        <strong>Dia {diaAtual} de {TOTAL_DIAS_TESTE}</strong>
+        <strong>Dia {diaAtual} de {totalDiasTeste}</strong>
         <span>{diasRestantes === 1 ? 'último dia' : `${diasRestantes} dias restantes`}</span>
       </div>
-      <div className="assinatura-barra" role="img" aria-label={`Dia ${diaAtual} de ${TOTAL_DIAS_TESTE} do período de teste`}>
-        <span style={{ width:`${(diaAtual / TOTAL_DIAS_TESTE) * 100}%` }}/>
+      <div className="assinatura-barra" role="img" aria-label={`Dia ${diaAtual} de ${totalDiasTeste} do período de teste`}>
+        <span style={{ width:`${(diaAtual / totalDiasTeste) * 100}%` }}/>
       </div>
+    </section>}
+
+    {cupomUsado && <div className="alert alert-success" role="status">{cupomUsado}</div>}
+
+    {cupomAtivo && <section className="card assinatura-cupom-ativo">
+      <Ticket/>
+      <div>
+        <strong>Cupom {cupomAtivo.codigo}</strong>
+        <span>{cupomAtivo.beneficio}{cupomAtivo.mesesRestantes != null
+          ? ` · ${cupomAtivo.mesesRestantes === 1 ? 'falta 1 mensalidade' : `faltam ${cupomAtivo.mesesRestantes} mensalidades`} com desconto`
+          : ''}</span>
+      </div>
+    </section>}
+
+    {administrador && !semPrazo && !negociado && !carregando && <section className="card assinatura-cupom">
+      {!cupomAberto
+        ? <button type="button" className="assinatura-cupom-abrir" onClick={() => { setCupomAberto(true); setCupomUsado('') }}><Ticket/>{cupomAtivo ? 'Tenho outro cupom' : 'Tenho um cupom'}</button>
+        : <form onSubmit={conferirCupom}>
+            <label>Cupom
+              <span className="assinatura-cupom-linha">
+                <input value={codigoCupom} maxLength={40} autoComplete="off" spellCheck={false} autoFocus placeholder="CODIGO"
+                  onChange={e => { setCodigoCupom(e.target.value.toUpperCase()); setPreviaCupom(null); setErroCupom('') }}/>
+                <button className="button button-secondary" disabled={enviandoCupom || !codigoCupom.trim()}>{enviandoCupom && !previaCupom ? 'Conferindo...' : 'Conferir'}</button>
+                <button type="button" className="button button-ghost" onClick={() => { setCupomAberto(false); setPreviaCupom(null); setErroCupom('') }}>Cancelar</button>
+              </span>
+            </label>
+            {erroCupom && <AvisoErro message={erroCupom}/>}
+            {previaCupom && <div className="assinatura-cupom-previa" aria-live="polite">
+              <p><strong>{previaCupom.beneficio}</strong>
+                {previaCupom.precoAtual != null && previaCupom.precoComCupom != null &&
+                  <> · a mensalidade de <s>{money(previaCupom.precoAtual)}</s> cai para <strong>{money(previaCupom.precoComCupom)}</strong> enquanto o desconto valer</>}</p>
+              {previaCupom.substituiCodigo
+                ? <small className="assinatura-cupom-aviso">Este cupom substitui o <strong>{previaCupom.substituiCodigo}</strong>, que para de valer. Os descontos não se somam.</small>
+                : <small>Sua conta pode ter um cupom de desconto por vez.</small>}
+              <button type="button" className="button button-primary" disabled={enviandoCupom} onClick={() => void aplicarCupom()}>
+                {enviandoCupom ? 'Aplicando...' : 'Usar este cupom'}</button>
+            </div>}
+          </form>}
     </section>}
 
     {status === 'OVERDUE' && <div className="alert alert-error">
@@ -279,8 +362,9 @@ export default function PaginaAssinatura() {
           <h2>{negociado ? 'Preço negociado com a equipe CotaPreço' : quantidadeEstimada > 1 ? 'Uma mensalidade para toda a rede' : 'Tudo liberado, um preço só'}</h2>
         </div>
         <div className="assinatura-preco">
+          {temDesconto && precoSemCupom != null && <s>{money(precoSemCupom)}</s>}
           <strong>{money(precoEstimado)}</strong>
-          <span>por mês{quantidadeParaAssinar > 1 ? ` · ${quantidadeParaAssinar} farmácias` : ''}</span>
+          <span>{periodoCupom && precoSemCupom != null ? `${periodoCupom}, depois ${money(precoSemCupom)}/mês` : 'por mês'}{quantidadeParaAssinar > 1 ? ` · ${quantidadeParaAssinar} farmácias` : ''}</span>
         </div>
       </div>
       <ul className="assinatura-inclui">{INCLUSO.map(item => <li key={item}><BadgeCheck/>{item}</li>)}</ul>
@@ -291,7 +375,9 @@ export default function PaginaAssinatura() {
               <input type="number" min={1} max={99} value={quantidadeEstimada}
                 onChange={e => setQuantidadeEstimada(Math.max(1, Number(e.target.value) || 1))}/>
             </label>
-            <p>Com {quantidadeEstimada} farmácia{quantidadeEstimada !== 1 ? 's' : ''}, sua mensalidade é <strong>{money(precoEstimado)}</strong>.
+            <p>Com {quantidadeEstimada} farmácia{quantidadeEstimada !== 1 ? 's' : ''}, sua mensalidade é {periodoCupom && precoSemCupom != null
+                ? <><strong>{money(precoEstimado)}</strong> {periodoCupom} pelo cupom {cupomAtivo?.codigo}, e depois <strong>{money(precoSemCupom)}</strong></>
+                : <strong>{money(precoEstimado)}</strong>}.
               {quantidadeEstimada > (user.companies.length || 1) && ' Você paga por todas agora (sem cobrança extra) e fica liberado para criar as que faltam pela tela Dados da Farmácia.'}
             </p>
             {quantidadeEstimada > 3 && <p className="assinatura-estimador-contato">
@@ -300,7 +386,7 @@ export default function PaginaAssinatura() {
             </p>}
           </div>)}
       <button className="button button-primary button-large" disabled={enviando} onClick={() => void assinar(quantidadeParaAssinar)}>
-        {enviando ? 'Abrindo pagamento...' : <><CreditCard/>{vencida || status === 'OVERDUE' ? 'Reativar por' : 'Assinar por'} {money(precoEstimado)}/mês</>}
+        {enviando ? 'Abrindo pagamento...' : <><CreditCard/>{vencida || status === 'OVERDUE' ? 'Reativar por' : 'Assinar por'} {money(precoEstimado)}{periodoCupom ? ` ${periodoCupom}` : '/mês'}</>}
       </button>
       <p className="assinatura-plano-nota">
         <ShieldCheck/>
@@ -315,7 +401,11 @@ export default function PaginaAssinatura() {
           <h2>Farmácias contratadas</h2>
           {negociado
             ? <p>Preço negociado com a equipe CotaPreço = <strong>{money(conta.precoMensalAtual)}</strong>/mês</p>
-            : <p>{money(conta.precoBase)} base{conta.farmaciasContratadas > 1 && <> + {money(conta.precoAdicionalPorFarmacia)} × {conta.farmaciasContratadas - 1} adicional{conta.farmaciasContratadas - 1 !== 1 ? 'is' : ''}</>} = <strong>{money(conta.precoMensalAtual)}</strong>/mês</p>}
+            : <p>{money(conta.precoBase)} base{conta.farmaciasContratadas > 1 && <> + {money(conta.precoAdicionalPorFarmacia)} × {conta.farmaciasContratadas - 1} adicional{conta.farmaciasContratadas - 1 !== 1 ? 'is' : ''}</>} = {cupomAtivo && <><s>{money(cupomAtivo.precoSemDesconto)}</s> </>}<strong>{money(conta.precoMensalAtual)}</strong>{cupomAtivo
+                ? cupomAtivo.mesesRestantes != null
+                  ? ` ${periodoDoDesconto(cupomAtivo.mesesRestantes, true)} com o cupom ${cupomAtivo.codigo}, depois ${money(cupomAtivo.precoSemDesconto)}/mês`
+                  : `/mês com o cupom ${cupomAtivo.codigo}`
+                : '/mês'}</p>}
         </div>
         {!editandoQuantidade && !negociado && <button type="button" className="button button-secondary" onClick={abrirEdicaoQuantidade}>Editar quantidade</button>}
       </div>

@@ -7,7 +7,7 @@ import { lerUsuarioFarmacia, limparSessaoFarmaciaLocal, possuiTokenFarmacia, sal
 import { Redirecionar } from './roteamento'
 import type { PendenciaDoisFatores, Usuario } from './types'
 
-interface DadosCadastroFarmacia { nomeUsuario:string; nomeFarmacia:string; cnpj:string; email:string; telefone:string; senha:string }
+interface DadosCadastroFarmacia { nomeUsuario:string; nomeFarmacia:string; cnpj:string; email:string; telefone:string; senha:string; cupom?:string|null }
 /* Mesmo endpoint, dois formatos possíveis: com "user" é login completo (igual sempre foi -
    ninguém que já existe percebe diferença); sem "user" é pendência de segundo fator. */
 type RespostaLoginOuPendencia = {token:string;user:Usuario} | PendenciaDoisFatores

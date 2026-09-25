@@ -832,6 +832,42 @@
 .cad-conferencia .confere { color: #1c7a58; }
 .cad-conferencia .diverge { color: #c0453c; }
 
+.cad-cupom { display: flex; gap: 8px; }
+.cad-cupom input { flex: 1 1 auto; min-width: 0; letter-spacing: 0.04em; }
+.cad-cupom button {
+  flex: 0 0 auto;
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid #d3e0da;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--lp-verde);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cad-cupom button:hover:not(:disabled) { background: var(--lp-verde-claro); }
+.cad-cupom button:disabled { opacity: 0.5; cursor: not-allowed; }
+.cad-cupom-ok { display: flex; align-items: center; gap: 6px; color: #1c7a58; font-size: 12.5px; font-weight: 700; }
+.cad-cupom-ok svg { flex: 0 0 auto; width: 15px; height: 15px; }
+.cad-link-cupom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--lp-verde);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cad-link-cupom:hover { text-decoration: underline; }
+.cad-link-cupom svg { width: 16px; height: 16px; }
+
 .cad-enviar { width: 100%; margin-top: 3px; min-height: 52px; border: 0; cursor: pointer; }
 .cad-enviar:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .cad-garantia {

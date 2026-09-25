@@ -1,7 +1,9 @@
-import { ChevronLeft, ChevronRight, Gift, HandCoins, ScrollText, Search, Timer, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Gift, HandCoins, ScrollText, Search, Ticket, Timer, Users } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi, money, date } from '../api'
 import { AvisoErro, Carregando, EstadoVazio } from '../components/ComponentesUI'
+import AbaCupons from '../components/staff/AbaCupons'
+import ModalAplicarCupom from '../components/staff/ModalAplicarCupom'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { ROTULO_STATUS } from '../lib/assinatura'
 import type { ContaStaff, PaginaAuditoriaStaff, PaginaContasStaff, SituacaoConta } from '../types'
@@ -11,7 +13,11 @@ const TAMANHO_PAGINA = 20
    consulta nova. */
 const ATRASO_BUSCA_MS = 350
 
-const ROTULO_ACAO_AUDITORIA:Record<string,string> = { NEGOCIACAO:'Negociação', BRINDE:'Cortesia', TRIAL:'Trial' }
+const ROTULO_ACAO_AUDITORIA:Record<string,string> = {
+  NEGOCIACAO:'Negociação', BRINDE:'Cortesia', TRIAL:'Trial',
+  CUPOM_CRIADO:'Cupom criado', CUPOM_EDITADO:'Cupom editado', CUPOM_ATIVADO:'Cupom reativado',
+  CUPOM_DESATIVADO:'Cupom desativado', CUPOM_RESGATE_ENCERRADO:'Cupom encerrado na conta', CUPOM_APLICADO:'Cupom aplicado',
+}
 
 function formatarCnpj(valor:string|null) {
   if (!valor) return '-'
@@ -67,7 +73,7 @@ function CampoPreco({ valor, aoAlterar }:{ valor:string; aoAlterar:(digitos:stri
 }
 
 export default function PaginaStaff() {
-  const [aba, setAba] = useState<'contas'|'auditoria'>('contas')
+  const [aba, setAba] = useState<'contas'|'cupons'|'auditoria'>('contas')
 
   const [auditoriaResultado, setAuditoriaResultado] = useState<PaginaAuditoriaStaff|null>(null)
   const [auditoriaPagina, setAuditoriaPagina] = useState(0)
@@ -97,6 +103,8 @@ export default function PaginaStaff() {
   const [diasForm, setDiasForm] = useState('7')
   const [erroTrial, setErroTrial] = useState('')
   const [salvandoTrial, setSalvandoTrial] = useState(false)
+
+  const [aplicandoCupom, setAplicandoCupom] = useState<ContaStaff|null>(null)
 
   /* Debounce: só aplica a busca (e some com a página atual) depois que a digitação parar. */
   useEffect(() => {
@@ -218,20 +226,24 @@ export default function PaginaStaff() {
 
     <div className="tabs" role="tablist" aria-label="Seções do painel de staff">
       <button type="button" role="tab" aria-selected={aba==='contas'} className={aba==='contas'?'active':''} onClick={() => setAba('contas')}><Users size={17}/>Contas</button>
+      <button type="button" role="tab" aria-selected={aba==='cupons'} className={aba==='cupons'?'active':''} onClick={() => setAba('cupons')}><Ticket size={17}/>Cupons</button>
       <button type="button" role="tab" aria-selected={aba==='auditoria'} className={aba==='auditoria'?'active':''} onClick={() => setAba('auditoria')}><ScrollText size={17}/>Auditoria</button>
     </div>
+
+    {aba==='cupons' && <AbaCupons/>}
 
     {aba==='auditoria' && <section className="card">
       {auditoriaErro && <div className="alert alert-error">{auditoriaErro}</div>}
       {auditoriaCarregando && !auditoriaResultado
         ? <Carregando/>
         : !auditoriaResultado || auditoriaResultado.itens.length === 0
-          ? <EstadoVazio title="Nenhum registro ainda" description="Negociações, brindes e trials feitos pela equipe aparecem aqui, com quem fez e quando."/>
+          ? <EstadoVazio title="Nenhum registro ainda" description="Negociações, brindes, trials e cupons mexidos pela equipe aparecem aqui, com quem fez e quando."/>
           : <>
               <div className="table-wrap"><table>
-                <thead><tr><th>Farmácia</th><th>Ação</th><th>Descrição</th><th>Staff</th><th>Quando</th></tr></thead>
+                <thead><tr><th>Farmácia / cupom</th><th>Ação</th><th>Descrição</th><th>Staff</th><th>Quando</th></tr></thead>
                 <tbody>{auditoriaResultado.itens.map(item => <tr key={item.id}>
-                  <td><strong>{item.nomeFarmacia}</strong></td>
+                  <td>{item.nomeFarmacia && <strong>{item.nomeFarmacia}</strong>}
+                    {item.codigoCupom && <>{item.nomeFarmacia && <br/>}<small>Cupom {item.codigoCupom}</small></>}</td>
                   <td>{ROTULO_ACAO_AUDITORIA[item.acao] ?? item.acao}</td>
                   <td>{item.descricao}</td>
                   <td>{item.staffNome}<br/><small>{item.staffEmail}</small></td>
@@ -305,13 +317,15 @@ export default function PaginaStaff() {
                   <td>{c.farmaciasAtivas} de {c.farmaciasContratadas}</td>
                   <td>{c.cortesia
                     ? <><strong>Cortesia</strong><br/><small>sem cobrança</small></>
-                    : <>{money(c.precoMensalAtual)}{c.precoMensalPersonalizado != null && <><br/><small>Negociado</small></>}</>}</td>
+                    : <>{money(c.precoMensalAtual)}{c.precoMensalPersonalizado != null && <><br/><small>Negociado</small></>}
+                        {c.cupomAtivo && <><br/><small>Cupom {c.cupomAtivo}</small></>}</>}</td>
                   <td>{c.assinaturaAte ? date(c.assinaturaAte) : '-'}</td>
                   <td>{date(c.criadoEm)}</td>
                   <td className="staff-acoes">
                     {!c.cortesia && <button type="button" className="icon-button" title={c.precoMensalPersonalizado != null ? 'Editar negociação' : 'Negociar'} onClick={() => abrirNegociacao(c)}><HandCoins size={16}/></button>}
                     <button type="button" className="icon-button" title={c.cortesia ? 'Editar brinde' : 'Dar de brinde'} onClick={() => abrirBrinde(c)}><Gift size={16}/></button>
                     <button type="button" className="icon-button" title="Colocar em trial" onClick={() => abrirTrial(c)}><Timer size={16}/></button>
+                    {!c.cortesia && <button type="button" className="icon-button" title="Aplicar cupom" onClick={() => setAplicandoCupom(c)}><Ticket size={16}/></button>}
                   </td>
                 </tr>)}</tbody>
               </table></div>
@@ -325,6 +339,12 @@ export default function PaginaStaff() {
             </>}
     </section>
     </>}
+
+    {aplicandoCupom && <ModalAplicarCupom conta={aplicandoCupom} aoFechar={() => setAplicandoCupom(null)}
+      aoAplicar={atualizada => {
+        setResultado(atual => atual && { ...atual, itens: atual.itens.map(c => c.grupoId === atualizada.grupoId ? atualizada : c) })
+        setAplicandoCupom(null)
+      }}/>}
 
     {negociando && <div className="modal-backdrop" role="presentation"><form className="modal user-modal" onSubmit={salvarNegociacao}>
       <div className="modal-header"><div className="modal-icon"><HandCoins/></div><div><h2>Negociar condições</h2><p>{negociando.nomeFarmacia}</p></div>

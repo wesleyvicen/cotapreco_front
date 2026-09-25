@@ -1,14 +1,15 @@
-import { AlertCircle, ArrowRight, BadgeCheck, Check, ChevronLeft, ChevronRight, Clock3, Eye, EyeOff, Gift, Link2, ShieldCheck } from 'lucide-react'
+import { AlertCircle, ArrowRight, BadgeCheck, Check, ChevronLeft, ChevronRight, Clock3, Eye, EyeOff, Gift, Link2, ShieldCheck, Ticket } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ErroApi } from '../api'
+import { apiPublica, ErroApi } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import { IndicadorForcaSenha } from '../components/IndicadorForcaSenha'
 import { cnpjValido } from '../lib/cnpj'
 import { TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import RodapeSite from '../components/RodapeEmpresa'
+import type { PreviaCupom } from '../types'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 
-type CampoCadastro = 'nomeUsuario' | 'nomeFarmacia' | 'cnpj' | 'email' | 'telefone' | 'senha' | 'confirmacao'
+type CampoCadastro = 'nomeUsuario' | 'nomeFarmacia' | 'cnpj' | 'email' | 'telefone' | 'senha' | 'confirmacao' | 'cupom'
 
 /* A conferência fica calada enquanto o que foi digitado ainda é começo da senha: acusar
    "não conferem" a cada tecla treina a pessoa a ignorar o aviso. Ela fala no instante em
@@ -43,12 +44,31 @@ export default function PaginaCadastroFarmacia() {
   const [ocupado, setOcupado] = useState(false)
   const formulario = useRef<HTMLFormElement>(null)
   const [slideAtivo, setSlideAtivo] = useState(0)
+  /* Cupom vem pronto pelo link de divulgação (/cadastro?cupom=CODIGO) ou digitado. */
+  const [cupom, setCupom] = useState(() => new URLSearchParams(window.location.search).get('cupom')?.trim().toUpperCase() ?? '')
+  const [mostrarCupom, setMostrarCupom] = useState(() => cupom !== '')
+  const [previaCupom, setPreviaCupom] = useState<PreviaCupom|null>(null)
+  const [conferindoCupom, setConferindoCupom] = useState(false)
 
   useEffect(() => {
     const intervalo = setInterval(() => setSlideAtivo(atual => (atual + 1) % TOTAL_SLIDES), 6000)
     return () => clearInterval(intervalo)
   }, [slideAtivo])
   const irParaSlide = (indice:number) => setSlideAtivo(((indice % TOTAL_SLIDES) + TOTAL_SLIDES) % TOTAL_SLIDES)
+
+  /* Confere só quando a pessoa pede (ou quando o cupom veio pelo link), nunca a cada tecla:
+     cada código errado conta no limite de tentativas do servidor. */
+  const conferirCupom = async (codigo:string) => {
+    const limpo = codigo.trim()
+    setPreviaCupom(null)
+    if (!limpo) return
+    setConferindoCupom(true)
+    try { setPreviaCupom(await apiPublica<PreviaCupom>(`/auth/cupom/${encodeURIComponent(limpo)}`)) }
+    catch (e) { setErrosCampos(atuais => ({ ...atuais, cupom:e instanceof ErroApi ? e.message : 'Não foi possível conferir o cupom agora.' })) }
+    finally { setConferindoCupom(false) }
+  }
+  const cupomDoLink = useRef(cupom)
+  useEffect(() => { if (cupomDoLink.current) void conferirCupom(cupomDoLink.current) }, [])
 
   if (user) return <Redirecionar to="/" replace/>
 
@@ -78,7 +98,8 @@ export default function PaginaCadastroFarmacia() {
     }
     setOcupado(true)
     try {
-      await cadastrarFarmacia({ nomeUsuario, nomeFarmacia, cnpj:cnpj.replace(/\D/g, ''), email, telefone:telefone.replace(/\D/g, ''), senha })
+      await cadastrarFarmacia({ nomeUsuario, nomeFarmacia, cnpj:cnpj.replace(/\D/g, ''), email, telefone:telefone.replace(/\D/g, ''), senha,
+        cupom:cupom.trim() || null })
       /* Conta nova cai direto na primeira cotação assistida. Quem preferir explorar sozinho
          sai de lá num clique, e o painel mantém o atalho de volta. */
       navegar('/primeira-cotacao')
@@ -227,6 +248,20 @@ export default function PaginaCadastroFarmacia() {
                 {avisoCampo('confirmacao')}
               </label>
             </div>
+
+            {mostrarCupom
+              ? <label className="cad-campo">Cupom (opcional)
+                  <span className="cad-cupom">
+                    <input {...campo('cupom')} value={cupom} maxLength={40} autoComplete="off" autoCapitalize="characters" spellCheck={false}
+                      placeholder="CODIGO" onChange={evento => { setCupom(evento.target.value.toUpperCase()); setPreviaCupom(null); limparErroCampo('cupom') }}
+                      onKeyDown={evento => { if (evento.key === 'Enter') { evento.preventDefault(); void conferirCupom(cupom) } }}/>
+                    <button type="button" disabled={conferindoCupom || !cupom.trim()} onClick={() => void conferirCupom(cupom)}>
+                      {conferindoCupom ? 'Conferindo...' : 'Aplicar'}</button>
+                  </span>
+                  {previaCupom && <small className="cad-cupom-ok" aria-live="polite"><Check/> {previaCupom.beneficio}</small>}
+                  {avisoCampo('cupom')}
+                </label>
+              : <button type="button" className="cad-link-cupom" onClick={() => setMostrarCupom(true)}><Ticket/> Tenho um cupom</button>}
 
             <button className="lp-botao lp-botao-primario cad-enviar" disabled={ocupado || !formularioValido}>
               {ocupado ? 'Criando sua conta...' : <>Começar teste grátis <ArrowRight/></>}

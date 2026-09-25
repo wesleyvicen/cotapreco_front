@@ -8,6 +8,8 @@ export interface ContaStaff {
   statusAssinatura:StatusAssinatura; emTeste:boolean; acessoLiberado:boolean; assinaturaAte:string|null
   farmaciasContratadas:number; farmaciasAtivas:number; contaAtiva:boolean; criadoEm:string
   precoMensalAtual:number; precoMensalPersonalizado:number|null; cortesia:boolean
+  /* Código do cupom de desconto valendo na conta, nulo se não há. */
+  cupomAtivo:string|null
 }
 /* Recortes da lista de contas na tela de staff. Os critérios vivem na consulta do backend
    (ver GrupoRepository.buscarContasDeClientes) para os cartões e a tabela não discordarem. */
@@ -19,8 +21,41 @@ export interface PaginaContasStaff {
   itens:ContaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number
   totalContas:number; totalPagando:number; totalEmTeste:number; totalVencidas:number
 }
-export interface RegistroAuditoriaStaff { id:number; grupoId:number; nomeFarmacia:string; acao:string; descricao:string; staffNome:string; staffEmail:string; criadoEm:string }
+/* grupoId/nomeFarmacia vêm nulos nas ações sobre cupom que não envolvem conta (criar, editar). */
+export interface RegistroAuditoriaStaff { id:number; grupoId:number|null; nomeFarmacia:string|null; acao:string; descricao:string; staffNome:string; staffEmail:string; criadoEm:string; codigoCupom:string|null }
 export interface PaginaAuditoriaStaff { itens:RegistroAuditoriaStaff[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number }
+/* Cupons promocionais (ver CupomDtos no backend). Só os campos do benefício do próprio tipo
+   vêm preenchidos; meses nulo num desconto = para sempre. */
+export type TipoCupom='DESCONTO_PERCENTUAL'|'DESCONTO_FIXO'|'TRIAL_ESTENDIDO'|'FARMACIA_GRATIS'
+export type SituacaoCupom='ATIVO'|'AGENDADO'|'EXPIRADO'|'ESGOTADO'|'INATIVO'
+export interface Cupom {
+  id:number; codigo:string; tipo:TipoCupom; percentual:number|null; valor:number|null; dias:number|null
+  quantidadeFarmacias:number|null; meses:number|null; validoDe:string|null; validoAte:string|null
+  limiteUsos:number|null; usos:number; origem:string|null; descricao:string|null; ativo:boolean
+  situacao:SituacaoCupom; beneficio:string; criadoPorNome:string|null; criadoEm:string
+}
+export interface SolicitacaoCupom {
+  codigo:string; tipo:TipoCupom; percentual:number|null; valor:number|null; dias:number|null
+  quantidadeFarmacias:number|null; meses:number|null; validoDe:string|null; validoAte:string|null
+  limiteUsos:number|null; origem:string|null; descricao:string|null
+}
+export interface PaginaCupons { itens:Cupom[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number }
+export interface ResgateCupom {
+  id:number; grupoId:number; nomeFarmacia:string|null; resgatadoPorNome:string; resgatadoPorEmail:string
+  resgatadoEm:string; canal:'CADASTRO'|'ASSINATURA'|'EQUIPE'; status:'ATIVO'|'ENCERRADO'; ciclosUsados:number
+  mesesRestantes:number|null; encerradoEm:string|null
+}
+/* Cupom que a conta já usou. CONCLUIDO = usou tudo (meses ou dias de teste); ENCERRADO =
+   parou antes (substituído ou encerrado pela equipe). */
+export interface CupomDaConta {
+  resgateId:number; codigo:string; tipo:TipoCupom; beneficio:string; canal:'CADASTRO'|'ASSINATURA'|'EQUIPE'
+  situacao:'EM_USO'|'CONCLUIDO'|'ENCERRADO'; resgatadoEm:string; encerradoEm:string|null; ciclosUsados:number; mesesRestantes:number|null
+}
+export interface PaginaResgatesCupom { itens:ResgateCupom[]; pagina:number; tamanho:number; totalItens:number; totalPaginas:number }
+/* precoAtual/precoComCupom vêm nulos em cupom de teste e na prévia do cadastro (ainda sem conta).
+   substituiCodigo é o cupom de desconto valendo que este vai encerrar. */
+export interface PreviaCupom { codigo:string; tipo:TipoCupom; beneficio:string; precoAtual:number|null; precoComCupom:number|null; substituiCodigo:string|null }
+export interface CupomAplicado { codigo:string; tipo:TipoCupom; beneficio:string; precoSemDesconto:number; mesesRestantes:number|null; percentual:number|null; valor:number|null; quantidadeFarmacias:number|null }
 export interface AcessoEmpresaUsuario { companyId:number; companyName:string; role:'ADMIN'|'BUYER'|'VIEWER' }
 export interface UsuarioAdministracao { id:number; name:string; email:string; active:boolean; createdAt:string; access:AcessoEmpresaUsuario[] }
 export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null; demo:boolean }
@@ -42,7 +77,8 @@ export interface LinhaImportacao { row:number; ean:string|null; productName:stri
 export interface PreviaImportacao { totalRows:number; validRows:number; invalidRows:number; lines:LinhaImportacao[] }
 export type StatusAssinatura='NONE'|'TRIAL'|'PENDING'|'ACTIVE'|'OVERDUE'|'CANCELED'
 export interface PlanoAssinatura { value:number; cycle:'MONTHLY'; description:string }
-export interface Assinatura { status:StatusAssinatura; activeUntil:string|null; nextDueDate:string|null; plan:PlanoAssinatura|null; billingType:string|null; cardLast4:string|null; canceledAt:string|null }
+/* plan.value já vem com o desconto do cupom; cupom traz o preço cheio para mostrar riscado. */
+export interface Assinatura { status:StatusAssinatura; activeUntil:string|null; nextDueDate:string|null; plan:PlanoAssinatura|null; billingType:string|null; cardLast4:string|null; canceledAt:string|null; cupom:CupomAplicado|null }
 export interface CheckoutAssinatura { checkoutUrl:string; checkoutId:string; expiresAt:string|null }
 export interface AjusteQuantidade { checkout:CheckoutAssinatura|null; assinatura:Assinatura|null }
 export interface EmpresaPendente { nome:string; cnpj:string|null; abertoEm:string }
