@@ -14,6 +14,11 @@ export function perfilAtivo(user:Usuario|null) {
   return empresaAtiva(user)?.role ?? null
 }
 
+/* Farmácias em que a pessoa pode comprar (ADMIN ou BUYER): as que podem entrar numa cotação unificada. */
+export function farmaciasDeCompra(user:Usuario|null):EmpresaAcesso[] {
+  return user?.companies.filter(c => c.role === 'ADMIN' || c.role === 'BUYER') ?? []
+}
+
 export function isAdminAtivo(user:Usuario|null) {
   return perfilAtivo(user) === 'ADMIN'
 }

@@ -46,6 +46,7 @@ export default function App(){
       '/representante/alterar-senha':'Minha conta',
       '/cotacoes':'Cotações',
       '/cotacoes/nova':'Nova cotação',
+      '/cotacoes/unificada/nova':'Cotação unificada',
       '/primeira-cotacao':'Primeira cotação',
       '/cotacao-ol':'Cotação para OL',
       '/produtos':'Produtos',
@@ -81,6 +82,7 @@ export default function App(){
   if(pathname==='/')page=<PaginaPainel/>
   else if(pathname==='/cotacoes')page=<PaginaCotacoes/>
   else if(pathname==='/cotacoes/nova')page=<PaginaNovaCotacao/>
+  else if(pathname==='/cotacoes/unificada/nova')page=<PaginaNovaCotacao unificada/>
   else if(pathname==='/primeira-cotacao')page=<PaginaPrimeiraCotacao/>
   else if(pathname==='/cotacao-ol')page=<PaginaCotacaoOL/>
   else if(pathname==='/produtos')page=<PaginaProdutos/>

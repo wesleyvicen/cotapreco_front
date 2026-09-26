@@ -2878,6 +2878,61 @@ label small {
   width: 18px;
   color: var(--green);
 }
+.company-list {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #526a62;
+}
+.company-list-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 6px;
+  margin: 0;
+  font-size: 14px;
+}
+.company-list-title svg { width: 18px; color: var(--green); }
+.company-list-title strong { color: var(--green); }
+.company-list-title span { flex-basis: 100%; color: var(--muted); font-size: 13px; }
+.company-list ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.company-list li {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+}
+.company-list li:has(button) { padding: 0; background: none; }
+.company-list li button {
+  padding: 3px 10px;
+  border: 1px dashed var(--green-2);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--green);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.company-list li button:focus-visible { outline: 2px solid var(--green-2); outline-offset: 2px; }
 .public-meta {
   display: flex;
   justify-content: center;
@@ -8961,3 +9016,98 @@ label small {
 .cupom-historico .cupom-escolha-texto small { color: var(--muted); font-size: 11.5px; }
 .cupom-historico-vazio { margin: 0; padding: 10px 14px; border-radius: 12px; background: #f4f8f6; color: var(--muted); font-size: 12.5px; }
 .cupom-ja-usado { color: #8a6416; font-weight: 700; }
+
+/* Cotação unificada */
+.unified-pharmacies { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.unified-pharmacies .source-card { cursor: pointer; }
+.unified-pharmacies .source-card input { flex: none; width: 18px; height: 18px; accent-color: var(--green); }
+.unified-current { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -6px 0 18px; padding: 10px 14px; border-radius: 12px; background: var(--green-soft); color: var(--green); }
+.unified-current svg { width: 18px; height: 18px; }
+.unified-current small { margin-left: auto; color: var(--muted); }
+.unified-summary { display: grid; gap: 8px; margin: 16px 0; }
+.unified-summary > div { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; }
+.unified-summary > div > svg { width: 18px; height: 18px; color: var(--green); flex: none; }
+.unified-summary > div > span { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.unified-summary small { color: var(--muted); }
+.badge-unificada { background: var(--green-soft); color: var(--green); margin-left: 8px; }
+.unified-switcher { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.unified-switcher > span { display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; color: var(--muted); font-size: 13px; }
+.unified-switcher > span svg { width: 16px; height: 16px; color: var(--green); }
+.unified-switcher button { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; background: #fff; color: inherit; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.unified-switcher button:hover { border-color: var(--green-2); }
+.unified-switcher button[aria-current="true"] { background: var(--green); border-color: var(--green); color: #fff; cursor: default; }
+.unified-switcher button:focus-visible { outline: 2px solid var(--green-2); outline-offset: 2px; }
+.unified-switcher-select { flex: 1 1 220px; max-width: 360px; }
+.unified-switcher-select select { width: 100%; }
+/* A página separa os blocos com gap de 22px. O quadro é apoio do plano de compra, então fica
+   mais colado nas abas (em cima) e no plano (embaixo): 12px de cada lado. */
+.stock-split { margin: -10px 0; }
+.stock-split-cabecalho { display: flex; align-items: center; gap: 10px; width: 100%; padding: 14px 18px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.stock-split-cabecalho > svg:first-child { flex: none; width: 20px; height: 20px; color: var(--green); }
+.stock-split-cabecalho > span { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.stock-split-cabecalho strong { font-size: 15px; color: var(--ink); }
+.stock-split-cabecalho small { color: var(--muted); font-size: 12px; }
+.stock-split-seta { flex: none; width: 18px; height: 18px; color: var(--muted); transition: transform 0.15s ease; }
+.stock-split-cabecalho[aria-expanded="true"] .stock-split-seta { transform: rotate(180deg); }
+.stock-split-cabecalho:focus-visible { outline: 2px solid var(--green-2); outline-offset: -2px; }
+.stock-split-aviso-status { display: flex; align-items: center; gap: 7px; margin: 0 18px 10px; padding: 8px 12px; border-radius: 10px; background: #f4f8f6; color: #4d655d; font-size: 12px; }
+.stock-split-aviso-status svg { flex: none; width: 14px; height: 14px; color: var(--green); }
+/* Planilha: grade fina, cabeçalho e primeira coluna fixos, rolagem nos dois sentidos. */
+.stock-split-planilha { max-height: 320px; margin: 0 18px 18px; overflow: auto; border: 1px solid #d5e1dc; border-radius: 10px; background: #fff; }
+.stock-split-planilha:focus-visible { outline: 2px solid var(--green-2); outline-offset: 2px; }
+.stock-split-planilha table { width: 100%; min-width: 0; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+.stock-split-planilha th, .stock-split-planilha td { padding: 6px 10px; border-top: 0; border-right: 1px solid #e4ece8; border-bottom: 1px solid #e4ece8; color: #536861; font-size: 12px; white-space: nowrap; }
+.stock-split-planilha tr > :last-child { border-right: 0; }
+.stock-split-planilha tbody tr:last-child > * { border-bottom: 0; }
+/* Nome de farmácia longo quebra em duas linhas em vez de ser cortado (na coluna alinhada à
+   direita o corte comia o começo do nome). */
+.stock-split-planilha thead th { position: sticky; top: 0; z-index: 2; min-width: 84px; max-width: 140px; background: #eef5f2; color: #4d655d; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; line-height: 1.25; text-align: left; vertical-align: bottom; white-space: normal; }
+.stock-split-planilha tbody th { position: sticky; left: 0; z-index: 1; background: #fff; text-align: left; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.stock-split-planilha thead th:first-child { left: 0; z-index: 3; }
+.stock-split-planilha tbody th strong { display: block; max-width: 240px; overflow: hidden; text-overflow: ellipsis; color: var(--ink); font-size: 12px; }
+.stock-split-planilha tbody th small { display: block; margin: 0; color: var(--muted); font-size: 11px; }
+.stock-split-planilha tbody tr:hover > * { background: #f6faf8; }
+.stock-split-planilha .numero { text-align: right; font-variant-numeric: tabular-nums; }
+.stock-split-planilha td.numero strong { color: var(--ink); }
+.stock-split-planilha td.numero small { margin: 0; color: var(--muted); font-size: 11px; }
+.stock-split-planilha td.parcial strong { color: #8a5a12; }
+.stock-split-planilha td.vazio, .stock-split-planilha td.referencia { color: #9aa8a3; }
+.stock-split-planilha td.acao { width: 1%; padding: 4px 8px; }
+/* Mesmo botão secundário do resto do sistema, só mais baixo para caber na linha da planilha. */
+.stock-split-planilha td.acao .button { padding: 5px 11px; font-size: 12px; }
+.stock-split-planilha td.acao .button svg { width: 14px; height: 14px; }
+/* Modal: a planilha é a parte que rola; cabeçalho, total e botões ficam sempre à vista. */
+.stock-split-modal { display: flex; flex-direction: column; width: min(760px, 100%); max-height: calc(100vh - 40px); }
+.stock-split-modal > .modal-header { flex: none; }
+.stock-split-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.stock-split-form > * { flex: none; }
+.stock-split-planilha-modal { flex: 1 1 auto; min-height: 120px; max-height: none; margin: 14px 0 0; }
+.stock-split-planilha-modal tbody th strong { max-width: 340px; font-size: 13px; }
+.stock-split-planilha-modal th, .stock-split-planilha-modal td { padding: 7px 12px; }
+.stock-split-planilha-modal tr.acima td.celula-input input { border-color: #e0b36a; }
+.stock-split-planilha td.celula-input { width: 1%; padding: 3px 6px; }
+.stock-split-planilha td.celula-input input { width: 84px; padding: 5px 8px; border: 1px solid #d7e1dd; border-radius: 6px; outline: none; background: #fbfcfc; color: var(--ink); font-size: 13px; font-weight: 700; text-align: right; }
+.stock-split-aviso { display: block; margin: 0; color: #a4620f !important; font-weight: 700; }
+.stock-split-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stock-split-resumo > div { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #f4f8f6; }
+.stock-split-resumo span { color: var(--muted); font-size: 11px; font-weight: 700; }
+.stock-split-resumo strong { color: var(--ink); font-size: 17px; }
+.stock-split-total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-top: 14px; padding: 10px 12px; border-radius: 12px; font-size: 13px; }
+.stock-split-total.ok { background: var(--green-soft); color: var(--green); }
+.stock-split-total.sobra { background: #fdf6e7; color: #8a5a12; }
+.stock-split-total.excede { background: #fdecea; color: #b42318; font-weight: 700; }
+.stock-split-reset { margin-top: 10px; font-size: 13px; }
+.stock-split-erro { margin-top: 12px; }
+.stock-split-nota { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+@media (max-width: 480px) {
+  .stock-split-planilha-modal .referencia { display: none; }
+  .stock-split-resumo strong { font-size: 15px; }
+  .stock-split-planilha td.celula-input input { width: 70px; }
+}
+@media (max-width: 700px) {
+  .unified-current small { margin-left: 0; width: 100%; }
+}
+/* Justificativa de estoque adicional na matriz do plano (modo avançado). A linha ocupa a
+   largura toda da tabela; o conteúdo fica preso à esquerda para não sumir na rolagem lateral. */
+.matriz-justificativa-linha td { padding: 0 8px 10px; text-align: left; }
+.matriz-justificativa-linha .guided-stock-note { position: sticky; left: 8px; max-width: min(640px, calc(100vw - 80px)); margin: 0; }

@@ -58,7 +58,15 @@ export interface PreviaCupom { codigo:string; tipo:TipoCupom; beneficio:string; 
 export interface CupomAplicado { codigo:string; tipo:TipoCupom; beneficio:string; precoSemDesconto:number; mesesRestantes:number|null; percentual:number|null; valor:number|null; quantidadeFarmacias:number|null }
 export interface AcessoEmpresaUsuario { companyId:number; companyName:string; role:'ADMIN'|'BUYER'|'VIEWER' }
 export interface UsuarioAdministracao { id:number; name:string; email:string; active:boolean; createdAt:string; access:AcessoEmpresaUsuario[] }
-export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null; demo:boolean }
+/* Cotação unificada: várias farmácias do grupo num único link. Cada farmácia tem a sua
+   cotação ("parte"), que traz em unified as farmácias irmãs para os atalhos. */
+export interface FarmaciaUnificada { companyId:number; companyName:string; quotationId:number }
+export interface VinculoUnificada { id:number; pharmacies:FarmaciaUnificada[] }
+export interface FarmaciaCotacaoUnificada extends FarmaciaUnificada { productCount:number; requestedUnits:number }
+export interface CotacaoUnificada { id:number; name:string; status:StatusCotacao; expiresAt:string|null; publicToken:string|null; publicUrl:string|null; productCount:number; pharmacies:FarmaciaCotacaoUnificada[] }
+export interface DivisaoFarmacia { companyId:number; companyName:string; quotationId:number; requestedQuantity:number; allocatedQuantity:number }
+export interface DivisaoEstoque { responseId:number; supplierName:string; productId:number; ean:string|null; productName:string; availableQuantity:number; requestedQuantity:number; pharmacies:DivisaoFarmacia[] }
+export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null; demo:boolean; unified:VinculoUnificada|null }
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'|'purchaseComparisonEligible'|'purchasedItemCount'|'lastPurchaseAt'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
 /* Primeira Cotação Assistida. O status e o ERP ficam na conta; o checklist é inferido pelo
@@ -98,10 +106,10 @@ export interface Produto { id:number; ean:string|null; name:string; laboratory:s
 export interface Representante { id:number; nome:string; telefone:string; email:string }
 export interface RespostaAutenticacaoRepresentante { token:string; tipoToken:string; expiraEmSegundos:number; representante:Representante }
 export interface ItemCotacaoPublica { ean:string|null; nomeProduto:string; laboratorio:string|null; quantidadeSolicitada:number }
-export interface CotacaoPublica { nomeEmpresa:string; nomeCotacao:string; expiraEm:string|null; totalProdutos:number; aceitaRespostas:boolean; itens:ItemCotacaoPublica[] }
+export interface CotacaoPublica { nomeEmpresa:string; nomeCotacao:string; expiraEm:string|null; totalProdutos:number; aceitaRespostas:boolean; itens:ItemCotacaoPublica[]; farmacias?:string[] }
 export interface ResumoRespostaPublica { id:number; nomeDistribuidora:string; documentoDistribuidora:string|null; valorMinimoPedido:number|null; status:StatusResposta; enviadoEm:string|null; atualizadoEm:string; totalItensCotados:number; valorTotal:number }
 export interface ItemRespostaPublica { id:number; ean:string|null; nomeProduto:string; laboratorio:string|null; quantidadeSolicitada:number; precoUnitario:number|null; quantidadeDisponivel:number|null; disponivel:boolean; observacao:string|null }
-export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:string; nomeRepresentante:string; nomeDistribuidora:string; documentoDistribuidora:string|null; valorMinimoPedido:number|null; status:StatusResposta; expiraEm:string|null; podeCorrigir:boolean; itens:ItemRespostaPublica[] }
+export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:string; nomeRepresentante:string; nomeDistribuidora:string; documentoDistribuidora:string|null; valorMinimoPedido:number|null; status:StatusResposta; expiraEm:string|null; podeCorrigir:boolean; itens:ItemRespostaPublica[]; farmacias?:string[] }
 export interface EnderecoEmpresa { cep:string; logradouro:string; numero:string; complemento:string|null; bairro:string; cidade:string; uf:string }
 export interface Empresa { id:number; nome:string; cnpj:string|null; ativo:boolean }
 /* Dados de cobrança da conta (grupo): nome/CNPJ/telefone/endereço usados no checkout do

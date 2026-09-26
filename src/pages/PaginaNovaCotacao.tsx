@@ -1,5 +1,5 @@
 import {
-  ArrowLeft, ArrowRight, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, HelpCircle, Lock,
+  ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, Clipboard, ClipboardPaste, Columns3, Download, HelpCircle, Lock,
   FileSpreadsheet, Layers, Link2, PenLine, Plus, TableProperties, Trash2, UploadCloud, XCircle,
 } from 'lucide-react'
 import { Fragment, useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
@@ -10,8 +10,10 @@ import { colunasColadasVazias, type ColunasColadas, type LinhaColada } from '../
 import { usarAutenticacao } from '../autenticacao'
 import { acessoBloqueado } from '../lib/assinatura'
 import type {
-  AnaliseArquivoImportacao, Cotacao, MapeamentoColunas, PreviaImportacao, Produto,
+  AnaliseArquivoImportacao, Cotacao, CotacaoUnificada, MapeamentoColunas, PreviaImportacao, Produto,
 } from '../types'
+import { empresaAtiva, farmaciasDeCompra } from '../lib/permissoes'
+import { salvarEmpresaAtiva } from '../cache/persistenciaSessao'
 import { LinkInterno, usarNavegacao } from '../roteamento'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { dataHoraLocal, nomeSugerido, prazoSugerido } from '../lib/sugestoesCotacao'
@@ -21,6 +23,11 @@ type CampoMapeamento = keyof MapeamentoColunas
 type OrigemItem = 'planilha' | 'manual' | 'colado'
 interface ItemManual { id:string; ean:string; productName:string; quantity:string; laboratory:string }
 interface ItemRevisao extends ItemManual { origem:OrigemItem; confirmedSameProduct:boolean }
+/* Na cotação unificada, o pedido de cada farmácia passa pelas mesmas etapas de produtos e
+   revisão da cotação normal, uma farmácia por vez; o que foi revisado fica guardado aqui. */
+interface PedidoRevisado { previa:PreviaImportacao; itens:ItemRevisao[] }
+const mapeamentoVazio:MapeamentoColunas = { ean:null, productName:null, quantity:null, laboratory:null }
+const juntarNomes = (nomes:string[]) => nomes.length <= 1 ? nomes.join('') : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`
 
 const novoItemManual = ():ItemManual => ({ id:crypto.randomUUID(), ean:'', productName:'', quantity:'', laboratory:'' })
 const normalizar = (valor:string) => valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -45,10 +52,20 @@ const completarPeloCatalogo = (item:ItemManual, campo:keyof Omit<ItemManual, 'id
   return alterado
 }
 
-export default function PaginaNovaCotacao() {
+export default function PaginaNovaCotacao({ unificada = false }:{ unificada?:boolean }) {
   const navegar = usarNavegacao()
   const { user } = usarAutenticacao()
+  /* Etapas internas: 1 informações, 2 produtos, 3 revisão, 4 criação, 5 compartilhar e, só
+     na unificada, 6 = escolha das farmácias (exibida como segunda etapa). */
   const [etapa, setEtapa] = useState(1)
+  const opcoesFarmacias = useMemo(() => farmaciasDeCompra(user), [user])
+  const [farmaciasEscolhidas, setFarmaciasEscolhidas] = useState<number[]>(() => farmaciasDeCompra(user).map(farmacia => farmacia.id))
+  const [indiceFarmacia, setIndiceFarmacia] = useState(0)
+  const [pedidos, setPedidos] = useState<Record<number, PedidoRevisado>>({})
+  const [cotacaoUnificada, setCotacaoUnificada] = useState<CotacaoUnificada|null>(null)
+  /* A sessão pode chegar depois do primeiro render: sem escolha ainda, entram todas. */
+  useEffect(() => { if (unificada && !farmaciasEscolhidas.length && opcoesFarmacias.length) setFarmaciasEscolhidas(opcoesFarmacias.map(farmacia => farmacia.id)) }, [unificada, farmaciasEscolhidas.length, opcoesFarmacias])
+  const farmaciaAtual = unificada ? opcoesFarmacias.find(farmacia => farmacia.id === farmaciasEscolhidas[indiceFarmacia]) : undefined
   /* Nome e prazo já vêm preenchidos: são sugestões que servem na maioria das vezes e
      continuam editáveis, então a etapa 1 vira um confirmar em vez de um formulário. */
   const [nome, setNome] = useState(nomeSugerido)
@@ -56,7 +73,7 @@ export default function PaginaNovaCotacao() {
   const [modo, setModo] = useState<ModoProdutos>('planilha')
   const [arquivo, setArquivo] = useState<File|null>(null)
   const [analise, setAnalise] = useState<AnaliseArquivoImportacao|null>(null)
-  const [mapeamento, setMapeamento] = useState<MapeamentoColunas>({ ean:null, productName:null, quantity:null, laboratory:null })
+  const [mapeamento, setMapeamento] = useState<MapeamentoColunas>(mapeamentoVazio)
   const [itensManuais, setItensManuais] = useState<ItemManual[]>([novoItemManual()])
   const [produtos, setProdutos] = useState<Produto[]>([])
   const [colarAberto, setColarAberto] = useState(false)
@@ -267,10 +284,67 @@ export default function PaginaNovaCotacao() {
     finally { setOcupado(false) }
   }
 
+  const limparProdutos = () => {
+    setModo('planilha'); setArquivo(null); setAnalise(null); setMapeamento(mapeamentoVazio); setItensManuais([novoItemManual()])
+    setColunasColadas(colunasColadasVazias); setPrevia(null); setItensRevisao([]); setAdicionandoExtra(false)
+    setEditandoId(''); setRascunho(null); setAvisoEdicao(''); setErro('')
+  }
+
+  /* Abre o pedido de uma farmácia: direto na revisão se ele já foi importado, senão na etapa de produtos. */
+  const abrirPedido = (indice:number, revisados:Record<number, PedidoRevisado> = pedidos) => {
+    limparProdutos(); setIndiceFarmacia(indice)
+    const pedido = revisados[farmaciasEscolhidas[indice]]
+    if (pedido) { setPrevia(pedido.previa); setItensRevisao(pedido.itens); setEtapa(3) }
+    else setEtapa(2)
+  }
+
+  const alternarFarmacia = (id:number) => setFarmaciasEscolhidas(atuais => atuais.includes(id)
+    ? atuais.filter(atual => atual !== id)
+    : opcoesFarmacias.map(farmacia => farmacia.id).filter(opcao => opcao === id || atuais.includes(opcao)))
+
+  const concluirPedido = () => {
+    if (!previa || !farmaciaAtual) return
+    const revisados = { ...pedidos, [farmaciaAtual.id]:{ previa, itens:itensRevisao } }
+    setPedidos(revisados)
+    if (indiceFarmacia < farmaciasEscolhidas.length - 1) abrirPedido(indiceFarmacia + 1, revisados)
+    else setEtapa(4)
+  }
+
+  const criarUnificada = async () => {
+    setOcupado(true); setErro('')
+    try {
+      setCotacaoUnificada(await api<CotacaoUnificada>('/unified-quotations', { method:'POST', body:JSON.stringify({
+        name:nome, expiresAt:prazo ? new Date(prazo).toISOString() : null,
+        pharmacies:farmaciasEscolhidas.map(id => ({ companyId:id, items:pedidos[id].previa.lines.filter(linha => linha.valid).map(linha => ({
+          ean:linha.ean, productName:linha.productName, quantity:linha.quantity, laboratory:linha.laboratory,
+        })) })),
+      }) }))
+      setEtapa(5)
+    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível criar a cotação unificada.') }
+    finally { setOcupado(false) }
+  }
+
+  /* Acompanha pela parte da farmácia ativa; se ela não participa, troca para a primeira da lista. */
+  const acompanharUnificada = (criada:CotacaoUnificada) => {
+    const ativa = empresaAtiva(user)?.id
+    const parte = criada.pharmacies.find(farmacia => farmacia.companyId === ativa) ?? criada.pharmacies[0]
+    if (parte.companyId === ativa) { navegar(`/cotacoes/${parte.quotationId}`); return }
+    salvarEmpresaAtiva(parte.companyId); window.location.assign(`/cotacoes/${parte.quotationId}`)
+  }
+
   const copiar = async (valor:string, tipo:string) => {
     await navigator.clipboard.writeText(valor); setCopiado(tipo); setTimeout(() => setCopiado(''), 1800)
   }
-  const mensagem = cotacao?.publicUrl ? `Olá! Estamos realizando uma nova cotação.\nVocê pode enviar seus preços através do link abaixo:\n${cotacao.publicUrl}\nObrigado!` : ''
+  const linkPublico = cotacao?.publicUrl ?? cotacaoUnificada?.publicUrl ?? null
+  const nomesUnificada = juntarNomes(cotacaoUnificada?.pharmacies.map(farmacia => farmacia.companyName) ?? [])
+  const mensagem = !linkPublico ? '' : cotacaoUnificada
+    ? `Olá! Estamos realizando uma cotação conjunta das farmácias ${nomesUnificada}.\nAs quantidades já estão somadas: você responde uma vez só, pelo link abaixo:\n${linkPublico}\nObrigado!`
+    : `Olá! Estamos realizando uma nova cotação.\nVocê pode enviar seus preços através do link abaixo:\n${linkPublico}\nObrigado!`
+  const rotulosEtapas = unificada ? ['Informações', 'Farmácias', 'Pedidos', 'Criação', 'Compartilhar'] : ['Informações', 'Produtos', 'Revisão', 'Criação', 'Compartilhar']
+  const passoVisivel = unificada ? ({ 1:1, 6:2, 2:3, 3:3, 4:4, 5:5 } as Record<number, number>)[etapa] : etapa
+  const rotuloEtapa = (interna:number) => `Etapa ${unificada ? ({ 1:1, 6:2, 2:3, 3:3, 4:4, 5:5 } as Record<number, number>)[interna] : interna} de 5`
+  const produtosDistintos = new Set(farmaciasEscolhidas.flatMap(id => pedidos[id]?.previa.lines.filter(linha => linha.valid).map(linha => identificadorLinha(linha.ean ?? '', linha.productName)) ?? [])).size
+  const avisoFarmacia = farmaciaAtual && <div className="unified-current"><Building2/><span>Pedido da <strong>{farmaciaAtual.name}</strong></span><small>Farmácia {indiceFarmacia + 1} de {farmaciasEscolhidas.length}</small></div>
   /* "Corrigir produtos" reabre a etapa 2 já com a lista atual da revisão (com o que foi somado,
      editado ou excluído) em modo manual, em vez de reprocessar de novo o arquivo ou a colagem
      originais - senão avançar de novo jogava fora toda mesclagem e confirmação já resolvida
@@ -297,16 +371,26 @@ export default function PaginaNovaCotacao() {
     </section>
   </div>
 
+  if (unificada && opcoesFarmacias.length < 2) return <div className="page narrow">
+    <div className="back-row"><LinkInterno to="/" className="text-link"><ArrowLeft/>Voltar para o painel</LinkInterno></div>
+    <section className="card assinatura-bloqueio">
+      <div className="assinatura-bloqueio-icone"><Building2/></div>
+      <h1>Cotação unificada precisa de duas farmácias</h1>
+      <p>Ela junta os pedidos de várias farmácias da rede num link só. Você precisa de permissão de compra em pelo menos duas delas.</p>
+      <div className="assinatura-bloqueio-acoes"><BotaoNovaCotacaoSimples/></div>
+    </section>
+  </div>
+
   return <div className="page narrow">
     <div className="back-row"><LinkInterno to="/cotacoes" className="text-link"><ArrowLeft/>Voltar para cotações</LinkInterno></div>
-    <div className="page-header"><div><span className="eyebrow green">Novo processo</span><h1>Nova cotação</h1><p>Em poucos passos, sua cotação estará pronta para compartilhar.</p></div></div>
-    <div className="stepper">{['Informações', 'Produtos', 'Revisão', 'Criação', 'Compartilhar'].map((rotulo, indice) => {
+    <div className="page-header"><div><span className="eyebrow green">Novo processo</span><h1>{unificada ? 'Cotação unificada' : 'Nova cotação'}</h1><p>{unificada ? 'Os pedidos de várias farmácias num único link: o representante responde uma vez e cada farmácia gera o seu pedido.' : 'Em poucos passos, sua cotação estará pronta para compartilhar.'}</p></div></div>
+    <div className="stepper">{rotulosEtapas.map((rotulo, indice) => {
       const numero = indice + 1
-      return <div key={rotulo} className={`step ${etapa === numero ? 'active' : ''} ${etapa > numero ? 'done' : ''}`}><span>{etapa > numero ? <Check size={16}/> : numero}</span><label>{rotulo}</label></div>
+      return <div key={rotulo} className={`step ${passoVisivel === numero ? 'active' : ''} ${passoVisivel > numero ? 'done' : ''}`}><span>{passoVisivel > numero ? <Check size={16}/> : numero}</span><label>{rotulo}</label></div>
     })}</div>
     {erro && <AvisoErro message={erro}/>}<section className="card wizard-card">
-      {etapa === 1 && <form onSubmit={(event:FormEvent) => { event.preventDefault(); setErro(''); setEtapa(2) }}>
-        <div className="wizard-heading"><span>Etapa 1 de 5</span><h2>Vamos identificar esta cotação</h2><p>Use um nome fácil de reconhecer no painel.</p></div>
+      {etapa === 1 && <form onSubmit={(event:FormEvent) => { event.preventDefault(); setErro(''); setEtapa(unificada ? 6 : 2) }}>
+        <div className="wizard-heading"><span>{rotuloEtapa(1)}</span><h2>Vamos identificar esta cotação</h2><p>Use um nome fácil de reconhecer no painel.</p></div>
         <div className="form-grid">
           <label className="full">Nome da cotação<input autoFocus required maxLength={180} placeholder="Ex.: Reposição primeira quinzena" value={nome} onChange={event => setNome(event.target.value)}/></label>
           <label className="full">Prazo para respostas <small>Opcional</small><input type="datetime-local" value={prazo} min={dataHoraLocal()} onChange={event => setPrazo(event.target.value)}/></label>
@@ -314,8 +398,23 @@ export default function PaginaNovaCotacao() {
         <div className="wizard-actions"><span/><button className="button button-primary">Continuar <ArrowRight/></button></div>
       </form>}
 
+      {etapa === 6 && <div>
+        <div className="wizard-heading"><span>{rotuloEtapa(6)}</span><h2>Quais farmácias entram nesta cotação?</h2><p>Você importa o pedido de cada uma na próxima etapa. O representante recebe um único link, com as quantidades somadas, e responde uma vez.</p></div>
+        <div className="unified-pharmacies">{opcoesFarmacias.map(farmacia => {
+          const escolhida = farmaciasEscolhidas.includes(farmacia.id)
+          const pedido = pedidos[farmacia.id]
+          return <label key={farmacia.id} className={`source-card ${escolhida ? 'selected' : ''}`}>
+            <input type="checkbox" checked={escolhida} onChange={() => alternarFarmacia(farmacia.id)}/>
+            <Building2/><span><strong>{farmacia.name}</strong><small>{pedido ? `${pedido.previa.validRows} produtos já revisados` : 'Pedido ainda não importado'}</small></span>
+          </label>
+        })}</div>
+        {farmaciasEscolhidas.length < 2 && <small className="mapping-error">Selecione ao menos duas farmácias.</small>}
+        <div className="wizard-actions"><button className="button button-ghost" onClick={() => setEtapa(1)}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={farmaciasEscolhidas.length < 2} onClick={() => abrirPedido(0)}>Importar pedidos <ArrowRight/></button></div>
+      </div>}
+
       {etapa === 2 && <div>
-        <div className="wizard-heading"><span>Etapa 2 de 5</span><h2>Adicione os produtos</h2><p>Importe uma planilha pronta ou preencha os itens diretamente no sistema.</p></div>
+        <div className="wizard-heading"><span>{rotuloEtapa(2)}</span><h2>{farmaciaAtual ? `Pedido da ${farmaciaAtual.name}` : 'Adicione os produtos'}</h2><p>Importe uma planilha pronta ou preencha os itens diretamente no sistema.</p></div>
+        {avisoFarmacia}
         <div className="product-source-actions">
           <button type="button" className={`source-card ${modo === 'planilha' ? 'selected' : ''}`} onClick={() => { setModo('planilha'); setErro('') }}><FileSpreadsheet/><span><strong>Importar planilha</strong><small>CSV ou XLSX, com conferência das colunas</small></span></button>
           <button type="button" className={`source-card ${modo === 'manual' ? 'selected' : ''}`} onClick={() => { setModo('manual'); setErro('') }}><PenLine/><span><strong>Preencher manualmente</strong><small>Adicione e pesquise produtos linha por linha</small></span></button>
@@ -362,11 +461,12 @@ export default function PaginaNovaCotacao() {
           <button type="button" className="button button-ghost add-manual-bottom" onClick={() => setItensManuais(atuais => [...atuais, novoItemManual()])}><Plus/>Adicionar outra linha</button>
         </div>}
 
-        <div className="wizard-actions"><button className="button button-ghost" onClick={() => setEtapa(1)}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={ocupado || (modo === 'planilha' && (!analise || colunasRepetidas || mapeamento.productName === null || mapeamento.quantity === null))} onClick={() => void (modo === 'planilha' ? gerarPreviaPlanilha() : gerarPreviaManual())}>{ocupado ? 'Conferindo...' : 'Conferir produtos'} <ArrowRight/></button></div>
+        <div className="wizard-actions"><button className="button button-ghost" onClick={() => { if (!unificada) setEtapa(1); else if (indiceFarmacia === 0) setEtapa(6); else abrirPedido(indiceFarmacia - 1) }}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={ocupado || (modo === 'planilha' && (!analise || colunasRepetidas || mapeamento.productName === null || mapeamento.quantity === null))} onClick={() => void (modo === 'planilha' ? gerarPreviaPlanilha() : gerarPreviaManual())}>{ocupado ? 'Conferindo...' : 'Conferir produtos'} <ArrowRight/></button></div>
       </div>}
 
       {etapa === 3 && previa && <div>
-        <div className="wizard-heading"><span>Etapa 3 de 5</span><h2>Revise os produtos</h2><p>Edite, remova ou acrescente itens direto aqui. Nenhum produto ou cotação foi salvo até este ponto.</p></div>
+        <div className="wizard-heading"><span>{rotuloEtapa(3)}</span><h2>{farmaciaAtual ? `Revise o pedido da ${farmaciaAtual.name}` : 'Revise os produtos'}</h2><p>Edite, remova ou acrescente itens direto aqui. Nenhum produto ou cotação foi salvo até este ponto.</p></div>
+        {avisoFarmacia}
         <div className="review-extra-panel">
           <datalist id="revisao-produtos-nomes">{produtos.map(produto => <option key={produto.id} value={produto.name}>{produto.ean ? `EAN ${produto.ean}` : 'Sem EAN'}</option>)}</datalist>
           <datalist id="revisao-produtos-eans">{produtos.filter(produto => produto.ean).map(produto => <option key={produto.id} value={produto.ean ?? ''}>{produto.name}</option>)}</datalist>
@@ -405,12 +505,17 @@ export default function PaginaNovaCotacao() {
             <td><div className="review-row-actions"><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId)} title="Editar produto" aria-label={`Editar ${linha.productName || 'produto'}`} onClick={() => abrirEdicaoRevisao(item)}><PenLine/></button><button type="button" className="icon-button" disabled={ocupado || Boolean(editandoId) || itensRevisao.length === 1} title={itensRevisao.length === 1 ? 'A cotação precisa de pelo menos um produto' : 'Remover produto'} aria-label={`Remover ${linha.productName || 'produto'}`} onClick={() => void removerProdutoRevisao(item.id)}><Trash2/></button></div></td></tr>
         })}</tbody></table></div>
         {previa.invalidRows > 0 && <div className="alert alert-warning">Responda as confirmações pendentes e corrija os itens destacados usando o lápis na própria linha, ou remova o que não faz mais sentido.</div>}
-        <div className="wizard-actions"><button className="button button-ghost" onClick={voltarProdutos}><ArrowLeft/>Corrigir produtos</button><button className="button button-primary" disabled={previa.invalidRows > 0 || ocupado || adicionandoExtra || Boolean(editandoId)} onClick={() => setEtapa(4)}>Revisar criação <ArrowRight/></button></div>
+        <div className="wizard-actions"><button className="button button-ghost" onClick={voltarProdutos}><ArrowLeft/>Corrigir produtos</button><button className="button button-primary" disabled={previa.invalidRows > 0 || ocupado || adicionandoExtra || Boolean(editandoId)} onClick={() => unificada ? concluirPedido() : setEtapa(4)}>{unificada && indiceFarmacia < farmaciasEscolhidas.length - 1 ? 'Próxima farmácia' : 'Revisar criação'} <ArrowRight/></button></div>
       </div>}
 
-      {etapa === 4 && previa && <div><div className="wizard-heading"><span>Etapa 4 de 5</span><h2>Tudo pronto para abrir</h2><p>Ao confirmar, produtos novos serão cadastrados e o link público será gerado.</p></div><div className="review-box"><div><span>Nome</span><strong>{nome}</strong></div><div><span>Prazo</span><strong>{prazo ? new Date(prazo).toLocaleString('pt-BR') : 'Sem prazo definido'}</strong></div><div><span>Produtos</span><strong>{previa.validRows} itens</strong></div><div><span>Novos cadastros</span><strong>{previa.lines.filter(linha => !linha.productExists).length} produtos</strong></div></div><div className="wizard-actions"><button className="button button-ghost" onClick={() => setEtapa(3)}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={ocupado} onClick={() => void criar()}>{ocupado ? 'Criando...' : 'Criar e abrir cotação'} <Check/></button></div></div>}
+      {etapa === 4 && unificada && <div><div className="wizard-heading"><span>{rotuloEtapa(4)}</span><h2>Tudo pronto para abrir</h2><p>Ao confirmar, cada farmácia ganha a sua cotação e um único link público é gerado para todas.</p></div>
+        <div className="review-box"><div><span>Nome</span><strong>{nome}</strong></div><div><span>Prazo</span><strong>{prazo ? new Date(prazo).toLocaleString('pt-BR') : 'Sem prazo definido'}</strong></div><div><span>Farmácias</span><strong>{farmaciasEscolhidas.length}</strong></div><div><span>Produtos no link</span><strong>{produtosDistintos} itens</strong></div></div>
+        <div className="unified-summary">{farmaciasEscolhidas.map((id, indice) => <div key={id}><Building2/><span><strong>{opcoesFarmacias.find(farmacia => farmacia.id === id)?.name}</strong><small>{pedidos[id]?.previa.validRows ?? 0} produtos</small></span><button type="button" className="text-link" onClick={() => abrirPedido(indice)}>Revisar</button></div>)}</div>
+        <div className="wizard-actions"><button className="button button-ghost" onClick={() => abrirPedido(farmaciasEscolhidas.length - 1)}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={ocupado || farmaciasEscolhidas.some(id => !pedidos[id])} onClick={() => void criarUnificada()}>{ocupado ? 'Criando...' : 'Criar e abrir cotação unificada'} <Check/></button></div></div>}
 
-      {etapa === 5 && cotacao?.publicUrl && <div className="share-success"><div className="success-icon"><CheckCircle2/></div><span className="eyebrow green">Cotação aberta</span><h2>Agora é só compartilhar!</h2><p>Envie este link para os representantes. Eles entram ou criam uma conta para responder.</p><div className="copy-box"><Link2/><span>{cotacao.publicUrl}</span><button className="button button-secondary" onClick={() => void copiar(cotacao.publicUrl!, 'link')}>{copiado === 'link' ? 'Copiado!' : 'Copiar link'}</button></div><div className="message-preview"><p>{mensagem}</p><button className="button button-ghost" onClick={() => void copiar(mensagem, 'mensagem')}><Clipboard/>{copiado === 'mensagem' ? 'Mensagem copiada!' : 'Copiar mensagem'}</button></div><div className="wizard-actions centered"><button className="button button-primary" onClick={() => navegar(`/cotacoes/${cotacao.id}`)}>Acompanhar cotação <ArrowRight/></button></div></div>}
+      {etapa === 4 && !unificada && previa && <div><div className="wizard-heading"><span>{rotuloEtapa(4)}</span><h2>Tudo pronto para abrir</h2><p>Ao confirmar, produtos novos serão cadastrados e o link público será gerado.</p></div><div className="review-box"><div><span>Nome</span><strong>{nome}</strong></div><div><span>Prazo</span><strong>{prazo ? new Date(prazo).toLocaleString('pt-BR') : 'Sem prazo definido'}</strong></div><div><span>Produtos</span><strong>{previa.validRows} itens</strong></div><div><span>Novos cadastros</span><strong>{previa.lines.filter(linha => !linha.productExists).length} produtos</strong></div></div><div className="wizard-actions"><button className="button button-ghost" onClick={() => setEtapa(3)}><ArrowLeft/>Voltar</button><button className="button button-primary" disabled={ocupado} onClick={() => void criar()}>{ocupado ? 'Criando...' : 'Criar e abrir cotação'} <Check/></button></div></div>}
+
+      {etapa === 5 && linkPublico && <div className="share-success"><div className="success-icon"><CheckCircle2/></div><span className="eyebrow green">{cotacaoUnificada ? 'Cotação unificada aberta' : 'Cotação aberta'}</span><h2>Agora é só compartilhar!</h2><p>{cotacaoUnificada ? `Um link só para ${nomesUnificada}. Os representantes respondem uma vez e cada farmácia recebe a sua parte.` : 'Envie este link para os representantes. Eles entram ou criam uma conta para responder.'}</p><div className="copy-box"><Link2/><span>{linkPublico}</span><button className="button button-secondary" onClick={() => void copiar(linkPublico, 'link')}>{copiado === 'link' ? 'Copiado!' : 'Copiar link'}</button></div><div className="message-preview"><p>{mensagem}</p><button className="button button-ghost" onClick={() => void copiar(mensagem, 'mensagem')}><Clipboard/>{copiado === 'mensagem' ? 'Mensagem copiada!' : 'Copiar mensagem'}</button></div><div className="wizard-actions centered"><button className="button button-primary" onClick={() => { if (cotacaoUnificada) acompanharUnificada(cotacaoUnificada); else if (cotacao) navegar(`/cotacoes/${cotacao.id}`) }}>Acompanhar cotação <ArrowRight/></button></div></div>}
     </section>
     {colarAberto && <ModalColarColunas colunas={colunasColadas} setColunas={setColunasColadas}
       ignorarCabecalho={ignorarCabecalho} setIgnorarCabecalho={setIgnorarCabecalho}
@@ -424,4 +529,8 @@ function SeletorColuna({ campo, rotulo, obrigatorio, analise, mapeamento, setMap
   mapeamento:MapeamentoColunas; setMapeamento:Dispatch<SetStateAction<MapeamentoColunas>>;
 }) {
   return <label>{rotulo} {obrigatorio ? <small>Obrigatório</small> : <small>Opcional</small>}<select value={mapeamento[campo] ?? ''} onChange={event => setMapeamento(atual => ({ ...atual, [campo]:event.target.value === '' ? null : Number(event.target.value) }))}><option value="">{obrigatorio ? 'Selecione uma coluna' : 'Não importar'}</option>{analise.columns.map(coluna => <option key={coluna.index} value={coluna.index}>{coluna.name}</option>)}</select></label>
+}
+
+function BotaoNovaCotacaoSimples() {
+  return <LinkInterno className="button button-primary" to="/cotacoes/nova">Criar cotação normal</LinkInterno>
 }

@@ -572,7 +572,10 @@ export default function PaginaRespostaPublica() {
         <span className="eyebrow green">Tudo certo!</span>
         <h1>Proposta salva com sucesso.</h1>
         <p>
-          A {resposta.nomeEmpresa} já recebeu os valores da{" "}
+          {resposta.farmacias && resposta.farmacias.length > 1
+            ? `As ${resposta.farmacias.length} farmácias da cotação conjunta já receberam`
+            : `A ${resposta.nomeEmpresa} já recebeu`}{" "}
+          os valores da{" "}
           {resposta.nomeDistribuidora}. Você pode enviar propostas de outras
           distribuidoras pela mesma conta.
         </p>
@@ -818,7 +821,11 @@ function Editor({
           Minhas propostas
         </button>
         <section className="quote-heading">
-          <span className="eyebrow green">{resposta.nomeEmpresa}</span>
+          <span className="eyebrow green" title={resposta.farmacias && resposta.farmacias.length > 1 ? resposta.nomeEmpresa : undefined}>
+            {resposta.farmacias && resposta.farmacias.length > 1
+              ? `Cotação conjunta · ${resposta.farmacias.length} farmácias`
+              : resposta.nomeEmpresa}
+          </span>
           <div className="title-line">
             <div>
               <h1>{resposta.nomeDistribuidora}</h1>
@@ -1345,15 +1352,58 @@ function Revisao({
   );
 }
 
+const FARMACIAS_VISIVEIS = 3;
+
+function ListaFarmacias({ farmacias }: { farmacias: string[] }) {
+  const [aberta, setAberta] = useState(false);
+  const visiveis = aberta ? farmacias : farmacias.slice(0, FARMACIAS_VISIVEIS);
+  const ocultas = farmacias.length - visiveis.length;
+  return (
+    <div className="company-list">
+      <p className="company-list-title">
+        <Building2 />
+        <strong>Cotação conjunta de {farmacias.length} farmácias</strong>
+        <span>Quantidades somadas: responda uma vez para todas.</span>
+      </p>
+      <ul aria-label="Farmácias desta cotação">
+        {visiveis.map((farmacia) => (
+          <li key={farmacia}>{farmacia}</li>
+        ))}
+        {ocultas > 0 && (
+          <li>
+            <button type="button" onClick={() => setAberta(true)} aria-label={`Mostrar mais ${ocultas} farmácias`}>
+              +{ocultas}
+            </button>
+          </li>
+        )}
+        {aberta && farmacias.length > FARMACIAS_VISIVEIS && (
+          <li>
+            <button type="button" onClick={() => setAberta(false)}>
+              mostrar menos
+            </button>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
 function Introducao({ cotacao }: { cotacao: CotacaoPublica }) {
   return (
     <section className="public-intro">
       <span className="eyebrow green">Convite para cotação</span>
       <h1>{cotacao.nomeCotacao}</h1>
-      <p className="company-name">
-        <Building2 />
-        {cotacao.nomeEmpresa}
-      </p>
+      {cotacao.farmacias && cotacao.farmacias.length > 1 ? (
+        /* Cotação unificada: um link só para várias farmácias da mesma rede. Linha única com
+           as primeiras farmácias em etiquetas; o resto abre sob demanda, para a lista não
+           empurrar os produtos para fora da tela quando a rede é grande. */
+        <ListaFarmacias farmacias={cotacao.farmacias} />
+      ) : (
+        <p className="company-name">
+          <Building2 />
+          {cotacao.nomeEmpresa}
+        </p>
+      )}
       <div className="public-meta">
         <div>
           <ShoppingBag />
