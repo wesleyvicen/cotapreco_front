@@ -228,6 +228,48 @@
 .lp-passos-lista h3 svg { width: 19px; height: 19px; flex: none; color: var(--lp-verde); }
 .lp-passos-lista p { margin: 0; color: var(--lp-suave); font-size: 14px; line-height: 1.55; }
 
+/* Redes: vantagens para quem compra para várias lojas. --------------- */
+.lp-rede { background: #f6faf8; }
+.lp-rede .lp-container { text-align: center; }
+.lp-rede-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--lp-verde-claro);
+  color: var(--lp-verde);
+  font-size: 12px;
+  font-weight: 800;
+}
+.lp-rede-eyebrow svg { width: 15px; height: 15px; }
+.lp-rede h2 { margin-bottom: 10px; }
+.lp-rede-sub { max-width: 620px; margin: 0 auto 24px; color: var(--lp-suave); font-size: 15px; line-height: 1.55; }
+.lp-rede-lista { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; text-align: left; }
+.lp-rede-lista li { padding: 20px; border: 1px solid var(--lp-linha); border-radius: 15px; background: #fff; }
+.lp-rede-icone {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: var(--lp-verde-claro);
+  color: var(--lp-verde);
+}
+.lp-rede-icone svg { width: 19px; height: 19px; }
+.lp-rede-lista h3 { margin: 0 0 7px; font-size: 16px; color: var(--lp-tinta); }
+.lp-rede-lista p { margin: 0; color: var(--lp-suave); font-size: 14px; line-height: 1.55; }
+.lp-rede-cta { margin: 22px auto 0; color: var(--lp-suave); font-size: 14px; }
+.lp-rede-cta a { color: var(--lp-verde); font-weight: 700; }
+/* Capturas da rede no mesmo formato dos diferenciais (texto de um lado, tela do outro),
+   logo abaixo dos cartões. O convite é captura de celular: fica estreito e limitado. */
+.lp-rede-destaques { margin-top: 40px; text-align: left; }
+.lp-rede-destaques .lp-diferencial-estreito .lp-diferencial-imagem { max-width: 360px; margin-inline: auto; }
+@media (min-width: 700px) { .lp-rede-lista { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .lp-rede-lista { grid-template-columns: repeat(3, 1fr); } }
+
 /* Tempo: contraste antes/depois em vez de lista. -------------------- */
 .lp-tempo { background: #fff; }
 .lp-tempo-interno { max-width: 900px; }

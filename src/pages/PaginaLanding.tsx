@@ -1,8 +1,8 @@
-import { ArrowRight, BadgeCheck, Boxes, CheckCircle2, Clock3, FileSpreadsheet, LineChart, Link2, MessageCircle, PackageCheck, Quote, Search, ShieldCheck, Sparkles, Tag, Users } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { ArrowRight, BadgeCheck, Boxes, Building2, CheckCircle2, Clock3, FileSpreadsheet, Layers, LineChart, Link2, MessageCircle, PackageCheck, Quote, Scale, Search, ShieldCheck, Sparkles, Tag, Users } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { money } from '../api'
 import RodapeSite from '../components/RodapeEmpresa'
-import { INCLUSO, linkWhatsappNegociarFarmacias, PLANO_PADRAO, PRECO_ADICIONAL_FARMACIA_PADRAO, TOTAL_DIAS_TESTE } from '../lib/assinatura'
+import { INCLUSO, linkWhatsappNegociarFarmacias, linkWhatsappRedes, PLANO_PADRAO, PRECO_ADICIONAL_FARMACIA_PADRAO, TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import { LinkInterno } from '../roteamento'
 
 const PERGUNTAS = [
@@ -17,6 +17,10 @@ const PERGUNTAS = [
   {
     pergunta: 'Tenho mais de uma farmácia. Como fica o preço?',
     resposta: 'Cada farmácia adicional soma R$ 89,90 à mensalidade da primeira, e todas ficam numa conta só. Para redes com mais de três farmácias, a gente costuma negociar um preço sob medida. É só chamar no WhatsApp.',
+  },
+  {
+    pergunta: 'Dá para cotar para várias lojas de uma vez?',
+    resposta: 'Dá. Na cotação unificada você importa o pedido de cada loja, e a distribuidora recebe um link só, com as quantidades somadas. Ela responde uma vez e cada loja recebe a sua parte, com o próprio pedido de compra.',
   },
   {
     pergunta: 'Minha farmácia precisa instalar algum programa?',
@@ -56,7 +60,13 @@ const ROTULO_TIPO_DEPOIMENTO: Record<TipoDepoimento, string> = {
   representante: 'Representante',
 }
 
-const DIFERENCIAIS = [
+interface ItemDiferencial {
+  icone:ReactNode; titulo:string; texto:string; reforco?:string
+  /* Nome base da captura (-desktop/-mobile). imagemMobile, quando existe, é a única captura. */
+  imagem:string; imagemMobile?:string; alt:string; largura:number; altura:number; estreita?:boolean
+}
+
+const DIFERENCIAIS:ItemDiferencial[] = [
   {
     icone: <Sparkles/>,
     titulo: 'Ele aponta a oportunidade e o risco de ruptura',
@@ -84,7 +94,7 @@ const DIFERENCIAIS = [
     imagem: '04-compra-sugerida',
     alt: 'Plano de compra do CotaPreço dividido por distribuidora, com total e alerta de pedido mínimo',
     largura: 1480,
-    altura: 492,
+    altura: 464,
   },
   {
     icone: <PackageCheck/>,
@@ -104,6 +114,63 @@ const DIFERENCIAIS = [
     alt: 'Comparativo entre cotações do CotaPreço mostrando evolução de preço por produto',
     largura: 1480,
     altura: 607,
+  },
+]
+
+/* Só o que a rede já faz no sistema hoje: cotação unificada, divisão de estoque, pedido por
+   loja e acesso por loja. Nada de promessa de funcionalidade futura na página de venda. */
+const VANTAGENS_REDE = [
+  {
+    icone: <Layers/>,
+    titulo: 'Um link para todas as lojas',
+    texto: 'Importe o pedido de cada loja e mande uma cotação só. A distribuidora vê as quantidades somadas e responde uma vez, em vez de preencher uma proposta por loja.',
+  },
+  {
+    icone: <Scale/>,
+    titulo: 'Volume de rede na negociação',
+    texto: 'A distribuidora enxerga o pedido da rede inteira e as lojas que estão cotando juntas. Quantidade maior no mesmo link é argumento para preço melhor.',
+  },
+  {
+    icone: <Boxes/>,
+    titulo: 'Estoque curto dividido com critério',
+    texto: 'Se a distribuidora não tem o total, o estoque é dividido na proporção do pedido de cada loja. Precisa priorizar uma delas? Você ajusta a divisão.',
+  },
+  {
+    icone: <CheckCircle2/>,
+    titulo: 'Cada loja com o seu pedido',
+    texto: 'A compra sai separada por loja, com o CNPJ dela, o pedido mínimo de cada uma e um atalho para passar de uma loja para a outra.',
+  },
+  {
+    icone: <Users/>,
+    titulo: 'Uma conta, acesso por loja',
+    texto: 'Comprador, gerente e dono entram na mesma conta, cada um com permissão só nas lojas que acompanha, e o painel mostra os números de todas juntas.',
+  },
+]
+
+/* Capturas da seção de redes, no mesmo formato texto + imagem dos diferenciais. O convite só
+   existe na versão celular (é assim que o representante abre o link), então ela serve às duas. */
+const DESTAQUES_REDE:ItemDiferencial[] = [
+  {
+    icone: <Link2/>,
+    titulo: 'O representante recebe um link só',
+    texto: 'O convite mostra as lojas que estão cotando juntas e as quantidades já somadas. Ele preenche uma proposta, e cada farmácia recebe a sua parte com o mesmo preço.',
+    reforco: 'Nada de mandar cinco links para a mesma distribuidora.',
+    imagem: '07-rede-convite-mobile',
+    imagemMobile: '07-rede-convite-mobile',
+    alt: 'Convite de cotação do CotaPreço para o representante, listando as três farmácias da rede que cotam juntas',
+    largura: 500,
+    altura: 334,
+    estreita: true,
+  },
+  {
+    icone: <Boxes/>,
+    titulo: 'Estoque curto dividido entre as lojas',
+    texto: 'Quando a distribuidora não tem o total, o sistema divide na proporção do pedido de cada farmácia e mostra tudo numa planilha. Precisa priorizar uma loja? Depois de fechar a cotação, você ajusta a divisão.',
+    reforco: 'Um atalho no topo leva de uma farmácia para outra, cada uma com o seu pedido.',
+    imagem: '08-rede-estoque',
+    alt: 'Cotação unificada no CotaPreço com atalho entre as farmácias e o estoque de cada produto dividido por loja',
+    largura: 1480,
+    altura: 633,
   },
 ]
 
@@ -208,22 +275,29 @@ export default function PaginaLanding() {
         <div className="lp-container">
           <h2 id="diferenciais">Por que não é só uma planilha mais bonita</h2>
           <div className="lp-diferenciais">
-            {DIFERENCIAIS.map(item => <article className={`lp-diferencial ${item.estreita ? 'lp-diferencial-estreito' : ''}`} key={item.titulo}>
-              <div className="lp-diferencial-texto">
-                <span className="lp-diferencial-icone" aria-hidden="true">{item.icone}</span>
-                <h3>{item.titulo}</h3>
-                <p>{item.texto}</p>
-                {item.reforco && <p className="lp-diferencial-reforco">{item.reforco}</p>}
-              </div>
-              {item.imagem && <figure className="lp-diferencial-imagem">
-                <picture>
-                  <source media="(max-width: 700px)" srcSet={`/landing/${item.imagem}-mobile.webp`}/>
-                  <img src={`/landing/${item.imagem}-desktop.webp`} width={item.largura} height={item.altura}
-                    loading="lazy" decoding="async" alt={item.alt}/>
-                </picture>
-              </figure>}
-            </article>)}
+            {DIFERENCIAIS.map(item => <Diferencial item={item} key={item.titulo}/>)}
           </div>
+        </div>
+      </section>
+
+      <section className="lp-secao lp-rede" aria-labelledby="redes" id="redes">
+        <div className="lp-container">
+          <span className="lp-rede-eyebrow"><Building2/> Para redes de farmácias</span>
+          <h2 id="redes">Várias lojas, uma cotação</h2>
+          <p className="lp-rede-sub">Quem compra para mais de uma loja não precisa repetir o processo em cada uma. A rede cota junto, e cada loja continua com o seu pedido.</p>
+          <ul className="lp-rede-lista">
+            {VANTAGENS_REDE.map(item => <li key={item.titulo}>
+              <span className="lp-rede-icone" aria-hidden="true">{item.icone}</span>
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </li>)}
+          </ul>
+          <div className="lp-diferenciais lp-rede-destaques">
+            {DESTAQUES_REDE.map(item => <Diferencial item={item} key={item.titulo}/>)}
+          </div>
+          <p className="lp-rede-cta">
+            <a href="#precos">Veja o preço por loja</a> ou <a href={linkWhatsappRedes()} target="_blank" rel="noopener noreferrer">fale com a gente pelo WhatsApp</a> sobre condições para redes.
+          </p>
         </div>
       </section>
 
@@ -306,4 +380,24 @@ export default function PaginaLanding() {
       <LinkInterno to="/cadastro" className="lp-botao lp-botao-primario lp-botao-compacto">Testar grátis</LinkInterno>
     </div>
   </div>
+}
+
+
+/* Bloco texto + captura, alternando o lado a cada item. Usado nos diferenciais e na seção de redes. */
+function Diferencial({ item }:{ item:ItemDiferencial }) {
+  return <article className={`lp-diferencial ${item.estreita ? 'lp-diferencial-estreito' : ''}`}>
+    <div className="lp-diferencial-texto">
+      <span className="lp-diferencial-icone" aria-hidden="true">{item.icone}</span>
+      <h3>{item.titulo}</h3>
+      <p>{item.texto}</p>
+      {item.reforco && <p className="lp-diferencial-reforco">{item.reforco}</p>}
+    </div>
+    {item.imagem && <figure className="lp-diferencial-imagem">
+      <picture>
+        <source media="(max-width: 700px)" srcSet={`/landing/${item.imagemMobile ?? `${item.imagem}-mobile`}.webp`}/>
+        <img src={`/landing/${item.imagem}${item.imagemMobile === undefined ? '-desktop' : ''}.webp`} width={item.largura} height={item.altura}
+          loading="lazy" decoding="async" alt={item.alt}/>
+      </picture>
+    </figure>}
+  </article>
 }

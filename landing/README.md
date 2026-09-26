@@ -28,6 +28,19 @@ existe, o que é risco jurídico. O mapa usado:
 **Os valores não foram tocados.** Trocar nome de empresa por fictício remove um risco;
 mexer em preço e economia seria fabricar a promessa que a página está vendendo.
 
+## Capturas refeitas em 26/09/2026 (dados fictícios coerentes)
+
+`04-compra-sugerida` (plano final de compra no leiaute novo), `07-rede-convite` e
+`08-rede-estoque` foram feitas numa base de vitrine separada, sem nenhum dado real: rede
+fictícia com Farmácia Central, Farmácia Boa Vista e Farmácia Jardim; distribuidoras Distribuidora
+Alfa, Beta Farma e Gama Distribuição; 14 medicamentos genéricos com preços de mercado
+coerentes e EANs inventados. Mesmas larguras de sempre (desktop 1480px com o menu
+recolhido, mobile 500px), recortadas no trecho da tela que interessa. Nessas três a ressalva
+abaixo não se aplica.
+
+- `07-rede-convite`: convite do representante numa cotação unificada (lojas e quantidades somadas).
+- `08-rede-estoque`: atalho entre as farmácias e o estoque curto dividido por loja.
+
 ## Ressalva importante sobre os números
 
 A base de testes tem valores incoerentes, e isso aparece nas capturas:

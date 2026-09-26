@@ -3,6 +3,10 @@ import type { Assinatura, PlanoAssinatura, StatusAssinatura } from '../types'
 export const LINK_WHATSAPP_ASSINATURA =
   'https://wa.me/5581999441494?text=' + encodeURIComponent('Olá! Quero assinar o CotaPreço.')
 
+/* Contato de quem ainda não é cliente e chegou pela seção de redes da landing. */
+export const linkWhatsappRedes = () =>
+  'https://wa.me/5581999441494?text=' + encodeURIComponent('Olá! Tenho uma rede de farmácias e quero conhecer o CotaPreço para cotar as lojas juntas.')
+
 export const linkWhatsappNegociarFarmacias = (quantidadeFarmacias:number) =>
   'https://wa.me/5581999441494?text=' + encodeURIComponent(`Olá! Tenho ${quantidadeFarmacias} farmácias no CotaPreço e quero negociar condições especiais.`)
 
