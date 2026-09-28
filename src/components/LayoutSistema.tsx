@@ -1,4 +1,4 @@
-import { BadgeCheck, BarChart3, Boxes, Building2, ChevronRight, ClipboardList, KeyRound, LogOut, Menu, PackageSearch, PanelLeftClose, PanelLeftOpen, Users, X } from 'lucide-react'
+import { BadgeCheck, BarChart3, Boxes, Building2, ChevronRight, ClipboardList, KeyRound, LogOut, Menu, PackageSearch, PanelLeftClose, PanelLeftOpen, Store, Users, X } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import FaixaAssinatura from './FaixaAssinatura'
 import FaixaConfirmacaoEmail from './FaixaConfirmacaoEmail'
@@ -10,7 +10,7 @@ import { usarAutenticacao } from '../autenticacao'
 import { isAdminAtivo, isAdminDoGrupo } from '../lib/permissoes'
 import SeletorFarmacia from './SeletorFarmacia'
 
-const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/cotacao-ol',label:'Cotação para OL',icon:PackageSearch},{to:'/produtos',label:'Produtos',icon:Boxes}]
+const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/cotacao-ol',label:'Cotação para OL',icon:PackageSearch},{to:'/produtos',label:'Produtos',icon:Boxes},{to:'/portais',label:'Busca nos portais',icon:Store}]
 /* Staff não tem farmácia nenhuma, então nada do menu normal (cotações, produtos, assinatura,
    seletor de farmácia) faz sentido pra essa conta, só a lista de contas e a própria senha. */
 const linksStaff=[{to:'/',label:'Contas',icon:Users,end:true}]

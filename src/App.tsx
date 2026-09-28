@@ -15,6 +15,7 @@ const PaginaEsqueciSenha=lazy(()=>import('./pages/PaginaEsqueciSenha'))
 const PaginaCadastroFarmacia=lazy(()=>import('./pages/PaginaCadastroFarmacia'))
 const PaginaNovaCotacao=lazy(()=>import('./pages/PaginaNovaCotacao'))
 const PaginaProdutos=lazy(()=>import('./pages/PaginaProdutos'))
+const PaginaPortais=lazy(()=>import('./pages/PaginaPortais'))
 const PaginaRespostaPublica=lazy(()=>import('./pages/PaginaRespostaPublica'))
 const PaginaRedefinirSenhaRepresentante=lazy(()=>import('./pages/PaginaRedefinirSenhaRepresentante'))
 const PaginaRedefinirSenha=lazy(()=>import('./pages/PaginaRedefinirSenha'))
@@ -50,6 +51,7 @@ export default function App(){
       '/primeira-cotacao':'Primeira cotação',
       '/cotacao-ol':'Cotação para OL',
       '/produtos':'Produtos',
+      '/portais':'Busca nos portais',
       '/dados-farmacia':'Dados da farmácia',
       '/usuarios':'Usuários',
       '/alterar-senha':'Alterar senha',
@@ -86,6 +88,7 @@ export default function App(){
   else if(pathname==='/primeira-cotacao')page=<PaginaPrimeiraCotacao/>
   else if(pathname==='/cotacao-ol')page=<PaginaCotacaoOL/>
   else if(pathname==='/produtos')page=<PaginaProdutos/>
+  else if(pathname==='/portais')page=<PaginaPortais/>
   else if(pathname==='/dados-farmacia')page=<PaginaConfiguracoes/>
   else if(pathname==='/usuarios')page=<PaginaUsuarios/>
   else if(pathname==='/alterar-senha')page=<PaginaAlterarSenha/>

@@ -140,3 +140,8 @@ export interface CandidatoCorrespondenciaMercadoFarma { ean:string; nome:string;
 export interface SugestaoCorrespondenciaMercadoFarma { itemCotacaoId:number; produtoId:number; produto:string; laboratorio:string|null; quantidade:number; eanSugerido:string|null; candidatos:CandidatoCorrespondenciaMercadoFarma[] }
 export interface ResultadoImportacaoMercadoFarma { distribuidoras:number; itensEncontrados:number; itensNaoEncontrados:number; itensSemEan:number; totalItens:number; sugestoes:SugestaoCorrespondenciaMercadoFarma[] }
 export interface ResultadoVinculosMercadoFarma { vinculados:number; recusados:string[]; importacao:ResultadoImportacaoMercadoFarma }
+/* Busca geral nos portais de pedido eletrônico conectados (GET /integracoes/busca). */
+export interface OfertaPortalEncontrada { portal:string; distribuidora:string; preco:number; estoque:number; pedidoMinimo:number|null; semImposto:boolean }
+export interface ProdutoPortalEncontrado { ean:string|null; nome:string; marca:string|null; menorPreco:number; estoqueTotal:number; ofertas:OfertaPortalEncontrada[] }
+export interface AvisoPortal { portal:string; mensagem:string }
+export interface ResultadoBuscaPortais { produtos:ProdutoPortalEncontrado[]; portaisConsultados:string[]; avisos:AvisoPortal[]; limitado:boolean }

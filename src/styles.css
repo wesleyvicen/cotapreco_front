@@ -5140,6 +5140,61 @@ label small {
 .integracao-comando code {
   overflow-wrap: anywhere;
 }
+/* Busca nos portais */
+/* Grid próprio: no celular a .toolbar vira coluna, e um flex-basis na busca passaria a
+   valer como altura. Aqui a busca ocupa a primeira faixa e botão + filtro dividem a segunda. */
+.portal-busca { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; }
+.portal-busca .search { min-width: 0; }
+.portal-check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; white-space: nowrap; }
+.portal-aviso { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.portal-aviso svg { width: 18px; height: 18px; flex: none; }
+.portal-aviso span { flex: 1 1 auto; }
+.portal-dica { display: flex; align-items: center; gap: 8px; color: #5f7470; }
+.portal-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 12px; color: #5f7470; font-size: 13px; }
+.portal-filtros > span { margin-right: auto; }
+.portal-filtros select { height: 36px; border: 1px solid #d5e2dd; border-radius: 10px; padding: 0 10px; background: #fff; font: inherit; font-size: 13px; }
+.portal-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.portal-produto { background: #fff; border: 1px solid #e3ebe8; border-radius: 14px; padding: 12px 14px; }
+.portal-produto header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; margin-bottom: 6px; }
+.portal-produto header > div { display: grid; gap: 2px; min-width: 0; }
+.portal-produto header strong { overflow-wrap: anywhere; }
+.portal-produto header small { color: #5f7470; font-size: 12px; }
+.portal-produto-resumo { text-align: right; }
+.portal-ofertas { width: 100%; font-size: 13px; }
+.portal-ofertas th, .portal-ofertas td { padding: 5px 8px; }
+.portal-ofertas .numero { text-align: right; white-space: nowrap; }
+.portal-ofertas small { color: #5f7470; font-size: 11px; }
+.portal-ofertas tr.melhor td { background: #f1f9f5; }
+.portal-selo { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #eef3f1; color: #34554b; font-size: 12px; white-space: nowrap; }
+.portal-sem-estoque { color: #a4523a; }
+.portal-ver-mais { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 13px; background: none; border: 0; cursor: pointer; }
+.portal-ver-mais svg { width: 14px; height: 14px; }
+@media (max-width: 760px) {
+  .portal-busca { grid-template-columns: auto minmax(0, 1fr); gap: 8px; padding: 8px; }
+  .portal-busca .search { grid-column: 1 / -1; }
+  .portal-busca .search input { font-size: 16px; text-overflow: ellipsis; }
+  .portal-busca .button { justify-content: center; }
+  .portal-check { justify-self: end; }
+  .portal-produto { padding: 10px; }
+  .portal-produto-resumo { text-align: left; }
+  /* A tabela vira uma linha por oferta: distribuidora e portal em cima, números embaixo. */
+  .portal-produto .table-wrap { overflow: visible; }
+  .portal-ofertas, .portal-ofertas tbody { display: block; width: 100%; min-width: 0; }
+  .portal-ofertas td.sem-minimo { display: none; }
+  .portal-ofertas thead { display: none; }
+  .portal-ofertas tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 6px 4px; border-bottom: 1px solid #eef3f1; }
+  .portal-ofertas tr:last-child { border-bottom: 0; }
+  .portal-ofertas td { padding: 0; border: 0; }
+  .portal-ofertas tr.melhor td { background: none; }
+  .portal-ofertas tr.melhor { background: #f1f9f5; border-radius: 8px; }
+  .portal-ofertas td:nth-child(1) { grid-column: 1; grid-row: 1; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .portal-ofertas td:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .portal-ofertas td:nth-child(3) { grid-column: 2; grid-row: 1; }
+  .portal-ofertas td:nth-child(4) { grid-column: 2; grid-row: 2; color: #5f7470; font-size: 12px; }
+  .portal-ofertas td:nth-child(5) { grid-column: 1 / -1; grid-row: 3; text-align: left; color: #5f7470; font-size: 12px; }
+  .portal-ofertas td:nth-child(5)::before { content: "Pedido mínimo: "; }
+  .portal-filtros select { flex: 1 1 140px; }
+}
 /* Confirmação de produtos sem EAN encontrados no Mercado Farma */
 .vinculos-modal { width: min(1180px, calc(100vw - 32px)); max-height: min(90vh, 900px); display: flex; flex-direction: column; }
 .vinculos-ferramentas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
