@@ -133,3 +133,10 @@ export interface PontoHistoricoCompra { quotationId:number; quotationName:string
 export interface ProdutoHistoricoCompra { key:string; ean:string|null; productName:string; laboratory:string|null; points:PontoHistoricoCompra[]; firstUnitPrice:number; lastUnitPrice:number; priceVariation:number; priceVariationPercent:number|null; financialDifference:number; latestPriceSituation:SituacaoPrecoCompra }
 export interface ResumoComparativoCompra { commonProducts:number; evaluatedPurchases:number; bestPricePurchases:number; actualTotal:number; amountAboveBestScenario:number; averagePriceVariationPercent:number }
 export interface ComparativoCompra { products:ProdutoHistoricoCompra[]; summary:ResumoComparativoCompra }
+/* Conexão da farmácia ativa com o Mercado Farma. status nulo: nunca conectou. O token nunca volta da API. */
+export type StatusIntegracao='CONECTADA'|'EXPIRADA'
+export interface IntegracaoMercadoFarma { disponivel:boolean; status:StatusIntegracao|null; tokenExpiraEm:string|null; ultimaImportacaoEm:string|null; ultimoErro:string|null }
+export interface CandidatoCorrespondenciaMercadoFarma { ean:string; nome:string; marca:string|null; menorPreco:number|null; distribuidoras:number; pontuacao:number }
+export interface SugestaoCorrespondenciaMercadoFarma { itemCotacaoId:number; produtoId:number; produto:string; laboratorio:string|null; quantidade:number; eanSugerido:string|null; candidatos:CandidatoCorrespondenciaMercadoFarma[] }
+export interface ResultadoImportacaoMercadoFarma { distribuidoras:number; itensEncontrados:number; itensNaoEncontrados:number; itensSemEan:number; totalItens:number; sugestoes:SugestaoCorrespondenciaMercadoFarma[] }
+export interface ResultadoVinculosMercadoFarma { vinculados:number; recusados:string[]; importacao:ResultadoImportacaoMercadoFarma }

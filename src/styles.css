@@ -5113,6 +5113,81 @@ label small {
 .settings-form > .button {
   width: max-content;
 }
+/* Integrações (Dados da farmácia > Integrações) */
+.integracao-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+}
+.integracao-status small {
+  color: #5f7470;
+}
+.integracao-passos {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  line-height: 1.5;
+}
+.integracao-comando {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.integracao-comando code {
+  overflow-wrap: anywhere;
+}
+/* Confirmação de produtos sem EAN encontrados no Mercado Farma */
+.vinculos-modal { width: min(1180px, calc(100vw - 32px)); max-height: min(90vh, 900px); display: flex; flex-direction: column; }
+.vinculos-ferramentas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.vinculos-busca { flex: 1 1 260px; display: flex; align-items: center; gap: 8px; border: 1px solid #d5e2dd; border-radius: 10px; padding: 0 10px; background: #fff; }
+.vinculos-busca svg { width: 16px; height: 16px; color: #5f7470; flex: none; }
+.vinculos-busca input { border: 0; outline: 0; padding: 8px 0; width: 100%; background: transparent; }
+.vinculos-busca:focus-within { outline: 2px solid #2f7d63; outline-offset: 1px; }
+.vinculos-ferramentas select { max-width: 220px; height: 38px; border: 1px solid #d5e2dd; border-radius: 10px; padding: 0 10px; background: #fff; color: inherit; font: inherit; font-size: 13px; text-decoration: none; }
+.vinculos-ferramentas select:focus { outline: 2px solid #2f7d63; outline-offset: 1px; }
+.vinculos-busca input { font-size: 13px; }
+.vinculos-filtros { display: flex; flex-wrap: wrap; gap: 4px; }
+.vinculos-filtro { border: 1px solid #d5e2dd; background: #fff; border-radius: 999px; padding: 5px 11px; font-size: 13px; cursor: pointer; color: #34554b; }
+.vinculos-filtro span { color: #5f7470; margin-left: 2px; }
+.vinculos-filtro.ativo { background: #2f7d63; border-color: #2f7d63; color: #fff; }
+.vinculos-filtro.ativo span { color: #d8efe6; }
+.vinculos-lote { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 8px; color: #5f7470; font-size: 13px; }
+.vinculos-lote .button { padding: 4px 10px; font-size: 13px; }
+.vinculos-lista { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border: 1px solid #e3ebe8; border-radius: 12px; }
+.vinculos-vazio { padding: 24px; text-align: center; color: #5f7470; margin: 0; }
+.vinculo-linha { display: grid; grid-template-columns: minmax(180px, 280px) minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 6px 10px; border-bottom: 1px solid #eef3f1; }
+.vinculo-linha:last-child { border-bottom: 0; }
+.vinculo-linha.vinculado { background: #f6fbf9; }
+.vinculo-linha.ignorado { background: #fafafa; }
+.vinculo-linha.ignorado .vinculo-produto { opacity: 0.6; }
+.vinculo-produto { display: grid; min-width: 0; }
+.vinculo-produto strong { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vinculo-produto small { color: #5f7470; font-size: 12px; }
+.vinculo-candidatos { display: grid; gap: 2px; min-width: 0; }
+.vinculo-opcao { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 3px 8px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.vinculo-opcao:hover { background: #eef5f2; }
+.vinculo-opcao.selecionada { border-color: #2f7d63; background: #e7f4ee; }
+.vinculo-opcao:focus-within { outline: 2px solid #2f7d63; outline-offset: 1px; }
+.vinculo-opcao input { margin: 0; }
+.vinculo-opcao-nome { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vinculo-opcao-info { color: #5f7470; font-size: 12px; white-space: nowrap; }
+.vinculo-opcao-preco { font-weight: 600; white-space: nowrap; text-align: right; min-width: 118px; }
+.vinculo-opcao-preco small { font-weight: 400; color: #5f7470; }
+.vinculo-ignorado-texto { color: #5f7470; font-size: 13px; padding: 3px 8px; }
+.vinculo-acao svg { width: 16px; height: 16px; }
+.vinculos-rodape { align-items: center; flex-wrap: wrap; }
+.vinculos-rodape > span { margin-right: auto; color: #5f7470; font-size: 13px; }
+@media (max-width: 760px) {
+  .vinculo-linha { grid-template-columns: minmax(0, 1fr) auto; }
+  .vinculo-candidatos { grid-column: 1 / -1; grid-row: 2; }
+  .vinculo-opcao { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .vinculo-opcao-info { display: none; }
+  .vinculo-opcao-preco { min-width: 0; }
+}
 .plano-resumo {
   padding: 22px;
   display: flex;

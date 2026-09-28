@@ -1,8 +1,9 @@
-import { Building2, ChevronDown, Gift, MapPin, MessageCircle, Plus, Save } from 'lucide-react'
+import { Building2, ChevronDown, Gift, MapPin, MessageCircle, PlugZap, Plus, Save } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import CamposEndereco from '../components/CamposEndereco'
+import CardMercadoFarma from '../components/CardMercadoFarma'
 import { AvisoErro, Carregando } from '../components/ComponentesUI'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
 import { linkWhatsappNegociarFarmacias } from '../lib/assinatura'
@@ -347,17 +348,24 @@ function CardPagamento() {
   </form>
 }
 
-type Aba = 'farmacias' | 'pagamento'
+type Aba = 'farmacias' | 'pagamento' | 'integracoes'
+const ABAS:Aba[] = ['farmacias', 'pagamento', 'integracoes']
 
 export default function PaginaConfiguracoes() {
-  const [aba, setAba] = useState<Aba>('farmacias')
+  /* ?aba=integracoes abre direto na conexão: é para lá que a cotação manda quem precisa reconectar. */
+  const [aba, setAba] = useState<Aba>(() => {
+    const pedida = new URLSearchParams(window.location.search).get('aba') as Aba | null
+    return pedida && ABAS.includes(pedida) ? pedida : 'farmacias'
+  })
   return <div className="page">
     <div className="page-header"><div><span className="eyebrow green">Administração</span><h1>Dados da farmácia</h1><p>Informações usadas nos pedidos de compra e na cobrança da assinatura.</p></div></div>
     <div className="tabs" role="tablist" aria-label="Seções de dados da farmácia">
       <button type="button" role="tab" aria-selected={aba==='farmacias'} className={aba==='farmacias'?'active':''} onClick={() => setAba('farmacias')}><Building2/>Farmácias</button>
       <button type="button" role="tab" aria-selected={aba==='pagamento'} className={aba==='pagamento'?'active':''} onClick={() => setAba('pagamento')}><MapPin/>Pagamento</button>
+      <button type="button" role="tab" aria-selected={aba==='integracoes'} className={aba==='integracoes'?'active':''} onClick={() => setAba('integracoes')}><PlugZap/>Integrações</button>
     </div>
     <div hidden={aba!=='farmacias'}><CardFarmacias/></div>
     <div hidden={aba!=='pagamento'}><CardPagamento/></div>
+    {aba==='integracoes' && <CardMercadoFarma/>}
   </div>
 }
