@@ -1,5 +1,10 @@
 import type { SugestaoCorrespondenciaMercadoFarma } from '../types'
 
+/* Avisa o menu que uma integração foi conectada ou desconectada, para mostrar ou esconder a
+   busca nos portais sem recarregar a página. */
+export const EVENTO_INTEGRACOES_ALTERADAS = 'cotapreco:integracoes-alteradas'
+export const avisarIntegracoesAlteradas = () => window.dispatchEvent(new Event(EVENTO_INTEGRACOES_ALTERADAS))
+
 const CHAVE_RECUSADOS = 'cotapreco:mercado-farma:sem-correspondencia'
 export const NENHUM = 'nenhum'
 

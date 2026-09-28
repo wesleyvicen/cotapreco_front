@@ -5,6 +5,7 @@ import { usarAutenticacao } from '../autenticacao'
 import { empresaAtiva, isAdminAtivo } from '../lib/permissoes'
 import type { IntegracaoMercadoFarma } from '../types'
 import { AvisoErro, Carregando } from './ComponentesUI'
+import { avisarIntegracoesAlteradas } from '../lib/vinculosMercadoFarma'
 
 const COMANDO_TOKEN = "copy(localStorage.getItem('token'))"
 
@@ -33,6 +34,7 @@ export default function CardMercadoFarma() {
     try {
       setIntegracao(await api<IntegracaoMercadoFarma>('/integracoes/mercado-farma', { method:'PUT', body:JSON.stringify({ token:token.trim() }) }))
       setToken('')
+      avisarIntegracoesAlteradas()
       setMensagem('Mercado Farma conectado. Na cotação aberta, use "Importar do Mercado Farma".')
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível conectar.') }
     finally { setOcupado(false) }
@@ -45,6 +47,7 @@ export default function CardMercadoFarma() {
       await api('/integracoes/mercado-farma', { method:'DELETE' })
       setIntegracao(atual => atual && { ...atual, status:null, tokenExpiraEm:null, ultimaImportacaoEm:null, ultimoErro:null })
       setMensagem('Mercado Farma desconectado.')
+      avisarIntegracoesAlteradas()
     } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível desconectar.') }
     finally { setOcupado(false) }
   }

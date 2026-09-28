@@ -9,8 +9,12 @@ import { LinkNavegacao } from '../roteamento'
 import { usarAutenticacao } from '../autenticacao'
 import { isAdminAtivo, isAdminDoGrupo } from '../lib/permissoes'
 import SeletorFarmacia from './SeletorFarmacia'
+import { api } from '../api'
+import { EVENTO_INTEGRACOES_ALTERADAS } from '../lib/vinculosMercadoFarma'
 
-const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/cotacao-ol',label:'Cotação para OL',icon:PackageSearch},{to:'/produtos',label:'Produtos',icon:Boxes},{to:'/portais',label:'Busca nos portais',icon:Store}]
+const links=[{to:'/',label:'Painel',icon:BarChart3,end:true},{to:'/cotacoes',label:'Cotações',icon:ClipboardList},{to:'/cotacao-ol',label:'Cotação para OL',icon:PackageSearch},{to:'/produtos',label:'Produtos',icon:Boxes}]
+/* Só entra no menu quando a farmácia ativa tem algum portal configurado. */
+const linkPortais={to:'/portais',label:'Busca nos portais',icon:Store,end:false}
 /* Staff não tem farmácia nenhuma, então nada do menu normal (cotações, produtos, assinatura,
    seletor de farmácia) faz sentido pra essa conta, só a lista de contas e a própria senha. */
 const linksStaff=[{to:'/',label:'Contas',icon:Users,end:true}]
@@ -40,13 +44,21 @@ export default function LayoutSistema({children}:{children:ReactNode}){
   useEffect(()=>{try{window.localStorage.setItem(SIDEBAR_RECOLHIDA_KEY,String(recolhida))}catch{/* Preferência é opcional quando o navegador bloqueia armazenamento. */}},[recolhida])
   useEffect(()=>{const consulta=window.matchMedia(CONSULTA_MOBILE);const atualizar=()=>setMobile(consulta.matches);consulta.addEventListener('change',atualizar);return()=>consulta.removeEventListener('change',atualizar)},[])
   const recolhidaEfetiva=recolhida&&!mobile
+  const[temPortal,setTemPortal]=useState(false)
+  useEffect(()=>{
+    if(!user||user.staff)return
+    const carregar=()=>{api<string[]>('/integracoes/portais').then(portais=>setTemPortal(portais.length>0)).catch(()=>setTemPortal(false))}
+    carregar()
+    window.addEventListener(EVENTO_INTEGRACOES_ALTERADAS,carregar)
+    return()=>window.removeEventListener(EVENTO_INTEGRACOES_ALTERADAS,carregar)
+  },[user])
   const fecharMenuMobile=()=>setOpen(false)
   const tituloNavegacao=(label:string)=>recolhidaEfetiva?label:undefined
   return <div className={`app-shell ${recolhidaEfetiva?'app-shell-sidebar-recolhida':''}`}>
     <aside className={`sidebar ${open?'sidebar-open':''} ${recolhidaEfetiva?'sidebar-recolhida':''}`}>
       <div className="brand"><div className="brand-copy"><img className="cotapreco-logo" src="/cotapreco-logo.png?v=20260905-1" width="450" height="106" alt="CotaPreço"/><span>{user?.staff?'Equipe interna':'Compras inteligentes'}</span></div><button aria-label={recolhida?'Expandir menu':'Minimizar menu'} className="icon-button sidebar-toggle" title={recolhida?'Expandir menu':'Minimizar menu'} onClick={()=>setRecolhida(valor=>!valor)}>{recolhida?<PanelLeftOpen size={20}/>:<PanelLeftClose size={20}/>}</button><button className="icon-button sidebar-close" onClick={()=>setOpen(false)}><X size={20}/></button></div>
       <nav>
-        {(user?.staff?linksStaff:links).map(({to,label,icon:Icon,end})=><LinkNavegacao key={to} to={to} end={end} aria-label={label} title={tituloNavegacao(label)} onClick={fecharMenuMobile}><Icon size={20}/><span>{label}</span><ChevronRight className="nav-chevron" size={16}/></LinkNavegacao>)}
+        {(user?.staff?linksStaff:temPortal?[...links,linkPortais]:links).map(({to,label,icon:Icon,end})=><LinkNavegacao key={to} to={to} end={end} aria-label={label} title={tituloNavegacao(label)} onClick={fecharMenuMobile}><Icon size={20}/><span>{label}</span><ChevronRight className="nav-chevron" size={16}/></LinkNavegacao>)}
         {!user?.staff&&(isAdminAtivo(user)||isAdminDoGrupo(user))&&<><div className="nav-divider"/><span className="nav-label">Administração</span>{isAdminDoGrupo(user)&&<LinkNavegacao to="/usuarios" aria-label="Usuários" title={tituloNavegacao('Usuários')} onClick={fecharMenuMobile}><Users size={20}/><span>Usuários</span><ChevronRight className="nav-chevron" size={16}/></LinkNavegacao>}<LinkNavegacao to="/dados-farmacia" aria-label="Dados da farmácia" title={tituloNavegacao('Dados da farmácia')} onClick={fecharMenuMobile}><Building2 size={20}/><span>Dados da farmácia</span><ChevronRight className="nav-chevron" size={16}/></LinkNavegacao></>}
         <div className="nav-divider"/><span className="nav-label">Minha conta</span>
         {!user?.staff&&<LinkNavegacao to="/assinatura" aria-label="Assinatura" title={tituloNavegacao('Assinatura')} onClick={fecharMenuMobile}><BadgeCheck size={20}/><span>Assinatura</span><ChevronRight className="nav-chevron" size={16}/></LinkNavegacao>}
