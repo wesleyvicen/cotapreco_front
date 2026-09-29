@@ -12,10 +12,22 @@ export interface ContaStaff {
   cupomAtivo:string|null
   /* Quando a equipe desativou a conta; nulo enquanto ativa. */
   desativadaEm:string|null
+  uso:UsoResumido|null
+}
+/* Uso da conta na tela de staff (ver UsoContaService no backend). Cotações não contam a demo
+   do onboarding; ultimoAcessoEm nulo = ninguém entrou desde que o acesso passou a ser guardado. */
+export type SituacaoUso = 'ATIVO' | 'ESFRIANDO' | 'PARADO' | 'NUNCA_COTOU' | 'SEM_REGISTRO'
+export interface UsoResumido { situacao:SituacaoUso; cotacoes:number; cotacoesAbertas:number; ultimaCotacaoEm:string|null; ultimoAcessoEm:string|null }
+export interface UsoDetalhadoStaff {
+  resumo:UsoResumido; onboardingStatus:StatusOnboarding|null; onboardingEtapa:EtapaOnboarding|null; onboardingErp:SistemaErp|null
+  produtosCadastrados:number; respostasRecebidas:number; pedidosGerados:number
+  ultimasCotacoes:{ id:number; nome:string; farmacia:string; status:StatusCotacao; criadoEm:string; respostas:number; demo:boolean }[]
+  usuarios:{ nome:string; email:string; ativo:boolean; ultimoAcessoEm:string|null }[]
+  integracoes:{ tipo:string; status:string; farmacia:string }[]
 }
 /* Recortes da lista de contas na tela de staff. Os critérios vivem na consulta do backend
    (ver GrupoRepository.buscarContasDeClientes) para os cartões e a tabela não discordarem. */
-export type SituacaoConta = 'TODAS' | 'PAGANDO' | 'EM_TESTE' | 'SEM_ACESSO' | 'CORTESIA' | 'NEGOCIADA' | 'DESATIVADA'
+export type SituacaoConta = 'TODAS' | 'PAGANDO' | 'EM_TESTE' | 'SEM_ACESSO' | 'CORTESIA' | 'NEGOCIADA' | 'DESATIVADA' | 'NUNCA_COTOU' | 'PARADO'
 /* Desativação de conta pela equipe (ver StaffService.desativar no backend). */
 export type ModalidadeDesativacao = 'SO_DESATIVAR' | 'LIBERAR_EMAIL_CNPJ'
 export interface UsuarioImpactado { nome:string; email:string; ativo:boolean }

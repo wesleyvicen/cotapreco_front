@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Gift, HandCoins, RotateCcw, ScrollText, Search, Ticket, Timer, Users, UserX } from 'lucide-react'
+import { Activity, ChevronLeft, ChevronRight, Gift, HandCoins, MessageCircle, RotateCcw, ScrollText, Search, Ticket, Timer, Users, UserX } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi, money, date } from '../api'
 import { AvisoErro, Carregando, EstadoVazio } from '../components/ComponentesUI'
@@ -6,6 +6,9 @@ import AbaCupons from '../components/staff/AbaCupons'
 import ModalAplicarCupom from '../components/staff/ModalAplicarCupom'
 import ModalDesativarConta from '../components/staff/ModalDesativarConta'
 import ModalReativarConta from '../components/staff/ModalReativarConta'
+import MenuAcoesConta from '../components/staff/MenuAcoesConta'
+import ModalUsoConta from '../components/staff/ModalUsoConta'
+import { dataCurta, haQuantoTempo, SELO_USO } from '../lib/usoConta'
 import { formatarCnpj } from '../lib/confirmacaoConta'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { ROTULO_STATUS } from '../lib/assinatura'
@@ -70,6 +73,32 @@ function CampoPreco({ valor, aoAlterar }:{ valor:string; aoAlterar:(digitos:stri
     onChange={() => undefined}/>
 }
 
+/* Uma linha só para a cobrança: quanto paga e até quando vale o acesso. */
+function resumoCobranca(conta:ContaStaff) {
+  if (!conta.contaAtiva) return conta.desativadaEm ? `desativada em ${dataCurta(conta.desativadaEm)}` : 'desativada'
+  const partes = [conta.cortesia ? 'sem cobrança'
+    : `${money(conta.precoMensalAtual)}/mês${conta.precoMensalPersonalizado != null ? ' (negociado)' : ''}`]
+  if (conta.cupomAtivo) partes.push(`cupom ${conta.cupomAtivo}`)
+  if (conta.assinaturaAte) partes.push(`${conta.acessoLiberado ? 'até' : 'venceu'} ${dataCurta(conta.assinaturaAte)}`)
+  return partes.join(' · ')
+}
+
+/* Selo discreto (ponto colorido + texto) em vez de etiqueta: a coluna Assinatura já tem uma, e
+   duas por linha brigavam por atenção. Quem nunca cotou mostra só isso, sem "0 cotações". */
+function ResumoUso({ conta }:{ conta:ContaStaff }) {
+  if (!conta.uso) return null
+  const { situacao, cotacoes, cotacoesAbertas, ultimoAcessoEm } = conta.uso
+  const selo = SELO_USO[situacao]
+  const detalhes = [
+    cotacoes > 0 && `${cotacoes} cotaç${cotacoes === 1 ? 'ão' : 'ões'}${cotacoesAbertas > 0 ? ` (${cotacoesAbertas} aberta${cotacoesAbertas !== 1 ? 's' : ''})` : ''}`,
+    ultimoAcessoEm && `acesso ${haQuantoTempo(ultimoAcessoEm)}`,
+  ].filter(Boolean).join(' · ')
+  return <>
+    <span className={`uso-indicador uso-${selo.tom}`} title={selo.dica}>{selo.texto}</span>
+    {detalhes && <small className="staff-sub">{detalhes}</small>}
+  </>
+}
+
 export default function PaginaStaff() {
   const [aba, setAba] = useState<'contas'|'cupons'|'auditoria'>('contas')
 
@@ -105,6 +134,7 @@ export default function PaginaStaff() {
   const [aplicandoCupom, setAplicandoCupom] = useState<ContaStaff|null>(null)
   const [desativando, setDesativando] = useState<ContaStaff|null>(null)
   const [reativando, setReativando] = useState<ContaStaff|null>(null)
+  const [vendoUso, setVendoUso] = useState<ContaStaff|null>(null)
   /* Desativar ou reativar tira a conta do recorte atual e muda os cartões de resumo, então
      recarrega a lista inteira em vez de só trocar a linha. */
   const [versaoLista, setVersaoLista] = useState(0)
@@ -284,7 +314,8 @@ export default function PaginaStaff() {
     <div className="toolbar staff-toolbar">
       <label className="search"><Search/><input placeholder="Buscar farmácia, CNPJ, e-mail ou WhatsApp" value={busca} onChange={e => setBusca(e.target.value)}/></label>
       <div className="staff-filtros" role="group" aria-label="Filtrar por condição comercial">
-        {([['CORTESIA', 'Cortesia'], ['NEGOCIADA', 'Preço negociado'], ['DESATIVADA', 'Desativadas']] as const).map(([chave, rotulo]) =>
+        {([['CORTESIA', 'Cortesia'], ['NEGOCIADA', 'Preço negociado'],
+          ['NUNCA_COTOU', 'Ainda não cotou'], ['PARADO', 'Parados +30 dias'], ['DESATIVADA', 'Desativadas']] as const).map(([chave, rotulo]) =>
           <button key={chave} type="button" className={`staff-filtro${situacao === chave ? ' ativo' : ''}`}
             aria-pressed={situacao === chave} onClick={() => filtrar(chave)}>{rotulo}</button>)}
       </div>
@@ -299,45 +330,48 @@ export default function PaginaStaff() {
                 : buscaAplicada ? 'Tente buscar por outro nome, CNPJ, e-mail ou WhatsApp.'
                 : 'As contas de clientes aparecem aqui assim que alguém se cadastrar.'}/>
           : <>
-              <div className="table-wrap"><table>
-                <thead><tr><th>Farmácia</th><th>Responsável</th><th>WhatsApp</th><th>Status</th><th>Farmácias</th><th>Mensalidade</th><th>Válido até</th><th>Desde</th><th/></tr></thead>
-                <tbody>{resultado.itens.map(c => <tr key={c.grupoId}>
-                  <td><strong>{c.nomeFarmacia}</strong><br/><small>{formatarCnpj(c.cnpj)}</small></td>
-                  <td>{c.responsavelNome ?? '-'}{c.responsavelEmail && <><br/><small>{c.responsavelEmail}</small></>}</td>
-                  {/* Link direto pro WhatsApp: a conversa já abre com o 55 na frente, sem ninguém
-                      copiar número na mão. */}
-                  <td>{c.telefone
-                    ? <a className="text-link" href={`https://wa.me/55${c.telefone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">{formatarTelefone(c.telefone)}</a>
-                    : '-'}</td>
+              <div className="table-wrap"><table className="staff-tabela">
+                <thead><tr><th>Farmácia</th><th>Contato</th><th>Assinatura</th><th>Uso</th><th><span className="sr-only">Ações</span></th></tr></thead>
+                <tbody>{resultado.itens.map(c => <tr key={c.grupoId} className={c.contaAtiva ? undefined : 'staff-linha-desativada'}>
+                  <td>
+                    {/* O nome também abre os detalhes: no celular o botão "Detalhes" some para
+                        economizar espaço, e tocar no nome é o gesto natural. */}
+                    <button type="button" className="staff-nome" onClick={() => setVendoUso(c)}>{c.nomeFarmacia}</button>
+                    <small className="staff-sub">{formatarCnpj(c.cnpj)} · desde {dataCurta(c.criadoEm)}</small>
+                    {c.farmaciasContratadas > 1 && <small className="staff-sub">{c.farmaciasAtivas} de {c.farmaciasContratadas} farmácias</small>}
+                  </td>
+                  <td>
+                    <span className="staff-nome-contato">{c.responsavelNome ?? '-'}</span>
+                    {c.responsavelEmail && <small className="staff-sub staff-email" title={c.responsavelEmail}>{c.responsavelEmail}</small>}
+                    {/* Link direto pro WhatsApp: a conversa já abre com o 55 na frente, sem ninguém
+                        copiar número na mão. */}
+                    {c.telefone && <a className="staff-whatsapp" href={`https://wa.me/55${c.telefone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer">
+                      <MessageCircle size={13} aria-hidden="true"/>{formatarTelefone(c.telefone)}</a>}
+                  </td>
                   <td>
                     {/* emTeste nunca convive com um pagamento de verdade (ver AssinaturaService.ativar,
                         que zera emTeste ao confirmar), mas também não cai sozinho quando o prazo acaba:
                         sem olhar acessoLiberado, quem parou meses atrás continuaria aparecendo como
                         "Período de teste". */}
                     <span className={`status-badge status-${etiqueta(c).tom}`}>{etiqueta(c).texto}</span>
-                    {c.desativadaEm && <><br/><small>desde {date(c.desativadaEm)}</small></>}
+                    <small className="staff-sub">{resumoCobranca(c)}</small>
                   </td>
-                  <td>{c.farmaciasAtivas} de {c.farmaciasContratadas}</td>
-                  <td>{c.cortesia
-                    ? <><strong>Cortesia</strong><br/><small>sem cobrança</small></>
-                    : <>{money(c.precoMensalAtual)}{c.precoMensalPersonalizado != null && <><br/><small>Negociado</small></>}
-                        {c.cupomAtivo && <><br/><small>Cupom {c.cupomAtivo}</small></>}</>}</td>
-                  <td>{c.assinaturaAte ? date(c.assinaturaAte) : '-'}</td>
-                  <td>{date(c.criadoEm)}</td>
+                  <td><ResumoUso conta={c}/></td>
                   <td className="staff-acoes">
-                    {/* Conta desativada só pode ser reativada: mexer em preço ou prazo de quem está
-                        fora do ar confundiria o que acontece quando ela voltar. */}
-                    {!c.contaAtiva
-                      ? <button type="button" className="icon-button" title="Reativar conta" aria-label={`Reativar conta ${c.nomeFarmacia}`} onClick={() => setReativando(c)}><RotateCcw size={16}/></button>
-                      : <>
-                    {!c.cortesia && <button type="button" className="icon-button" title={c.precoMensalPersonalizado != null ? 'Editar negociação' : 'Negociar'} onClick={() => abrirNegociacao(c)}><HandCoins size={16}/></button>}
-                    <button type="button" className="icon-button" title={c.cortesia ? 'Editar brinde' : 'Dar de brinde'} onClick={() => abrirBrinde(c)}><Gift size={16}/></button>
-                    <button type="button" className="icon-button" title="Colocar em trial" onClick={() => abrirTrial(c)}><Timer size={16}/></button>
-                    {!c.cortesia && <button type="button" className="icon-button" title="Aplicar cupom" onClick={() => setAplicandoCupom(c)}><Ticket size={16}/></button>}
-                    {/* Separado das outras ações e em vermelho: não é mais um ajuste comercial. */}
-                    <span className="staff-acoes-separador" aria-hidden="true"/>
-                    <button type="button" className="icon-button icon-button-perigo" title="Desativar conta" aria-label={`Desativar conta ${c.nomeFarmacia}`} onClick={() => setDesativando(c)}><UserX size={16}/></button>
-                    </>}
+                    <button type="button" className="button button-ghost staff-detalhes" aria-label={`Detalhes da conta ${c.nomeFarmacia}`} onClick={() => setVendoUso(c)}>
+                      <Activity size={15} aria-hidden="true"/><span>Detalhes</span></button>
+                    <MenuAcoesConta rotulo={`Ações da conta ${c.nomeFarmacia}`} grupos={c.contaAtiva ? [[
+                      ...(!c.cortesia ? [{ rotulo: c.precoMensalPersonalizado != null ? 'Editar negociação' : 'Negociar preço', icone:<HandCoins size={16}/>, aoEscolher:() => abrirNegociacao(c) }] : []),
+                      { rotulo: c.cortesia ? 'Editar cortesia' : 'Dar de cortesia', icone:<Gift size={16}/>, aoEscolher:() => abrirBrinde(c) },
+                      { rotulo:'Colocar em trial', icone:<Timer size={16}/>, aoEscolher:() => abrirTrial(c) },
+                      ...(!c.cortesia ? [{ rotulo:'Aplicar cupom', icone:<Ticket size={16}/>, aoEscolher:() => setAplicandoCupom(c) }] : []),
+                    ], [
+                      { rotulo:'Desativar conta', icone:<UserX size={16}/>, aoEscolher:() => setDesativando(c), perigo:true },
+                    ]] : [[
+                      /* Conta desativada só pode ser reativada: mexer em preço ou prazo de quem está
+                         fora do ar confundiria o que acontece quando ela voltar. */
+                      { rotulo:'Reativar conta', icone:<RotateCcw size={16}/>, aoEscolher:() => setReativando(c) },
+                    ]]}/>
                   </td>
                 </tr>)}</tbody>
               </table></div>
@@ -358,6 +392,7 @@ export default function PaginaStaff() {
         setAplicandoCupom(null)
       }}/>}
 
+    {vendoUso && <ModalUsoConta conta={vendoUso} aoFechar={() => setVendoUso(null)}/>}
     {desativando && <ModalDesativarConta conta={desativando} aoFechar={() => setDesativando(null)}
       aoConcluir={() => { setDesativando(null); setVersaoLista(v => v + 1) }}/>}
     {reativando && <ModalReativarConta conta={reativando} aoFechar={() => setReativando(null)}
