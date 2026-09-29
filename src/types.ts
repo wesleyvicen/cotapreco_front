@@ -145,3 +145,8 @@ export interface OfertaPortalEncontrada { portal:string; distribuidora:string; p
 export interface ProdutoPortalEncontrado { ean:string|null; nome:string; marca:string|null; menorPreco:number; estoqueTotal:number; ofertas:OfertaPortalEncontrada[] }
 export interface AvisoPortal { portal:string; mensagem:string }
 export interface ResultadoBuscaPortais { produtos:ProdutoPortalEncontrado[]; portaisConsultados:string[]; avisos:AvisoPortal[]; limitado:boolean }
+/* Conferência de uma lista (Excel/CSV) nos portais (POST /integracoes/busca/lista). */
+export type SituacaoItemLista='EAN'|'NOME'|'NAO_ENCONTRADO'
+export interface ItemListaPortais { linha:number; descricao:string; ean:string; quantidade:number; laboratorio:string|null; situacao:SituacaoItemLista; produtoNome:string|null; produtoMarca:string|null; produtoEan:string|null; ofertas:OfertaPortalEncontrada[] }
+export interface ResumoDistribuidoraPortal { portal:string; distribuidora:string; itens:number; total:number; pedidoMinimo:number|null }
+export interface ResultadoListaPortais { totalItens:number; porEan:number; porNome:number; naoEncontrados:number; totalMelhoresPrecos:number; itens:ItemListaPortais[]; distribuidoras:ResumoDistribuidoraPortal[]; portaisConsultados:string[]; avisos:AvisoPortal[] }

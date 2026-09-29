@@ -1,7 +1,8 @@
-import { AlertTriangle, ChevronDown, ChevronUp, LoaderCircle, PlugZap, Search } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronUp, FileSpreadsheet, LoaderCircle, PlugZap, Search } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi, money } from '../api'
 import { AvisoErro, EstadoVazio } from '../components/ComponentesUI'
+import ConferenciaListaPortais from '../components/ConferenciaListaPortais'
 import { LinkInterno, usarParametrosBusca } from '../roteamento'
 import type { ProdutoPortalEncontrado, ResultadoBuscaPortais } from '../types'
 
@@ -40,10 +41,17 @@ function CartaoProduto({ produto }:{ produto:ProdutoPortalEncontrado }) {
   </article>
 }
 
-/* Consulta preço e estoque de um produto em todos os portais de pedido eletrônico que a
-   farmácia conectou. Só leitura. O termo fica na URL para recarregar ou compartilhar a busca. */
+/* Consulta preço e estoque em todos os portais de pedido eletrônico que a farmácia conectou:
+   um produto por vez ou uma lista inteira (planilha). Só leitura. Aba e termo ficam na URL
+   para recarregar ou compartilhar a busca. */
 export default function PaginaPortais() {
   const [params, setParams] = usarParametrosBusca()
+  const modo = params.get('modo') === 'lista' ? 'lista' : 'produto'
+  const trocarModo = (proximo:'produto'|'lista') => {
+    const proximos = new URLSearchParams(params)
+    if (proximo === 'lista') proximos.set('modo', 'lista'); else proximos.delete('modo')
+    setParams(proximos, { replace:true })
+  }
   const termoUrl = params.get('q') ?? ''
   const somenteComEstoque = params.get('estoque') !== 'todos'
   const [termo, setTermo] = useState(termoUrl)
@@ -85,8 +93,14 @@ export default function PaginaPortais() {
 
   return <div className="page">
     <div className="page-header"><div><span className="eyebrow green">Consulta</span><h1>Busca nos portais</h1>
-      <p>Preço e estoque de um produto em todos os portais de pedido eletrônico conectados, lado a lado.</p></div></div>
+      <p>Preço e estoque em todos os portais de pedido eletrônico conectados, lado a lado.</p></div></div>
 
+    <div className="tabs" role="tablist" aria-label="Tipo de busca">
+      <button type="button" role="tab" aria-selected={modo==='produto'} className={modo==='produto'?'active':''} onClick={() => trocarModo('produto')}><Search/>Um produto</button>
+      <button type="button" role="tab" aria-selected={modo==='lista'} className={modo==='lista'?'active':''} onClick={() => trocarModo('lista')}><FileSpreadsheet/>Conferir lista</button>
+    </div>
+
+    {modo === 'lista' ? <ConferenciaListaPortais/> : <>
     <form className="toolbar portal-busca" onSubmit={buscar}>
       <label className="search"><Search/><input autoFocus placeholder="Nome, princípio ativo ou EAN (ex.: losartana 50)" aria-label="Buscar nos portais" value={termo} onChange={e => setTermo(e.target.value)}/></label>
       <button className="button button-primary" disabled={buscando}>{buscando ? <><LoaderCircle className="spin"/>Buscando...</> : <><Search/>Buscar</>}</button>
@@ -120,6 +134,7 @@ export default function PaginaPortais() {
       {produtos.length === 0
         ? <EstadoVazio title="Nada encontrado" description={somenteComEstoque ? 'Nenhum produto com estoque para essa busca. Tente outro termo ou desmarque "Só com estoque".' : 'Nenhum produto encontrado para essa busca.'}/>
         : <div className="portal-lista">{produtos.map(p => <CartaoProduto key={p.ean ?? p.nome} produto={p}/>)}</div>}
+    </>}
     </>}
   </div>
 }

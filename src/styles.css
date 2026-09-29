@@ -5195,6 +5195,39 @@ label small {
   .portal-ofertas td:nth-child(5)::before { content: "Pedido mínimo: "; }
   .portal-filtros select { flex: 1 1 140px; }
 }
+/* Busca nos portais: conferência de lista */
+.lista-portais { display: grid; gap: 12px; }
+.lista-envio { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.lista-envio > svg { width: 28px; height: 28px; color: #2f7d63; }
+.lista-envio > div { display: grid; gap: 2px; min-width: 0; }
+.lista-envio strong { overflow-wrap: anywhere; }
+.lista-envio small { color: #5f7470; font-size: 12px; }
+.lista-resumo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.lista-resumo > div { background: #fff; border: 1px solid #e3ebe8; border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }
+.lista-resumo span { color: #5f7470; font-size: 12px; }
+.lista-resumo strong { font-size: 20px; }
+.lista-resumo small { color: #5f7470; font-size: 12px; }
+.lista-distribuidoras table, .lista-tabela { width: 100%; font-size: 13px; }
+.lista-distribuidoras th, .lista-distribuidoras td, .lista-tabela th, .lista-tabela td { padding: 6px 10px; vertical-align: middle; }
+.lista-distribuidoras .numero, .lista-tabela .numero { text-align: right; white-space: nowrap; }
+.lista-abaixo-minimo { color: #a4523a; }
+.lista-ferramentas { margin: 0; }
+.lista-tabela td > span, .lista-tabela td > small { display: block; }
+.lista-tabela small { color: #5f7470; font-size: 11.5px; }
+.lista-produto { max-width: 320px; }
+.lista-produto strong, .lista-encontrado > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+.lista-nao { color: #a4523a; }
+.lista-selo-nome { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 999px; background: #fff3dc; color: #8a5a00; font-size: 11px; }
+.lista-estoque-curto { color: #a4523a; }
+.lista-item.lista-nao_encontrado { background: #fcfaf9; }
+.lista-oferta-extra td { background: #f7faf9; }
+.lista-tabela .icon-button svg { width: 16px; height: 16px; }
+@media (max-width: 760px) {
+  .lista-envio { grid-template-columns: auto minmax(0, 1fr); }
+  .lista-envio .button { grid-column: 1 / -1; justify-content: center; }
+  .lista-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lista-produto, .lista-produto strong, .lista-encontrado > span { max-width: 200px; }
+}
 /* Confirmação de produtos sem EAN encontrados no Mercado Farma */
 .vinculos-modal { width: min(1180px, calc(100vw - 32px)); max-height: min(90vh, 900px); display: flex; flex-direction: column; }
 .vinculos-ferramentas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
