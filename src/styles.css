@@ -2435,7 +2435,7 @@ label small {
   scrollbar-gutter: stable;
 }
 .purchase-supplier-table {
-  min-width: 760px;
+  min-width: 880px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -2533,7 +2533,7 @@ label small {
 }
 .supplier-row-toggle {
   display: flex;
-  min-width: 180px;
+  min-width: 300px;
   align-items: center;
   gap: 8px;
   padding: 0;
@@ -2553,14 +2553,14 @@ label small {
 .supplier-row-toggle > span:last-child {
   display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 .supplier-row-toggle > span:last-child > strong {
-  overflow: hidden;
-  max-width: 132px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .supplier-row-toggle small {
   display: inline-flex;
@@ -2685,7 +2685,7 @@ label small {
 }
 @container purchase-card (max-width: 900px) {
   .purchase-supplier-table {
-    min-width: 720px;
+    min-width: 800px;
     font-size: 11px;
   }
   .purchase-supplier-table > thead th,
@@ -2693,11 +2693,11 @@ label small {
     padding-inline: 8px;
   }
   .supplier-row-toggle {
-    min-width: 158px;
+    min-width: 240px;
     gap: 7px;
   }
   .supplier-row-toggle > span:last-child > strong {
-    max-width: 104px;
+    max-width: 100%;
   }
   .purchase-sort-button {
     gap: 3px;
@@ -2743,9 +2743,9 @@ label small {
   }
   .purchase-supplier-table > thead th:first-child,
   .purchase-supplier-row > td:first-child {
-    width: 148px;
-    min-width: 148px;
-    max-width: 148px;
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
   }
   .purchase-supplier-table .supplier-row-toggle {
     width: 100%;
@@ -2757,11 +2757,11 @@ label small {
     height: 26px;
   }
   .purchase-supplier-table .supplier-row-toggle > span:last-child {
-    overflow: hidden;
+    overflow: visible;
   }
   .purchase-supplier-table .supplier-row-toggle > span:last-child > strong {
-    max-width: 82px;
-    white-space: nowrap;
+    max-width: 100%;
+    white-space: normal;
   }
   .purchase-supplier-table .supplier-row-toggle small {
     gap: 0;
