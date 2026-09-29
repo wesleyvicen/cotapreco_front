@@ -9274,3 +9274,34 @@ label small {
    largura toda da tabela; o conteúdo fica preso à esquerda para não sumir na rolagem lateral. */
 .matriz-justificativa-linha td { padding: 0 8px 10px; text-align: left; }
 .matriz-justificativa-linha .guided-stock-note { position: sticky; left: 8px; max-width: min(640px, calc(100vw - 80px)); margin: 0; }
+
+/* Desativar / reativar conta (tela de staff). Vermelho sólido só no botão final: o resto do
+   fluxo é alerta, não ação. */
+.button-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.button-danger:hover:not(:disabled) { background: #9f3539; border-color: #9f3539; }
+.button-danger:disabled, .button-danger-soft:disabled { opacity: .5; cursor: not-allowed; }
+.icon-button-perigo { color: var(--danger); }
+.icon-button-perigo:hover { background: #fff0f0; color: #9f3539; }
+.staff-acoes-separador { width: 1px; align-self: stretch; margin: 4px 4px; background: var(--line); }
+.modal-icon-perigo { color: var(--danger); background: #fff0f0; }
+.desativar-modal { display: flex; flex-direction: column; max-height: calc(100dvh - 32px); }
+.desativar-corpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -24px; padding: 4px 24px 8px; }
+.desativar-modal > .modal-actions { flex: 0 0 auto; margin-top: 12px; }
+.desativar-alerta { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+.desativar-alerta > svg { flex: 0 0 auto; margin-top: 2px; }
+.desativar-alerta ul { margin: 6px 0; padding-left: 18px; }
+.desativar-impacto { margin-bottom: 16px; }
+.desativar-impacto h3 { margin: 0 0 8px; color: #425c54; font-size: 12px; font-weight: 700; }
+.desativar-impacto > ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ink); }
+.desativar-usuarios { margin: 4px 0 0; padding-left: 16px; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.desativar-destaque { color: #9f3539; }
+.desativar-modalidades { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.desativar-modalidades legend { margin-bottom: 7px; padding: 0; color: #425c54; font-size: 12px; font-weight: 700; }
+.desativar-modalidade { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid #d7e1dd; border-radius: 12px; background: #fbfcfc; cursor: pointer; transition: border-color .15s, background .15s; }
+.desativar-modalidade:hover { border-color: #e2b4b6; background: #fff; }
+.desativar-modalidade.ativo { border-color: var(--danger); background: #fff6f6; box-shadow: 0 0 0 1px var(--danger) inset; }
+.desativar-modalidade input { margin-top: 3px; accent-color: var(--danger); }
+.desativar-modalidade > span { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--ink); }
+.desativar-modalidade small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.desativar-form textarea { resize: vertical; min-height: 72px; font: inherit; }
+.desativar-form input[aria-invalid="true"] { border-color: var(--danger); }

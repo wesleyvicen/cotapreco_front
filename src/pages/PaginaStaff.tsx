@@ -1,9 +1,12 @@
-import { ChevronLeft, ChevronRight, Gift, HandCoins, ScrollText, Search, Ticket, Timer, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Gift, HandCoins, RotateCcw, ScrollText, Search, Ticket, Timer, Users, UserX } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi, money, date } from '../api'
 import { AvisoErro, Carregando, EstadoVazio } from '../components/ComponentesUI'
 import AbaCupons from '../components/staff/AbaCupons'
 import ModalAplicarCupom from '../components/staff/ModalAplicarCupom'
+import ModalDesativarConta from '../components/staff/ModalDesativarConta'
+import ModalReativarConta from '../components/staff/ModalReativarConta'
+import { formatarCnpj } from '../lib/confirmacaoConta'
 import { usarCamadaNoHistorico } from '../hooks/usarCamadaNoHistorico'
 import { ROTULO_STATUS } from '../lib/assinatura'
 import type { ContaStaff, PaginaAuditoriaStaff, PaginaContasStaff, SituacaoConta } from '../types'
@@ -17,18 +20,13 @@ const ROTULO_ACAO_AUDITORIA:Record<string,string> = {
   NEGOCIACAO:'Negociação', BRINDE:'Cortesia', TRIAL:'Trial',
   CUPOM_CRIADO:'Cupom criado', CUPOM_EDITADO:'Cupom editado', CUPOM_ATIVADO:'Cupom reativado',
   CUPOM_DESATIVADO:'Cupom desativado', CUPOM_RESGATE_ENCERRADO:'Cupom encerrado na conta', CUPOM_APLICADO:'Cupom aplicado',
-}
-
-function formatarCnpj(valor:string|null) {
-  if (!valor) return '-'
-  const digitos = valor.replace(/\D/g, '').slice(0, 14)
-  return digitos.replace(/^(\d{2})(\d)/, '$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2').replace(/(\d{4})(\d)/, '$1-$2')
+  CONTA_DESATIVADA:'Conta desativada', CONTA_REATIVADA:'Conta reativada',
 }
 
 /* Teste que venceu sem assinatura continua com emTeste verdadeiro no banco, então é
    acessoLiberado que separa quem está testando agora de quem só deixou o prazo passar. */
 function etiqueta(conta:ContaStaff):{ texto:string, tom:string } {
+  if (!conta.contaAtiva) return { texto:'Desativada', tom:'canceled' }
   if (conta.emTeste) return conta.acessoLiberado
     ? { texto:ROTULO_STATUS.TRIAL, tom:'trial' }
     : { texto:'Teste expirado', tom:'overdue' }
@@ -105,6 +103,11 @@ export default function PaginaStaff() {
   const [salvandoTrial, setSalvandoTrial] = useState(false)
 
   const [aplicandoCupom, setAplicandoCupom] = useState<ContaStaff|null>(null)
+  const [desativando, setDesativando] = useState<ContaStaff|null>(null)
+  const [reativando, setReativando] = useState<ContaStaff|null>(null)
+  /* Desativar ou reativar tira a conta do recorte atual e muda os cartões de resumo, então
+     recarrega a lista inteira em vez de só trocar a linha. */
+  const [versaoLista, setVersaoLista] = useState(0)
 
   /* Debounce: só aplica a busca (e some com a página atual) depois que a digitação parar. */
   useEffect(() => {
@@ -121,7 +124,7 @@ export default function PaginaStaff() {
       .then(setResultado)
       .catch(() => setErro('Não foi possível carregar as contas.'))
       .finally(() => setCarregando(false))
-  }, [buscaAplicada, situacao, pagina])
+  }, [buscaAplicada, situacao, pagina, versaoLista])
 
   /* Trocar de filtro volta para a primeira página: manter a página 3 de uma lista que virou
      outra mostra uma tabela vazia com contas existentes. */
@@ -281,7 +284,7 @@ export default function PaginaStaff() {
     <div className="toolbar staff-toolbar">
       <label className="search"><Search/><input placeholder="Buscar farmácia, CNPJ, e-mail ou WhatsApp" value={busca} onChange={e => setBusca(e.target.value)}/></label>
       <div className="staff-filtros" role="group" aria-label="Filtrar por condição comercial">
-        {([['CORTESIA', 'Cortesia'], ['NEGOCIADA', 'Preço negociado']] as const).map(([chave, rotulo]) =>
+        {([['CORTESIA', 'Cortesia'], ['NEGOCIADA', 'Preço negociado'], ['DESATIVADA', 'Desativadas']] as const).map(([chave, rotulo]) =>
           <button key={chave} type="button" className={`staff-filtro${situacao === chave ? ' ativo' : ''}`}
             aria-pressed={situacao === chave} onClick={() => filtrar(chave)}>{rotulo}</button>)}
       </div>
@@ -312,7 +315,7 @@ export default function PaginaStaff() {
                         sem olhar acessoLiberado, quem parou meses atrás continuaria aparecendo como
                         "Período de teste". */}
                     <span className={`status-badge status-${etiqueta(c).tom}`}>{etiqueta(c).texto}</span>
-                    {!c.contaAtiva && <><br/><small>Conta desativada</small></>}
+                    {c.desativadaEm && <><br/><small>desde {date(c.desativadaEm)}</small></>}
                   </td>
                   <td>{c.farmaciasAtivas} de {c.farmaciasContratadas}</td>
                   <td>{c.cortesia
@@ -322,10 +325,19 @@ export default function PaginaStaff() {
                   <td>{c.assinaturaAte ? date(c.assinaturaAte) : '-'}</td>
                   <td>{date(c.criadoEm)}</td>
                   <td className="staff-acoes">
+                    {/* Conta desativada só pode ser reativada: mexer em preço ou prazo de quem está
+                        fora do ar confundiria o que acontece quando ela voltar. */}
+                    {!c.contaAtiva
+                      ? <button type="button" className="icon-button" title="Reativar conta" aria-label={`Reativar conta ${c.nomeFarmacia}`} onClick={() => setReativando(c)}><RotateCcw size={16}/></button>
+                      : <>
                     {!c.cortesia && <button type="button" className="icon-button" title={c.precoMensalPersonalizado != null ? 'Editar negociação' : 'Negociar'} onClick={() => abrirNegociacao(c)}><HandCoins size={16}/></button>}
                     <button type="button" className="icon-button" title={c.cortesia ? 'Editar brinde' : 'Dar de brinde'} onClick={() => abrirBrinde(c)}><Gift size={16}/></button>
                     <button type="button" className="icon-button" title="Colocar em trial" onClick={() => abrirTrial(c)}><Timer size={16}/></button>
                     {!c.cortesia && <button type="button" className="icon-button" title="Aplicar cupom" onClick={() => setAplicandoCupom(c)}><Ticket size={16}/></button>}
+                    {/* Separado das outras ações e em vermelho: não é mais um ajuste comercial. */}
+                    <span className="staff-acoes-separador" aria-hidden="true"/>
+                    <button type="button" className="icon-button icon-button-perigo" title="Desativar conta" aria-label={`Desativar conta ${c.nomeFarmacia}`} onClick={() => setDesativando(c)}><UserX size={16}/></button>
+                    </>}
                   </td>
                 </tr>)}</tbody>
               </table></div>
@@ -345,6 +357,11 @@ export default function PaginaStaff() {
         setResultado(atual => atual && { ...atual, itens: atual.itens.map(c => c.grupoId === atualizada.grupoId ? atualizada : c) })
         setAplicandoCupom(null)
       }}/>}
+
+    {desativando && <ModalDesativarConta conta={desativando} aoFechar={() => setDesativando(null)}
+      aoConcluir={() => { setDesativando(null); setVersaoLista(v => v + 1) }}/>}
+    {reativando && <ModalReativarConta conta={reativando} aoFechar={() => setReativando(null)}
+      aoConcluir={() => { setReativando(null); setVersaoLista(v => v + 1) }}/>}
 
     {negociando && <div className="modal-backdrop" role="presentation"><form className="modal user-modal" onSubmit={salvarNegociacao}>
       <div className="modal-header"><div className="modal-icon"><HandCoins/></div><div><h2>Negociar condições</h2><p>{negociando.nomeFarmacia}</p></div>

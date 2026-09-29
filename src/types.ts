@@ -10,10 +10,24 @@ export interface ContaStaff {
   precoMensalAtual:number; precoMensalPersonalizado:number|null; cortesia:boolean
   /* Código do cupom de desconto valendo na conta, nulo se não há. */
   cupomAtivo:string|null
+  /* Quando a equipe desativou a conta; nulo enquanto ativa. */
+  desativadaEm:string|null
 }
 /* Recortes da lista de contas na tela de staff. Os critérios vivem na consulta do backend
    (ver GrupoRepository.buscarContasDeClientes) para os cartões e a tabela não discordarem. */
-export type SituacaoConta = 'TODAS' | 'PAGANDO' | 'EM_TESTE' | 'SEM_ACESSO' | 'CORTESIA' | 'NEGOCIADA'
+export type SituacaoConta = 'TODAS' | 'PAGANDO' | 'EM_TESTE' | 'SEM_ACESSO' | 'CORTESIA' | 'NEGOCIADA' | 'DESATIVADA'
+/* Desativação de conta pela equipe (ver StaffService.desativar no backend). */
+export type ModalidadeDesativacao = 'SO_DESATIVAR' | 'LIBERAR_EMAIL_CNPJ'
+export interface UsuarioImpactado { nome:string; email:string; ativo:boolean }
+/* confirmacaoPorCnpj diz o que a pessoa digita para confirmar: o CNPJ ou, nas contas sem
+   CNPJ, o nome da farmácia. conflitosReativacao só vem preenchido em conta desativada. */
+export interface ImpactoDesativacao {
+  grupoId:number; nomeFarmacia:string; cnpj:string|null; confirmacaoPorCnpj:boolean; contaAtiva:boolean
+  usuarios:UsuarioImpactado[]; farmaciasAtivas:number; assinaturaAtivaNoAsaas:boolean; pagando:boolean
+  precoMensalAtual:number; cotacoesAbertas:number; conflitosReativacao:string[]
+}
+export interface SolicitacaoDesativacao { modalidade:ModalidadeDesativacao; motivo:string; confirmacao:string; codigoDoisFatores:string }
+export interface SolicitacaoReativacao { motivo:string; codigoDoisFatores:string }
 export interface SolicitacaoNegociacao { farmaciasContratadas:number; precoMensalPersonalizado:number|null }
 export interface SolicitacaoBrinde { farmaciasContratadas:number }
 export interface SolicitacaoTrial { dias:number }
