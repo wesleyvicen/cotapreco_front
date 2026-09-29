@@ -4,11 +4,17 @@ import { api, ErroApi } from '../api'
 import { LinkInterno } from '../roteamento'
 import type { IntegracaoMercadoFarma, ResultadoImportacaoMercadoFarma } from '../types'
 
+/* Toda proposta importada leva este prefixo no nome da distribuidora (ver
+   ImportacaoPropostasMercadoFarmaService.PREFIXO_DISTRIBUIDORA no backend). */
+export const PREFIXO_MERCADO_FARMA = 'Mercado Farma · '
+
 /* Busca os preços do Mercado Farma e grava na cotação como propostas, uma por distribuidor.
    Com a conexão expirada, leva para a tela de conexão em vez de mostrar um botão que só falharia.
-   A primeira importação baixa o catálogo inteiro do portal e pode levar uns 20 segundos. */
-export default function BotaoImportarMercadoFarma({ cotacaoId, desabilitado, aoImportar, aoErro }:{
-  cotacaoId:number; desabilitado:boolean
+   A primeira importação baixa o catálogo inteiro do portal e pode levar uns 20 segundos.
+   jaImportado troca o texto para "Reimportar": importar de novo atualiza as mesmas propostas
+   (preço, estoque, laboratório), não cria outras. */
+export default function BotaoImportarMercadoFarma({ cotacaoId, desabilitado, jaImportado, aoImportar, aoErro }:{
+  cotacaoId:number; desabilitado:boolean; jaImportado:boolean
   aoImportar:(resultado:ResultadoImportacaoMercadoFarma)=>void; aoErro:(mensagem:string)=>void
 }) {
   const [integracao, setIntegracao] = useState<IntegracaoMercadoFarma|null>(null)
@@ -34,7 +40,11 @@ export default function BotaoImportarMercadoFarma({ cotacaoId, desabilitado, aoI
   }
 
   return <button type="button" className="button button-secondary" disabled={desabilitado || importando} onClick={() => void importar()}
-    title="Busca preço e estoque no Mercado Farma e grava uma proposta por distribuidor">
-    {importando ? <><LoaderCircle className="spin"/>Buscando preços...</> : <><PlugZap/>Importar do Mercado Farma</>}
+    title={jaImportado
+      ? 'Atualiza preço e estoque das propostas do Mercado Farma nesta cotação, sem duplicar'
+      : 'Busca preço e estoque no Mercado Farma e grava uma proposta por distribuidor'}>
+    {importando
+      ? <><LoaderCircle className="spin"/>{jaImportado ? 'Atualizando preços...' : 'Buscando preços...'}</>
+      : <><PlugZap/>{jaImportado ? 'Reimportar do Mercado Farma' : 'Importar do Mercado Farma'}</>}
   </button>
 }
