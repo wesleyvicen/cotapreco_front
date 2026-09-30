@@ -45,10 +45,10 @@ const completarPeloCatalogo = (item:ItemManual, campo:keyof Omit<ItemManual, 'id
      borda e o auto-preenchimento dispara no meio da digitação - por exemplo, ao tentar diferenciar
      duas linhas de mesmo nome digitando um espaço antes de completar o resto, o sistema "seleciona"
      o produto do catálogo que ainda bate e substitui nome e EAN pelos dele, no meio da edição. */
-  if (campo === 'productName' && valor === valor.trim()) {
-    const encontrados = produtos.filter(produto => normalizar(produto.name) === normalizar(valor))
-    if (encontrados.length === 1) return { ...alterado, ean:encontrados[0].ean ?? '', productName:encontrados[0].name, laboratory:encontrados[0].laboratory ?? '' }
-  }
+  /* Pelo nome, nunca preenche EAN nem laboratório: item sem EAN é pedido pela descrição, e o
+     representante oferece o de melhor preço. Puxar o EAN de um produto de mesmo nome do catálogo
+     prendia a cotação àquele código e laboratório sem ninguém pedir (ver
+     CotacaoService.localizarProduto, que segue a mesma regra). */
   return alterado
 }
 

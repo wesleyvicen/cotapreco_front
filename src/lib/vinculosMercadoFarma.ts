@@ -8,12 +8,12 @@ export const avisarIntegracoesAlteradas = () => window.dispatchEvent(new Event(E
 const CHAVE_RECUSADOS = 'cotapreco:mercado-farma:sem-correspondencia'
 export const NENHUM = 'nenhum'
 
-/* "Nenhum destes" / "manter o atual" vale para as próximas importações: sem isso a farmácia
-   teria de recusar a mesma coisa toda vez. O alcance segue o da escolha: produto sem EAN é
-   recusado para sempre (a escolha iria para o cadastro); EAN não encontrado e troca por mais
-   barato, só nesta cotação. Fica no navegador; limpar os dados do site faz a pergunta voltar. */
+/* "Nenhum destes" / "manter o atual" vale para as próximas importações desta cotação: sem isso
+   a farmácia teria de recusar a mesma coisa a cada reimportação. Só desta cotação, como as
+   escolhas: nada do Mercado Farma muda como as próximas cotações funcionam. Fica no navegador;
+   limpar os dados do site faz a pergunta voltar. */
 export function chaveRecusa(sugestao:SugestaoCorrespondenciaMercadoFarma, cotacaoId:number) {
-  return sugestao.tipo === 'SEM_EAN' ? `p:${sugestao.produtoId}` : `c:${cotacaoId}:i:${sugestao.itemCotacaoId}:${sugestao.tipo}`
+  return `c:${cotacaoId}:i:${sugestao.itemCotacaoId}:${sugestao.tipo}`
 }
 
 export function lerRecusados():Set<string> {

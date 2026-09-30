@@ -10,10 +10,10 @@ const ROTULOS:Record<Filtro,string> = { todos:'Todos', pendentes:'Para escolher'
 
 const semAcento = (texto:string) => texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
-/* Por que cada produto está aqui. A escolha de SEM_EAN vai para o cadastro; as outras duas
-   valem só nesta cotação (o cadastro continua com o EAN do ERP). */
+/* Por que cada produto está aqui. Toda escolha vale só nesta cotação: o cadastro do produto
+   nunca muda, para não afetar como as próximas cotações são criadas. */
 const TIPOS:Record<SugestaoCorrespondenciaMercadoFarma['tipo'],{ selo:string, dica:string }> = {
-  SEM_EAN:{ selo:'Sem EAN', dica:'O EAN escolhido fica salvo no cadastro do produto.' },
+  SEM_EAN:{ selo:'Sem EAN', dica:'Vale só nesta cotação: o cadastro continua sem EAN.' },
   EAN_NAO_ENCONTRADO:{ selo:'EAN não está no portal', dica:'Vale só nesta cotação: o cadastro continua com o EAN atual.' },
   MAIS_BARATO:{ selo:'Opção mais barata', dica:'Equivalente de outro laboratório. Trocar vale só nesta cotação.' },
 }
@@ -85,7 +85,7 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
       <div className="modal-header modal-header-simple">
         <div>
           <h2 id="vinculos-titulo">{sugestoes.length === 1 ? '1 produto' : `${sugestoes.length} produtos`} para conferir no Mercado Farma</h2>
-          <p>Marque qual é o mesmo produto no portal, ou se quer trocar pelo mais barato. Cada linha diz até onde a escolha vale.</p>
+          <p>Marque qual é o mesmo produto no portal, ou se quer trocar pelo mais barato. As escolhas valem só nesta cotação.</p>
         </div>
         <button type="button" className="icon-button" aria-label="Fechar" disabled={enviando} onClick={aoFechar}><X/></button>
       </div>
@@ -131,7 +131,7 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
             <div className="vinculo-candidatos" role="radiogroup" aria-label={`Produto do Mercado Farma para ${sugestao.produto}`}>
               {ignorado
                 ? <span className="vinculo-ignorado-texto">{troca ? 'Mantém o produto atual: não pergunta de novo nesta cotação.'
-                    : sugestao.tipo === 'SEM_EAN' ? 'Não é nenhum destes: não pergunta de novo.' : 'Não é nenhum destes: não pergunta de novo nesta cotação.'}</span>
+                    : 'Não é nenhum destes: não pergunta de novo nesta cotação.'}</span>
                 : sugestao.candidatos.map((candidato, indice) => <label key={candidato.ean} className={`vinculo-opcao${escolha === candidato.ean ? ' selecionada' : ''}`}
                   title={`${candidato.nome} · ${candidato.marca ?? ''} · EAN ${candidato.ean}`}>
                   <input type="radio" name={`vinculo-${sugestao.itemCotacaoId}`} checked={escolha === candidato.ean} onChange={() => escolher(sugestao.itemCotacaoId, candidato.ean)}/>
