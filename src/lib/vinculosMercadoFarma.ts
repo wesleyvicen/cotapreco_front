@@ -8,17 +8,38 @@ export const avisarIntegracoesAlteradas = () => window.dispatchEvent(new Event(E
 const CHAVE_RECUSADOS = 'cotapreco:mercado-farma:sem-correspondencia'
 export const NENHUM = 'nenhum'
 
-/* "Nenhum destes" vale para as próximas importações: sem isso a farmácia teria de recusar o
-   mesmo produto toda vez. Fica no navegador; limpar os dados do site faz a pergunta voltar. */
-export function lerRecusados():Set<number> {
-  try { return new Set(JSON.parse(localStorage.getItem(CHAVE_RECUSADOS) ?? '[]') as number[]) } catch { return new Set() }
-}
-export function gravarRecusados(ids:Set<number>) {
-  try { localStorage.setItem(CHAVE_RECUSADOS, JSON.stringify([...ids])) } catch { /* Preferência opcional: sem armazenamento, só pergunta de novo. */ }
+/* "Nenhum destes" / "manter o atual" vale para as próximas importações: sem isso a farmácia
+   teria de recusar a mesma coisa toda vez. O alcance segue o da escolha: produto sem EAN é
+   recusado para sempre (a escolha iria para o cadastro); EAN não encontrado e troca por mais
+   barato, só nesta cotação. Fica no navegador; limpar os dados do site faz a pergunta voltar. */
+export function chaveRecusa(sugestao:SugestaoCorrespondenciaMercadoFarma, cotacaoId:number) {
+  return sugestao.tipo === 'SEM_EAN' ? `p:${sugestao.produtoId}` : `c:${cotacaoId}:i:${sugestao.itemCotacaoId}:${sugestao.tipo}`
 }
 
-/** Tira das sugestões os produtos que a farmácia já marcou como "Nenhum destes". */
-export function sugestoesPendentes(sugestoes:SugestaoCorrespondenciaMercadoFarma[]) {
+export function lerRecusados():Set<string> {
+  try {
+    /* Versões antigas guardavam só o id do produto (número): vale como recusa de produto sem EAN. */
+    const valores = JSON.parse(localStorage.getItem(CHAVE_RECUSADOS) ?? '[]') as (number|string)[]
+    return new Set(valores.map(valor => typeof valor === 'number' ? `p:${valor}` : valor))
+  } catch { return new Set() }
+}
+export function gravarRecusados(chaves:Set<string>) {
+  try { localStorage.setItem(CHAVE_RECUSADOS, JSON.stringify([...chaves])) } catch { /* Preferência opcional: sem armazenamento, só pergunta de novo. */ }
+}
+
+/** Tira das sugestões o que a farmácia já recusou. */
+export function sugestoesPendentes(sugestoes:SugestaoCorrespondenciaMercadoFarma[], cotacaoId:number) {
   const recusados = lerRecusados()
-  return sugestoes.filter(sugestao => !recusados.has(sugestao.produtoId))
+  return sugestoes.filter(sugestao => !recusados.has(chaveRecusa(sugestao, cotacaoId)))
+}
+
+/* "3 produtos para conferir no Mercado Farma (1 sem EAN, 2 com opção mais barata)". */
+const ROTULO_TIPO:Record<SugestaoCorrespondenciaMercadoFarma['tipo'],string> = {
+  SEM_EAN:'sem EAN', EAN_NAO_ENCONTRADO:'com EAN que não está no portal', MAIS_BARATO:'com opção mais barata',
+}
+export function resumoSugestoes(sugestoes:SugestaoCorrespondenciaMercadoFarma[]) {
+  const partes = (Object.keys(ROTULO_TIPO) as SugestaoCorrespondenciaMercadoFarma['tipo'][])
+    .map(tipo => [sugestoes.filter(s => s.tipo === tipo).length, ROTULO_TIPO[tipo]] as const)
+    .filter(([quantidade]) => quantidade > 0).map(([quantidade, rotulo]) => `${quantidade} ${rotulo}`)
+  return `${sugestoes.length === 1 ? '1 produto' : `${sugestoes.length} produtos`} para conferir no Mercado Farma (${partes.join(', ')})`
 }

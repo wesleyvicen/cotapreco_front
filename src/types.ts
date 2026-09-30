@@ -162,9 +162,13 @@ export interface ComparativoCompra { products:ProdutoHistoricoCompra[]; summary:
 /* Conexão da farmácia ativa com o Mercado Farma. status nulo: nunca conectou. O token nunca volta da API. */
 export type StatusIntegracao='CONECTADA'|'EXPIRADA'
 export interface IntegracaoMercadoFarma { disponivel:boolean; status:StatusIntegracao|null; tokenExpiraEm:string|null; ultimaImportacaoEm:string|null; ultimoErro:string|null }
-export interface CandidatoCorrespondenciaMercadoFarma { ean:string; nome:string; marca:string|null; menorPreco:number|null; distribuidoras:number; pontuacao:number }
-export interface SugestaoCorrespondenciaMercadoFarma { itemCotacaoId:number; produtoId:number; produto:string; laboratorio:string|null; quantidade:number; eanSugerido:string|null; candidatos:CandidatoCorrespondenciaMercadoFarma[] }
-export interface ResultadoImportacaoMercadoFarma { distribuidoras:number; itensEncontrados:number; itensNaoEncontrados:number; itensSemEan:number; totalItens:number; sugestoes:SugestaoCorrespondenciaMercadoFarma[] }
+/* economiaPercentual só nas sugestões MAIS_BARATO. */
+export interface CandidatoCorrespondenciaMercadoFarma { ean:string; nome:string; marca:string|null; menorPreco:number|null; distribuidoras:number; pontuacao:number; economiaPercentual:number|null }
+/* SEM_EAN: a escolha vai para o cadastro do produto. EAN_NAO_ENCONTRADO e MAIS_BARATO: vale só
+   nesta cotação. produtoPortalAtual/precoAtual: o que o item usa hoje, só em MAIS_BARATO. */
+export type TipoSugestaoMercadoFarma = 'SEM_EAN' | 'EAN_NAO_ENCONTRADO' | 'MAIS_BARATO'
+export interface SugestaoCorrespondenciaMercadoFarma { itemCotacaoId:number; produtoId:number; produto:string; laboratorio:string|null; quantidade:number; tipo:TipoSugestaoMercadoFarma; eanSugerido:string|null; produtoPortalAtual:string|null; precoAtual:number|null; candidatos:CandidatoCorrespondenciaMercadoFarma[] }
+export interface ResultadoImportacaoMercadoFarma { distribuidoras:number; itensEncontrados:number; itensNaoEncontrados:number; itensSemEan:number; totalItens:number; itensSubstituidos:number; sugestoes:SugestaoCorrespondenciaMercadoFarma[] }
 export interface ResultadoVinculosMercadoFarma { vinculados:number; recusados:string[]; importacao:ResultadoImportacaoMercadoFarma }
 /* Busca geral nos portais de pedido eletrônico conectados (GET /integracoes/busca). */
 export interface OfertaPortalEncontrada { portal:string; distribuidora:string; preco:number; estoque:number; pedidoMinimo:number|null; semImposto:boolean }

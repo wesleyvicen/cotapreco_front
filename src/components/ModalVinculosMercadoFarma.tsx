@@ -3,17 +3,26 @@ import { useEffect, useMemo, useState } from 'react'
 import { api, ErroApi, money } from '../api'
 import type { ResultadoVinculosMercadoFarma, SugestaoCorrespondenciaMercadoFarma } from '../types'
 import { AvisoErro } from './ComponentesUI'
-import { lerRecusados, gravarRecusados, NENHUM } from '../lib/vinculosMercadoFarma'
+import { chaveRecusa, lerRecusados, gravarRecusados, NENHUM } from '../lib/vinculosMercadoFarma'
 
 type Filtro = 'todos' | 'pendentes' | 'vinculados' | 'ignorados'
-const ROTULOS:Record<Filtro,string> = { todos:'Todos', pendentes:'Para escolher', vinculados:'Vinculados', ignorados:'Ignorados' }
+const ROTULOS:Record<Filtro,string> = { todos:'Todos', pendentes:'Para escolher', vinculados:'Escolhidos', ignorados:'Ignorados' }
 
 const semAcento = (texto:string) => texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
-/* Produtos sem EAN que parecem estar no Mercado Farma. Uma linha por produto, com os
-   candidatos lado a lado. O mais parecido já vem marcado quando a semelhança é alta. Busca e
-   filtros ajudam em listas grandes, e as ações em lote valem só para o que está filtrado.
-   Confirma tudo de uma vez: o EAN vai para o cadastro do produto e a importação roda de novo. */
+/* Por que cada produto está aqui. A escolha de SEM_EAN vai para o cadastro; as outras duas
+   valem só nesta cotação (o cadastro continua com o EAN do ERP). */
+const TIPOS:Record<SugestaoCorrespondenciaMercadoFarma['tipo'],{ selo:string, dica:string }> = {
+  SEM_EAN:{ selo:'Sem EAN', dica:'O EAN escolhido fica salvo no cadastro do produto.' },
+  EAN_NAO_ENCONTRADO:{ selo:'EAN não está no portal', dica:'Vale só nesta cotação: o cadastro continua com o EAN atual.' },
+  MAIS_BARATO:{ selo:'Opção mais barata', dica:'Equivalente de outro laboratório. Trocar vale só nesta cotação.' },
+}
+
+/* Produtos que a importação não conseguiu resolver sozinha pelo EAN (sem EAN, ou EAN que o
+   portal não tem) e produtos com equivalente mais barato de outro laboratório. Uma linha por
+   produto, com os candidatos lado a lado. O mais parecido já vem marcado quando a semelhança é
+   alta, nunca numa troca de laboratório. Busca e filtros ajudam em listas grandes, e as ações
+   em lote valem só para o que está filtrado. Confirma tudo de uma vez e a importação roda de novo. */
 export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConcluir, aoFechar }:{
   cotacaoId:number; sugestoes:SugestaoCorrespondenciaMercadoFarma[]
   aoConcluir:(resultado:ResultadoVinculosMercadoFarma)=>void; aoFechar:()=>void
@@ -23,6 +32,7 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
   const [busca, setBusca] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [laboratorio, setLaboratorio] = useState('')
+  const [tipo, setTipo] = useState<SugestaoCorrespondenciaMercadoFarma['tipo']|''>('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
 
@@ -37,10 +47,11 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
   const contagem:Record<Filtro,number> = { todos:sugestoes.length, pendentes:0, vinculados:0, ignorados:0 }
   sugestoes.forEach(s => { contagem[situacao(s)] += 1 })
   const laboratorios = useMemo(() => [...new Set(sugestoes.map(s => s.laboratorio).filter((l):l is string => !!l))].sort(), [sugestoes])
+  const tipos = useMemo(() => (Object.keys(TIPOS) as SugestaoCorrespondenciaMercadoFarma['tipo'][]).filter(t => sugestoes.some(s => s.tipo === t)), [sugestoes])
 
   const termo = semAcento(busca.trim())
   const visiveis = sugestoes.filter(s => (filtro === 'todos' || situacao(s) === filtro)
-    && (!laboratorio || s.laboratorio === laboratorio)
+    && (!laboratorio || s.laboratorio === laboratorio) && (!tipo || s.tipo === tipo)
     && (!termo || semAcento([s.produto, s.laboratorio ?? '', ...s.candidatos.flatMap(c => [c.nome, c.marca ?? '', c.ean])].join(' ')).includes(termo)))
 
   const vinculos = Object.entries(escolhas).filter(([, ean]) => ean !== NENHUM).map(([itemCotacaoId, ean]) => ({ itemCotacaoId:Number(itemCotacaoId), ean }))
@@ -51,19 +62,21 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
     return proximas
   })
   const pendentesVisiveis = visiveis.filter(s => escolhas[s.itemCotacaoId] == null)
-  const marcarMaisParecidos = () => setEscolhas(atuais => ({ ...atuais, ...Object.fromEntries(pendentesVisiveis.map(s => [s.itemCotacaoId, s.candidatos[0].ean])) }))
+  /* Trocar de laboratório é sempre uma decisão por produto: o lote não marca troca nenhuma. */
+  const marcaveis = pendentesVisiveis.filter(s => s.tipo !== 'MAIS_BARATO')
+  const marcarMaisParecidos = () => setEscolhas(atuais => ({ ...atuais, ...Object.fromEntries(marcaveis.map(s => [s.itemCotacaoId, s.candidatos[0].ean])) }))
   const ignorarPendentes = () => setEscolhas(atuais => ({ ...atuais, ...Object.fromEntries(pendentesVisiveis.map(s => [s.itemCotacaoId, NENHUM])) }))
 
   const confirmar = async () => {
     setErro('')
     const recusados = lerRecusados()
-    sugestoes.filter(s => escolhas[s.itemCotacaoId] === NENHUM).forEach(s => recusados.add(s.produtoId))
+    sugestoes.filter(s => escolhas[s.itemCotacaoId] === NENHUM).forEach(s => recusados.add(chaveRecusa(s, cotacaoId)))
     gravarRecusados(recusados)
     if (vinculos.length === 0) { aoFechar(); return }
     setEnviando(true)
     try {
       aoConcluir(await api<ResultadoVinculosMercadoFarma>(`/quotations/${cotacaoId}/mercado-farma/vinculos`, { method:'POST', body:JSON.stringify({ itens:vinculos }) }))
-    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar os vínculos.') }
+    } catch (e) { setErro(e instanceof ErroApi ? e.message : 'Não foi possível salvar as escolhas.') }
     finally { setEnviando(false) }
   }
 
@@ -71,8 +84,8 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
     <section className="modal vinculos-modal" role="dialog" aria-modal="true" aria-labelledby="vinculos-titulo">
       <div className="modal-header modal-header-simple">
         <div>
-          <h2 id="vinculos-titulo">{sugestoes.length === 1 ? '1 produto sem EAN' : `${sugestoes.length} produtos sem EAN`} no Mercado Farma</h2>
-          <p>Marque qual é o mesmo produto. O EAN fica salvo no cadastro e, nas próximas importações, ele entra sozinho.</p>
+          <h2 id="vinculos-titulo">{sugestoes.length === 1 ? '1 produto' : `${sugestoes.length} produtos`} para conferir no Mercado Farma</h2>
+          <p>Marque qual é o mesmo produto no portal, ou se quer trocar pelo mais barato. Cada linha diz até onde a escolha vale.</p>
         </div>
         <button type="button" className="icon-button" aria-label="Fechar" disabled={enviando} onClick={aoFechar}><X/></button>
       </div>
@@ -82,6 +95,10 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
         <label className="vinculos-busca"><Search aria-hidden="true"/>
           <input type="search" placeholder="Buscar produto, marca ou EAN" aria-label="Buscar produto, marca ou EAN" value={busca} onChange={e => setBusca(e.target.value)}/>
         </label>
+        {tipos.length > 1 && <select aria-label="Filtrar por motivo" value={tipo} onChange={e => setTipo(e.target.value as typeof tipo)}>
+          <option value="">Todos os motivos</option>
+          {tipos.map(t => <option key={t} value={t}>{TIPOS[t].selo}</option>)}
+        </select>}
         {laboratorios.length > 1 && <select aria-label="Filtrar por laboratório" value={laboratorio} onChange={e => setLaboratorio(e.target.value)}>
           <option value="">Todos os laboratórios</option>
           {laboratorios.map(l => <option key={l} value={l}>{l}</option>)}
@@ -93,7 +110,7 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
       </div>
       {pendentesVisiveis.length > 0 && <div className="vinculos-lote">
         <span>{pendentesVisiveis.length} para escolher {visiveis.length !== sugestoes.length ? 'nesta seleção' : ''}</span>
-        <button type="button" className="button button-ghost" onClick={marcarMaisParecidos}><Check/>Marcar o mais parecido</button>
+        {marcaveis.length > 0 && <button type="button" className="button button-ghost" onClick={marcarMaisParecidos}><Check/>Marcar o mais parecido</button>}
         <button type="button" className="button button-ghost" onClick={ignorarPendentes}><Ban/>Ignorar</button>
       </div>}
 
@@ -102,24 +119,32 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
         {visiveis.map(sugestao => {
           const escolha = escolhas[sugestao.itemCotacaoId]
           const ignorado = escolha === NENHUM
+          const troca = sugestao.tipo === 'MAIS_BARATO'
           return <div key={sugestao.itemCotacaoId} role="listitem" className={`vinculo-linha${ignorado ? ' ignorado' : ''}${escolha && !ignorado ? ' vinculado' : ''}`}>
             <div className="vinculo-produto">
               <strong title={sugestao.produto}>{sugestao.produto}</strong>
               <small>{[sugestao.laboratorio, `${sugestao.quantidade} un.`].filter(Boolean).join(' · ')}</small>
+              <span className={`vinculo-tipo vinculo-tipo-${sugestao.tipo.toLowerCase()}`} title={TIPOS[sugestao.tipo].dica}>{TIPOS[sugestao.tipo].selo}</span>
+              {troca && sugestao.produtoPortalAtual && <small className="vinculo-atual" title={sugestao.produtoPortalAtual}>
+                Hoje: {sugestao.produtoPortalAtual}{sugestao.precoAtual != null && ` · ${money(sugestao.precoAtual)}`}</small>}
             </div>
             <div className="vinculo-candidatos" role="radiogroup" aria-label={`Produto do Mercado Farma para ${sugestao.produto}`}>
               {ignorado
-                ? <span className="vinculo-ignorado-texto">Não é nenhum destes: não pergunta de novo.</span>
+                ? <span className="vinculo-ignorado-texto">{troca ? 'Mantém o produto atual: não pergunta de novo nesta cotação.'
+                    : sugestao.tipo === 'SEM_EAN' ? 'Não é nenhum destes: não pergunta de novo.' : 'Não é nenhum destes: não pergunta de novo nesta cotação.'}</span>
                 : sugestao.candidatos.map((candidato, indice) => <label key={candidato.ean} className={`vinculo-opcao${escolha === candidato.ean ? ' selecionada' : ''}`}
                   title={`${candidato.nome} · ${candidato.marca ?? ''} · EAN ${candidato.ean}`}>
                   <input type="radio" name={`vinculo-${sugestao.itemCotacaoId}`} checked={escolha === candidato.ean} onChange={() => escolher(sugestao.itemCotacaoId, candidato.ean)}/>
                   <span className="vinculo-opcao-nome">{candidato.nome}</span>
-                  <span className="vinculo-opcao-info">{candidato.marca}{indice === 0 && candidato.pontuacao >= 85 ? ' · mais parecido' : ''}</span>
+                  <span className="vinculo-opcao-info">{candidato.marca}
+                    {troca ? candidato.economiaPercentual != null && <strong className="vinculo-economia"> · {candidato.economiaPercentual}% mais barato</strong>
+                      : indice === 0 && candidato.pontuacao >= 85 ? ' · mais parecido' : ''}</span>
                   <span className="vinculo-opcao-preco">{candidato.menorPreco != null ? money(candidato.menorPreco) : '-'}<small> · {candidato.distribuidoras} dist.</small></span>
                 </label>)}
             </div>
             <button type="button" className="icon-button vinculo-acao" onClick={() => escolher(sugestao.itemCotacaoId, ignorado ? sugestao.eanSugerido : NENHUM)}
-              title={ignorado ? 'Desfazer' : 'Não é nenhum destes'} aria-label={ignorado ? `Desfazer: ${sugestao.produto}` : `Nenhum destes: ${sugestao.produto}`}>
+              title={ignorado ? 'Desfazer' : troca ? 'Manter o atual' : 'Não é nenhum destes'}
+              aria-label={ignorado ? `Desfazer: ${sugestao.produto}` : troca ? `Manter o atual: ${sugestao.produto}` : `Nenhum destes: ${sugestao.produto}`}>
               {ignorado ? <Undo2/> : <Ban/>}
             </button>
           </div>
@@ -127,10 +152,10 @@ export default function ModalVinculosMercadoFarma({ cotacaoId, sugestoes, aoConc
       </div>
 
       <div className="modal-actions vinculos-rodape">
-        <span>{contagem.vinculados} vinculado{contagem.vinculados === 1 ? '' : 's'} · {contagem.ignorados} ignorado{contagem.ignorados === 1 ? '' : 's'} · {contagem.pendentes} para escolher</span>
+        <span>{contagem.vinculados} escolhido{contagem.vinculados === 1 ? '' : 's'} · {contagem.ignorados} ignorado{contagem.ignorados === 1 ? '' : 's'} · {contagem.pendentes} para escolher</span>
         <button type="button" className="button button-ghost" disabled={enviando} onClick={aoFechar}>Agora não</button>
         <button type="button" className="button button-primary" disabled={enviando || decididos === 0} onClick={() => void confirmar()}>
-          <Link2/>{enviando ? 'Salvando e importando...' : vinculos.length > 0 ? `Vincular ${vinculos.length} e importar` : 'Salvar'}
+          <Link2/>{enviando ? 'Salvando e importando...' : vinculos.length > 0 ? `Aplicar ${vinculos.length} e importar` : 'Salvar'}
         </button>
       </div>
     </section>
