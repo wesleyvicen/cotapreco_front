@@ -9417,3 +9417,177 @@ label small {
   .staff-filtros { flex-wrap: wrap; gap: 6px; min-width: 0; }
   .staff-filtro { padding: 5px 11px; font-size: 12px; }
 }
+
+/* Cartão "Economia estimada" clicável e o modal que explica o número. */
+.stat-card-clicavel { width: 100%; font: inherit; color: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.stat-card-clicavel:hover, .stat-card-clicavel:focus-visible { border-color: #c9b8e6; box-shadow: 0 8px 24px rgba(115, 82, 163, 0.12); }
+.stat-card .stat-acao { color: #7352a3; font-size: 11px; font-weight: 700; margin-top: 3px; }
+.economia-modal { width: min(1080px, calc(100vw - 32px)); max-height: min(90vh, 900px); display: flex; flex-direction: column; padding: 20px 22px; }
+.economia-modal > .modal-header { flex: 0 0 auto; margin-bottom: 14px; }
+.economia-modal > .modal-actions { flex: 0 0 auto; margin-top: 12px; }
+.economia-corpo { display: flex; flex: 1 1 auto; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px; }
+
+/* Manchete: o retorno em número grande, a frase e a barra. */
+.economia-manchete { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 20px; border: 1px solid #e3d9f2; border-radius: 14px; padding: 16px 20px; background: linear-gradient(135deg, #faf7ff, #fff); }
+.economia-manchete-ok { border-color: #b8dccd; background: linear-gradient(135deg, var(--green-soft), #fff); }
+.economia-manchete-numero { display: flex; flex-direction: column; align-items: center; min-width: 108px; }
+.economia-manchete-numero strong { font-size: 40px; line-height: 1; letter-spacing: -.02em; color: #5b3f86; }
+.economia-manchete-ok .economia-manchete-numero strong { color: var(--green); }
+.economia-manchete-numero span { font-size: 11px; color: var(--muted); margin-top: 4px; text-align: center; }
+.economia-manchete-texto { display: grid; gap: 8px; min-width: 0; }
+.economia-manchete-texto h3 { margin: 0; font-size: 17px; }
+.economia-manchete-texto small { font-size: 12px; color: var(--muted); }
+.economia-manchete-texto small strong { color: var(--ink); }
+.economia-barra { height: 8px; border-radius: 999px; background: #e6ece9; overflow: hidden; }
+.economia-barra span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7352a3, var(--green-2)); transition: width .4s; }
+.economia-garantia-faixa { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 12px; border-radius: 10px; background: #f3faf7; font-size: 12px; color: var(--ink); }
+.economia-selo { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 7px; border-radius: 999px; background: var(--green); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; flex: none; }
+.economia-selo svg { width: 12px; height: 12px; }
+.economia-beneficios { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.economia-beneficios li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.economia-beneficio-icone { flex: none; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--green-soft); color: var(--green); }
+.economia-beneficio-icone svg { width: 16px; height: 16px; }
+.economia-beneficios li div { display: flex; flex-direction: column; min-width: 0; }
+.economia-beneficios li strong { font-size: 16px; }
+.economia-beneficios li div span { font-size: 11px; line-height: 1.3; color: var(--muted); }
+
+/* Explicação, regras e histórico recolhidos. */
+.economia-expansores { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.economia-expansor + .economia-expansor { border-top: 1px solid var(--line); }
+.economia-expansor summary { display: flex; align-items: center; gap: 8px; padding: 9px 14px; font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; list-style: none; }
+.economia-expansor summary::-webkit-details-marker { display: none; }
+.economia-expansor summary:hover { background: #fbfdfc; }
+.economia-expansor summary:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+.economia-expansor summary > svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
+.economia-expansor summary > svg:last-child { margin-left: auto; transition: transform .15s; }
+.economia-expansor[open] summary > svg:last-child { transform: rotate(180deg); }
+.economia-contagem { font-size: 11px; font-weight: 800; background: #f0eafa; color: #5b3f86; border-radius: 999px; padding: 1px 7px; }
+.economia-expansor-corpo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px 24px; padding: 4px 14px 14px; font-size: 12px; }
+.economia-expansor-corpo p { margin: 0 0 6px; font-size: 12px; }
+.economia-expansor-corpo ul { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; color: var(--muted); }
+.economia-expansor-corpo ul strong { color: var(--ink); }
+.economia-formula { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+.economia-formula span { background: #f0eafa; color: #5b3f86; border-radius: 6px; padding: 4px 8px; }
+.economia-formula span:nth-child(2) { background: none; padding: 0; color: var(--ink); }
+.economia-meses { list-style: none; margin: 0; padding: 0 14px 10px; }
+.economia-meses li { display: grid; grid-template-columns: 56px 150px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 7px 0; font-size: 12px; color: var(--muted); }
+.economia-meses li + li { border-top: 1px dashed var(--line); }
+.economia-mes-numero { font-size: 11px; font-weight: 800; color: #7352a3; }
+.economia-meses b { font-size: 11px; color: var(--ink); }
+.economia-mes-ok b { color: var(--green); }
+
+/* Cotações. */
+.economia-titulo-lista { font-size: 14px; margin: 4px 0 8px; }
+.economia-titulo-lista small { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+.economia-vazio { font-size: 13px; color: var(--muted); margin: 0; }
+.economia-cotacao { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 6px; overflow: hidden; }
+.economia-cotacao.aberta { border-color: #c9b8e6; box-shadow: 0 6px 18px rgba(115, 82, 163, 0.08); }
+.economia-cotacao-cabecalho { width: 100%; display: grid; grid-template-columns: minmax(180px, 1fr) auto 16px; gap: 18px; align-items: center; padding: 10px 14px; background: #fff; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.economia-cotacao-cabecalho:hover { background: #fbfdfc; }
+.economia-cotacao-titulo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.economia-cotacao-titulo strong { font-size: 13px; }
+.economia-cotacao-titulo small { font-size: 11px; color: var(--muted); }
+.economia-cotacao-cabecalho > svg { width: 16px; height: 16px; color: var(--muted); transition: transform .15s; }
+.economia-cotacao.aberta .economia-cotacao-cabecalho > svg { transform: rotate(180deg); }
+.economia-metricas { display: grid; grid-template-columns: repeat(4, minmax(84px, auto)); gap: 18px; margin: 0; }
+.economia-metricas div { display: flex; flex-direction: column; gap: 1px; }
+.economia-metricas dt { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.economia-metricas dd { margin: 0; font-size: 14px; font-weight: 800; }
+.economia-metricas dd small { font-size: 11px; font-weight: 600; color: var(--muted); }
+.economia-valor { font-weight: 800; color: var(--green); white-space: nowrap; }
+.economia-detalhe { border-top: 1px solid var(--line); padding: 12px 14px 14px; display: grid; gap: 10px; background: #fbfdfc; }
+.economia-resumo-conta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.economia-resumo-conta > div { display: flex; flex-direction: column; gap: 1px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; }
+.economia-resumo-conta > div span { font-size: 11px; color: var(--muted); }
+.economia-resumo-conta > div strong { font-size: 14px; }
+.economia-resumo-sinal { font-size: 18px; font-weight: 800; color: var(--muted); }
+.economia-resumo-total { border-color: #b8dccd !important; background: var(--green-soft) !important; }
+.economia-resumo-total strong { color: var(--green); }
+.economia-nota { margin: 0; font-size: 11px; color: var(--muted); }
+.economia-tabela-wrap { background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+.economia-tabela { width: 100%; min-width: 820px; font-size: 12px; }
+.economia-tabela th { font-size: 11px; white-space: nowrap; padding-top: 8px; padding-bottom: 8px; }
+.economia-tabela td { vertical-align: top; padding-top: 8px; padding-bottom: 8px; }
+.economia-tabela td small { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; white-space: nowrap; }
+.economia-tabela .num { text-align: right; white-space: nowrap; }
+.economia-fornecedor { font-weight: 700; }
+.economia-detalhe > .text-link { font-size: 12px; }
+
+@media (max-width: 960px) {
+  .economia-beneficios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .economia-cotacao-cabecalho { grid-template-columns: minmax(0, 1fr) 16px; }
+  .economia-metricas { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .economia-meses li { grid-template-columns: 48px minmax(0, 1fr) auto; }
+  .economia-meses li > span:nth-child(3) { grid-column: 2; grid-row: 2; }
+  .economia-meses li > b { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+/* Celular: tela cheia, uma borda por nível no máximo. */
+@media (max-width: 640px) {
+  .modal-backdrop:has(.economia-modal) { padding: 0; }
+  .economia-modal { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; padding: max(14px, env(safe-area-inset-top)) 0 0; }
+  .economia-modal > .modal-header { grid-template-columns: 38px 1fr 36px; gap: 10px; margin: 0; padding: 0 16px 12px; border-bottom: 1px solid var(--line); }
+  .economia-modal .modal-icon { width: 38px; height: 38px; border-radius: 11px; }
+  .economia-modal .modal-header h2 { font-size: 17px; }
+  .economia-corpo { gap: 10px; padding: 12px 16px 8px; }
+  .economia-modal > .modal-actions { margin: 0; padding: 10px 16px max(10px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: #fff; }
+  .economia-modal > .modal-actions .button { width: 100%; }
+
+  .economia-manchete { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 14px; }
+  .economia-manchete-numero { flex-direction: row; align-items: baseline; gap: 8px; min-width: 0; }
+  .economia-manchete-numero strong { font-size: 32px; }
+  .economia-manchete-texto h3 { font-size: 15px; }
+  .economia-garantia-faixa { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .economia-beneficios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .economia-beneficios li { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px; }
+  .economia-expansor-corpo { grid-template-columns: minmax(0, 1fr); }
+  .economia-meses { padding: 0 12px 8px; }
+  .economia-titulo-lista small { display: block; margin: 2px 0 0; }
+
+  .economia-cotacao-cabecalho { gap: 10px; padding: 12px; }
+  .economia-cotacao-cabecalho > svg { align-self: start; margin-top: 2px; }
+  .economia-metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .economia-metricas div { background: #fbfdfc; padding: 6px 10px; }
+
+  .economia-detalhe { padding: 12px; }
+  /* A conta em três caixas com sinais vira um extrato: uma caixa, uma linha por parcela. */
+  .economia-resumo-conta { flex-direction: column; align-items: stretch; gap: 0; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .economia-resumo-conta > div { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 12px; border: 0; border-radius: 0; padding: 8px 12px; }
+  .economia-resumo-conta > div + .economia-resumo-sinal + div { border-top: 1px solid var(--line); }
+  .economia-resumo-conta > div strong { white-space: nowrap; }
+  .economia-resumo-sinal { display: none; }
+  .economia-resumo-total { border-top: 1px solid #b8dccd !important; }
+
+  /* Tabela vira lista de cartões: sem rolagem lateral e sem borda externa somando à do cartão. */
+  .economia-tabela-wrap { background: none; border: 0; border-radius: 0; overflow: visible; }
+  .economia-tabela { min-width: 0; display: block; }
+  .economia-tabela thead { display: none; }
+  .economia-tabela tbody { display: grid; gap: 8px; }
+  .economia-tabela tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .economia-tabela td { display: flex; flex-direction: column; gap: 1px; padding: 0; border: 0; min-width: 0; }
+  .economia-tabela td::before { content: attr(data-label); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .economia-tabela td small { white-space: normal; }
+  .economia-tabela .num { text-align: left; }
+  .economia-celula-produto { grid-column: 1 / -1; padding-bottom: 6px !important; border-bottom: 1px dashed var(--line) !important; }
+  .economia-celula-produto::before { display: none; }
+  .economia-celula-qtd { display: none !important; }
+  .economia-tabela td.economia-valor { font-size: 14px; }
+  .economia-detalhe > .text-link { justify-content: center; padding: 4px 0; }
+}
+
+/* Retorno do CotaPreço na assinatura e no cancelamento. */
+.resumo-retorno { display: grid; gap: 8px; border: 1px solid #b8dccd; border-radius: 14px; padding: 14px 16px; background: linear-gradient(135deg, var(--green-soft), #fff); }
+.resumo-retorno-manchete { font-size: 16px; color: var(--green); }
+.resumo-retorno ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); }
+.resumo-retorno li { display: inline-flex; align-items: center; gap: 6px; }
+.resumo-retorno li svg { width: 15px; height: 15px; color: var(--green); }
+.resumo-retorno li b { color: var(--ink); }
+.resumo-retorno p { margin: 0; font-size: 12px; color: var(--ink); font-weight: 600; }
+.resumo-retorno-assinatura { margin-bottom: 16px; }
+.resumo-retorno-cancelamento { margin-bottom: 12px; }
+.economia-conteudo { display: flex; flex-direction: column; gap: 12px; transition: opacity .15s; }
+.economia-recalculando { opacity: .55; pointer-events: none; }
+.economia-referencia { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 12px; color: var(--muted); }
+.economia-referencia select { font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; background: #fff; }
+.economia-referencia select:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
+@media (max-width: 640px) { .economia-referencia { justify-content: space-between; } .economia-referencia select { max-width: 60%; } }

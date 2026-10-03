@@ -9,6 +9,7 @@ import {
   assinaturaEmConfirmacao, INCLUSO, LINK_WHATSAPP_ASSINATURA, precoDoPlano, ROTULO_STATUS, TOTAL_DIAS_TESTE,
 } from '../lib/assinatura'
 import CamposEndereco from '../components/CamposEndereco'
+import ResumoRetorno from '../components/ResumoRetorno'
 import { periodoDoDesconto, precoComCupom } from '../lib/cupom'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
 import type { AjusteQuantidade, Assinatura, CheckoutAssinatura, Conta, Empresa, PreviaCupom } from '../types'
@@ -292,6 +293,8 @@ export default function PaginaAssinatura() {
       </div>
     </section>
 
+    <ResumoRetorno variante="assinatura"/>
+
     {estado === 'teste' && <section className="card assinatura-progresso">
       <div className="assinatura-progresso-topo">
         <strong>Dia {diaAtual} de {totalDiasTeste}</strong>
@@ -496,6 +499,8 @@ function ModalCancelarAssinatura({ farmacia, preco, farmacias, ativaAte, ocupado
       </div>
 
       {erro && <AvisoErro message={erro}/>}
+
+      <ResumoRetorno variante="cancelamento"/>
 
       <div className="cancelar-assinatura-bloco cancelar-assinatura-mantem">
         <span className="cancelar-assinatura-titulo">Hoje, por {money(preco)}/mês, você tem</span>

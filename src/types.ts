@@ -127,6 +127,13 @@ export interface LinhaCompraSugerida { quotationItemId:number; ean:string|null; 
 export type StatusPedidoMinimo='SEM_MINIMO'|'ATENDIDO'|'ABAIXO_DO_MINIMO'
 export interface CompraSugerida { responseId?:number; supplierName:string; productCount:number; totalQuantity:number; total:number; minimumOrderValue:number|null; minimumOrderShortfall:number; minimumOrderStatus:StatusPedidoMinimo; items?:LinhaCompraSugerida[] }
 export interface ComparacaoCotacao { products:ComparacaoProduto[]; supplierTotals:TotalDistribuidor[]; suggestedPurchase:CompraSugerida[]; productsWithoutOffer:number; partiallyCoveredProducts:number; bestCompositionTotal:number; estimatedSavings:number }
+export interface LinhaEconomia { quotationItemId:number; productName:string; comparedQuantity:number; chosenSupplier:string; paidUnitPrice:number; paidTotal:number; referenceSupplier:string; referencePosition:number; referenceUnitPrice:number; referenceTotal:number; savings:number; offerCount:number }
+export interface EconomiaCotacao { quotationId:number; name:string; pharmacyName:string; createdAt:string; offeringSuppliers:number; comparedProducts:number; productCount:number; paidTotal:number; referenceTotal:number; savings:number; topLines:LinhaEconomia[] }
+export interface MesEconomia { number:number; startsAt:string; lastDay:string; subscriptionValue:number; savings:number; quotations:number; returnMultiple:number|null; paidOff:boolean }
+export interface PeriodoTeste { monthlyValue:number; savings:number; returnMultiple:number|null; firstChargeOn:string|null }
+export interface GarantiaSatisfacao { days:number; until:string|null }
+export interface BeneficiosEconomia { totalSavings:number; quotations:number; proposalsCompared:number; productsQuoted:number; cheaperProducts:number; estimatedMinutesSaved:number; minutesPerItem:number }
+export interface VisaoEconomia { totalSavings:number; totalPaid:number; savingsWhilePaying:number; benefits:BeneficiosEconomia; currentMonth:MesEconomia|null; previousMonths:MesEconomia[]; trial:PeriodoTeste|null; guarantee:GarantiaSatisfacao|null; quotations:EconomiaCotacao[]; referencePosition:number; maxOffers:number }
 export interface Painel { openQuotations:number; finishedQuotations:number; responsesThisMonth:number; responsesTotal:number; quotedValue:number; estimatedSavings:number; latestQuotations:ResumoCotacao[] }
 export interface Produto { id:number; ean:string|null; name:string; laboratory:string|null; presentation:string|null; category:string|null; active:boolean; createdAt:string; updatedAt:string }
 export interface Representante { id:number; nome:string; telefone:string; email:string }
