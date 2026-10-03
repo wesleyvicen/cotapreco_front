@@ -92,7 +92,8 @@ export interface FarmaciaCotacaoUnificada extends FarmaciaUnificada { productCou
 export interface CotacaoUnificada { id:number; name:string; status:StatusCotacao; expiresAt:string|null; publicToken:string|null; publicUrl:string|null; productCount:number; pharmacies:FarmaciaCotacaoUnificada[] }
 export interface DivisaoFarmacia { companyId:number; companyName:string; quotationId:number; requestedQuantity:number; allocatedQuantity:number }
 export interface DivisaoEstoque { responseId:number; supplierName:string; productId:number; ean:string|null; productName:string; availableQuantity:number; requestedQuantity:number; pharmacies:DivisaoFarmacia[] }
-export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null; demo:boolean; unified:VinculoUnificada|null }
+export interface ResultadoArquivamento { changed:number; skipped:string[] }
+export interface ResumoCotacao { id:number; name:string; status:StatusCotacao; expiresAt:string|null; createdAt:string; productCount:number; submittedResponses:number; purchaseComparisonEligible:boolean; purchasedItemCount:number; lastPurchaseAt:string|null; demo:boolean; unified:VinculoUnificada|null; archived:boolean }
 export interface ItemCotacao { id:number; productId:number; ean:string|null; productName:string; laboratory:string|null; requestedQuantity:number; active:boolean }
 export interface Cotacao extends Omit<ResumoCotacao,'productCount'|'submittedResponses'|'purchaseComparisonEligible'|'purchasedItemCount'|'lastPurchaseAt'> { updatedAt:string; publicToken:string|null; publicUrl:string|null; items:ItemCotacao[] }
 /* Primeira Cotação Assistida. O status e o ERP ficam na conta; o checklist é inferido pelo

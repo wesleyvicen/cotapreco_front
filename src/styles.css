@@ -9591,3 +9591,20 @@ label small {
 .economia-referencia select { font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; background: #fff; }
 .economia-referencia select:focus-visible { outline: 2px solid var(--green); outline-offset: 1px; }
 @media (max-width: 640px) { .economia-referencia { justify-content: space-between; } .economia-referencia select { max-width: 60%; } }
+
+/* Arquivar cotações na lista. */
+.badge-arquivada { background: #eef1f0; color: #5f726b; margin-left: 8px; }
+.linha-arquivada td { color: var(--muted); }
+.linha-arquivada td strong { color: #4f635c; }
+.linha-acoes { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.arquivar-aviso { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.arquivar-selecao { border-color: #d5dcd9; background: #f7f9f8; }
+.arquivar-modal { width: min(560px, 100%); }
+.arquivar-efeitos { margin: 0 0 18px; padding-left: 18px; display: grid; gap: 8px; font-size: 13px; color: #526a62; line-height: 1.5; }
+.arquivar-efeitos strong { color: var(--ink); }
+.arquivar-atencao::marker { color: #a97918; }
+.arquivar-modal .modal-actions { display: flex; }
+@media (max-width: 640px) {
+  .arquivar-modal .modal-actions { flex-direction: column-reverse; }
+  .arquivar-modal .modal-actions .button { width: 100%; }
+}
