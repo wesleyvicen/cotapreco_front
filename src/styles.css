@@ -4767,6 +4767,19 @@ label small {
   margin-top: 3px;
   font-size: 9px;
 }
+/* Observação longa (ex.: "No portal: ...") não pode ditar a largura da tabela:
+   em table-layout auto o texto nowrap vira min-content e estoura o card. */
+.supplier-products-table .produto-laboratorio-nota .nota-fornecedor {
+  align-items: flex-start;
+  min-width: 0;
+}
+.supplier-products-table .produto-laboratorio-nota .nota-fornecedor span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .supplier-products-table .allocated-product-actions {
   width: 1%;
   text-align: right;
