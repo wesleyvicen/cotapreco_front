@@ -2707,6 +2707,24 @@ label small {
     height: 11px;
   }
 }
+/* Notebook 1366px com menu lateral aberto deixa o card com ~770px: o min-width de 800px
+   vazava a tabela por baixo do card lateral, escondendo status e seta. Compacta mais e,
+   se ainda não couber, rola dentro do card em vez de escapar dele. */
+@container purchase-card (max-width: 820px) {
+  .purchase-supplier-wrap {
+    overflow-x: auto;
+  }
+  .purchase-supplier-table {
+    min-width: 660px;
+  }
+  .purchase-supplier-table > thead th,
+  .purchase-supplier-table td {
+    padding-inline: 6px;
+  }
+  .supplier-row-toggle {
+    min-width: 170px;
+  }
+}
 @media (max-width: 760px) {
   .purchase-filter-bar {
     align-items: stretch;
