@@ -541,6 +541,10 @@ code {
 .endereco-grid input:disabled { background: #f2f5f4; color: #7d8f89; }
 .endereco-cep-campo { position: relative; display: block; }
 .endereco-cep-campo svg { position: absolute; top: 50%; right: 12px; width: 17px; height: 17px; transform: translateY(-50%); color: var(--green); }
+.resumo-cnpj { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.resumo-cnpj svg { flex: none; width: 14px; height: 14px; color: var(--green); }
+.resumo-cnpj-alerta, .resumo-cnpj-alerta svg { color: #a86a07; }
+.endereco-receita { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
 .settings-form-wrap { display: flex; flex-direction: column; gap: 18px; }
 .settings-form-wrap > .button { align-self: flex-start; }
 .assinatura-cadastro { padding: 0; }

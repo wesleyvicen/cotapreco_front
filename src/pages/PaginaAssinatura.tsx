@@ -50,6 +50,7 @@ export default function PaginaAssinatura() {
   const [completando, setCompletando] = useState(false)
   const [telefone, setTelefone] = useState('')
   const [endereco, setEndereco] = useState<FormularioEndereco>(enderecoVazio)
+  const [cnpjCobranca, setCnpjCobranca] = useState<string|null>(null)
   const [conta, setConta] = useState<Conta|null>(null)
   const [quantidadeEstimada, setQuantidadeEstimada] = useState(() => Math.max(1, user?.companies.length ?? 1))
   const [editandoQuantidade, setEditandoQuantidade] = useState(false)
@@ -167,7 +168,7 @@ export default function PaginaAssinatura() {
     setCompletando(true)
     try {
       const conta = await api<Conta>('/account')
-      setTelefone(formatarTelefone(conta.telefone ?? '')); setEndereco(enderecoDoServidor(conta.endereco))
+      setTelefone(formatarTelefone(conta.telefone ?? '')); setEndereco(enderecoDoServidor(conta.endereco)); setCnpjCobranca(conta.cnpj)
     } catch { /* Sem os dados atuais o formulário abre vazio, que é o caso mais comum mesmo. */ }
   }
 
@@ -350,7 +351,7 @@ export default function PaginaAssinatura() {
     {completando && <section className="card assinatura-cadastro">
       <div className="card-header"><div><h2>Falta só o endereço da farmácia</h2><p>A operadora de pagamento exige estes dados na cobrança. Você preenche uma vez; nas próximas vezes vai direto.</p></div></div>
       <form onSubmit={salvarCadastroEAssinar}>
-        <CamposEndereco telefone={telefone} setTelefone={setTelefone} endereco={endereco} setEndereco={setEndereco}/>
+        <CamposEndereco telefone={telefone} setTelefone={setTelefone} endereco={endereco} setEndereco={setEndereco} cnpj={cnpjCobranca}/>
         <div className="assinatura-cadastro-acoes">
           <button type="button" className="button button-ghost" disabled={enviando} onClick={() => { setCompletando(false); setErro('') }}>Agora não</button>
           <button className="button button-primary" disabled={enviando}>{enviando ? 'Salvando...' : <>Salvar e continuar <ArrowRight/></>}</button>

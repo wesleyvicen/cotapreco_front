@@ -6,6 +6,8 @@ import { IndicadorForcaSenha } from '../components/IndicadorForcaSenha'
 import { cnpjValido } from '../lib/cnpj'
 import { TOTAL_DIAS_TESTE } from '../lib/assinatura'
 import RodapeSite from '../components/RodapeEmpresa'
+import ResumoCnpj from '../components/ResumoCnpj'
+import { nomeSugerido, usarDadosCnpj } from '../hooks/usarDadosCnpj'
 import type { PreviaCupom } from '../types'
 import { LinkInterno, Redirecionar, usarNavegacao } from '../roteamento'
 
@@ -70,6 +72,20 @@ export default function PaginaCadastroFarmacia() {
   const cupomDoLink = useRef(cupom)
   useEffect(() => { if (cupomDoLink.current) void conferirCupom(cupomDoLink.current) }, [])
 
+  /* O CNPJ vem antes do nome para o nome se preencher sozinho com o da Receita. Só substitui
+     o que ele mesmo preencheu: nome digitado pela pessoa nunca é sobrescrito. */
+  const consultaCnpj = usarDadosCnpj(cnpj)
+  const nomeAutomatico = useRef('')
+  useEffect(() => {
+    if (!consultaCnpj.dados) return
+    const sugerido = nomeSugerido(consultaCnpj.dados)
+    setNomeFarmacia(atual => {
+      if (atual.trim() && atual !== nomeAutomatico.current) return atual
+      nomeAutomatico.current = sugerido
+      return sugerido
+    })
+  }, [consultaCnpj.dados])
+
   if (user) return <Redirecionar to="/" replace/>
 
   /* O erro do campo some assim que a pessoa mexe nele: manter o aviso embaixo de um valor
@@ -126,13 +142,13 @@ export default function PaginaCadastroFarmacia() {
      passo em vez de adivinhar por que o botão continua apagado. */
   const pendencias:string[] = []
   if (!nomeUsuario.trim()) pendencias.push('seu nome')
-  if (!nomeFarmacia.trim()) pendencias.push('o nome da farmácia')
   const cnpjDigitado = cnpj.replace(/\D/g, '').length === 14
   const cnpjErrado = cnpjDigitado && !cnpjValido(cnpj)
   /* CNPJ incompleto entra na lista igual aos outros campos vazios; já digitado por inteiro
      mas com dígito verificador errado ganha aviso próprio, porque "falta um CNPJ válido"
      soa como campo em branco, quando na verdade a pessoa só bateu um número errado. */
   if (!cnpjDigitado) pendencias.push('um CNPJ válido')
+  if (!nomeFarmacia.trim()) pendencias.push('o nome da farmácia')
   if (!emailValido) pendencias.push('um e-mail válido')
   if (!telefoneValido(telefone)) pendencias.push('o WhatsApp com DDD')
   if (senha.length < 8) pendencias.push('uma senha com pelo menos 8 caracteres')
@@ -196,16 +212,16 @@ export default function PaginaCadastroFarmacia() {
               {avisoCampo('nomeUsuario')}
             </label>
 
-            <label className="cad-campo">Nome da farmácia
-              <input {...campo('nomeFarmacia')} value={nomeFarmacia} required maxLength={160} autoComplete="organization" autoCapitalize="words"
-                placeholder="Como aparece para a distribuidora" onChange={evento => { setNomeFarmacia(evento.target.value); limparErroCampo('nomeFarmacia') }}/>
-              {avisoCampo('nomeFarmacia')}
-            </label>
-
             <label className="cad-campo">CNPJ
               <input {...campo('cnpj')} value={cnpj} required maxLength={18} inputMode="numeric" autoComplete="off"
                 placeholder="00.000.000/0000-00" onChange={evento => { setCnpj(formatarCnpj(evento.target.value)); limparErroCampo('cnpj') }}/>
-              {avisoCampo('cnpj')}
+              {avisoCampo('cnpj') ?? (!cnpjErrado && <ResumoCnpj estado={consultaCnpj}/>)}
+            </label>
+
+            <label className="cad-campo">Nome da farmácia
+              <input {...campo('nomeFarmacia')} value={nomeFarmacia} required maxLength={160} autoComplete="organization" autoCapitalize="words"
+                placeholder="Preenchido pelo CNPJ, pode ajustar" onChange={evento => { setNomeFarmacia(evento.target.value); limparErroCampo('nomeFarmacia') }}/>
+              {avisoCampo('nomeFarmacia')}
             </label>
 
             <label className="cad-campo">E-mail

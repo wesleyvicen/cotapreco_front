@@ -1,16 +1,45 @@
-import { LoaderCircle } from 'lucide-react'
-import { useState } from 'react'
+import { Building2, LoaderCircle } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { usarDadosCnpj } from '../hooks/usarDadosCnpj'
 import { buscarCep, formatarCep, formatarTelefone, type FormularioEndereco } from '../lib/endereco'
+import type { DadosPublicosCnpj } from '../types'
+
+const enderecoDaReceita = (dados:DadosPublicosCnpj):FormularioEndereco => ({
+  cep:formatarCep(dados.endereco.cep ?? ''), logradouro:dados.endereco.logradouro ?? '', numero:dados.endereco.numero ?? '',
+  complemento:dados.endereco.complemento ?? '', bairro:dados.endereco.bairro ?? '', cidade:dados.endereco.cidade ?? '', uf:dados.endereco.uf ?? '',
+})
 
 /* Campos compartilhados entre Dados da farmácia e o passo antes do pagamento: a mesma
    informação pedida em dois lugares tem que ser pedida do mesmo jeito. */
-export default function CamposEndereco({ telefone, setTelefone, endereco, setEndereco, desabilitado = false }:{
+export default function CamposEndereco({ telefone, setTelefone, endereco, setEndereco, desabilitado = false, cnpj }:{
   telefone:string; setTelefone:(valor:string) => void
   endereco:FormularioEndereco; setEndereco:(endereco:FormularioEndereco) => void
   desabilitado?:boolean
+  /* CNPJ da farmácia pagadora: com ele o endereço da Receita vira sugestão de um clique. */
+  cnpj?:string|null
 }) {
   const [buscando, setBuscando] = useState(false)
   const alterar = (campo:keyof FormularioEndereco, valor:string) => setEndereco({ ...endereco, [campo]:valor })
+
+  const { dados } = usarDadosCnpj(cnpj)
+  const sugestao = dados?.endereco.cep ? enderecoDaReceita(dados) : null
+  const usarReceita = () => {
+    if (!dados || !sugestao) return
+    setEndereco(sugestao)
+    if (!telefone.replace(/\D/g, '') && dados.telefone) setTelefone(formatarTelefone(dados.telefone))
+  }
+  /* Conta sem endereço nenhum recebe o da Receita direto: é o caso comum e poupa digitar seis
+     campos. Com algo já preenchido, só oferece - nunca troca o que a pessoa escreveu. */
+  const preencheuSozinho = useRef(false)
+  const vazio = Object.values(endereco).every(valor => !valor.trim())
+  useEffect(() => {
+    if (preencheuSozinho.current || desabilitado || !sugestao || !vazio) return
+    preencheuSozinho.current = true
+    usarReceita()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sugestao?.cep, vazio, desabilitado])
+  const mostrarSugestao = sugestao && !desabilitado
+    && (sugestao.cep.replace(/\D/g, '') !== endereco.cep.replace(/\D/g, '') || sugestao.numero !== endereco.numero.trim())
 
   /* O CEP preenche rua, bairro e cidade sozinho: são três campos a menos para digitar no
      celular, e menos chance de o endereço sair errado da cobrança. */
@@ -23,6 +52,10 @@ export default function CamposEndereco({ telefone, setTelefone, endereco, setEnd
   }
 
   return <div className="endereco-grid">
+    {mostrarSugestao && <div className="endereco-receita">
+      <span className="resumo-cnpj"><Building2/>Na Receita: {sugestao.logradouro}, {sugestao.numero} · {sugestao.cidade}/{sugestao.uf}</span>
+      <button type="button" className="button button-ghost" onClick={usarReceita}>Usar este endereço</button>
+    </div>}
     <label className="endereco-telefone">Telefone
       <input required inputMode="tel" maxLength={15} disabled={desabilitado} placeholder="(00) 00000-0000"
         value={telefone} onChange={evento => setTelefone(formatarTelefone(evento.target.value))}/>

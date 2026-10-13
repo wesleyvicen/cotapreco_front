@@ -146,6 +146,10 @@ export interface ItemRespostaPublica { id:number; ean:string|null; nomeProduto:s
 export interface RespostaPublica { id:number; nomeEmpresa:string; nomeCotacao:string; nomeRepresentante:string; nomeDistribuidora:string; documentoDistribuidora:string|null; valorMinimoPedido:number|null; status:StatusResposta; expiraEm:string|null; podeCorrigir:boolean; itens:ItemRespostaPublica[]; farmacias?:string[] }
 export interface EnderecoEmpresa { cep:string; logradouro:string; numero:string; complemento:string|null; bairro:string; cidade:string; uf:string }
 export interface Empresa { id:number; nome:string; cnpj:string|null; ativo:boolean }
+/* Cadastro público do CNPJ na Receita (GET /cnpj/{cnpj}), para preencher nome e endereço sozinhos. */
+export interface DadosPublicosCnpj { cnpj:string; razaoSocial:string|null; nomeFantasia:string|null; situacao:string|null; ativa:boolean
+  atividadePrincipal:string|null; endereco:EnderecoCnpj; telefone:string|null; email:string|null }
+export interface EnderecoCnpj { cep:string|null; logradouro:string|null; numero:string|null; complemento:string|null; bairro:string|null; cidade:string|null; uf:string|null }
 /* Dados de cobrança da conta (grupo): nome/CNPJ/telefone/endereço usados no checkout do
    Asaas. Distintos da Empresa - aqui é a conta toda, não uma farmácia. */
 export interface Conta { id:number; empresaPagadoraId:number; nome:string; cnpj:string|null; telefone:string|null; endereco:EnderecoEmpresa|null; enderecoCompleto:boolean; empresasAtivas:number; farmaciasContratadas:number; farmaciasContratadasAgendadas:number|null; precoBase:number; precoAdicionalPorFarmacia:number; precoMensalAtual:number; sugerirContato:boolean; precoNegociado:boolean; cortesia:boolean }

@@ -1,9 +1,11 @@
 import { Building2, ChevronDown, Gift, MapPin, MessageCircle, PlugZap, Plus, Save } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, date, ErroApi, money } from '../api'
 import { usarAutenticacao } from '../autenticacao'
 import CamposEndereco from '../components/CamposEndereco'
 import CardMercadoFarma from '../components/CardMercadoFarma'
+import ResumoCnpj from '../components/ResumoCnpj'
+import { nomeSugerido, usarDadosCnpj } from '../hooks/usarDadosCnpj'
 import { AvisoErro, Carregando } from '../components/ComponentesUI'
 import { enderecoDoServidor, enderecoVazio, formatarTelefone, paraEnvio, type FormularioEndereco } from '../lib/endereco'
 import { linkWhatsappNegociarFarmacias } from '../lib/assinatura'
@@ -41,6 +43,20 @@ function CardFarmacias() {
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [retorno] = useState(() => new URLSearchParams(window.location.search).get('checkout') ?? '')
+  /* Na edição a Receita só confirma o CNPJ digitado; na farmácia nova também sugere o nome,
+     sem sobrescrever o que a pessoa já escreveu. */
+  const consultaEdicao = usarDadosCnpj(selecionada != null ? cnpjEdicao : null)
+  const consultaNova = usarDadosCnpj(mostrarForm ? cnpj : null)
+  const nomeAutomatico = useRef('')
+  useEffect(() => {
+    if (!consultaNova.dados) return
+    const sugerido = nomeSugerido(consultaNova.dados)
+    setNome(atual => {
+      if (atual.trim() && atual !== nomeAutomatico.current) return atual
+      nomeAutomatico.current = sugerido
+      return sugerido
+    })
+  }, [consultaNova.dados])
 
   const carregar = () => {
     api<Empresa[]>('/companies').then(setEmpresas).catch(() => {})
@@ -229,7 +245,7 @@ function CardFarmacias() {
                         Aumente a quantidade em Assinatura antes de reativar esta.</p>
                     : <p className="modal-nota">Reativar não cobra nada extra, ainda está dentro do que você já contratou.</p>)}
                   <label>Nome da farmácia<input required maxLength={160} value={nomeEdicao} onChange={ev => setNomeEdicao(ev.target.value)}/></label>
-                  <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpjEdicao} onChange={ev => setCnpjEdicao(formatarCnpj(ev.target.value))}/></label>
+                  <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpjEdicao} onChange={ev => setCnpjEdicao(formatarCnpj(ev.target.value))}/><ResumoCnpj estado={consultaEdicao}/></label>
                   {motivoDesativar && <p className="modal-nota">{motivoDesativar}</p>}
                   <div className="line-actions">
                     <button className="button button-primary" disabled={salvandoEdicao || !alterado} title={alterado ? undefined : 'Altere o nome ou o CNPJ para salvar.'}><Save/>{salvandoEdicao ? 'Salvando...' : 'Salvar dados'}</button>
@@ -251,8 +267,9 @@ function CardFarmacias() {
         <button type="button" className="icon-button" onClick={() => setMostrarForm(false)}>×</button></div>
       {erro && <AvisoErro message={erro}/>}
       <div className="user-form">
+        <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpj} onChange={e => setCnpj(formatarCnpj(e.target.value))}/>
+          {consultaNova.status === 'ocioso' ? <small>Informe os 14 dígitos: o nome vem da Receita Federal.</small> : <ResumoCnpj estado={consultaNova}/>}</label>
         <label>Nome da farmácia<input required maxLength={160} value={nome} onChange={e => setNome(e.target.value)}/></label>
-        <label>CNPJ<input required inputMode="numeric" maxLength={18} value={cnpj} onChange={e => setCnpj(formatarCnpj(e.target.value))}/><small>Informe os 14 dígitos do CNPJ.</small></label>
       </div>
       {conta && (dentroDaCota
         ? <p className="modal-nota">Você já contratou {conta.farmaciasContratadas} farmácias e usou {conta.empresasAtivas}, esta entra dentro
@@ -339,7 +356,7 @@ function CardPagamento() {
     <section className="card settings-card">
       <div className="card-header"><div><h2><MapPin/> Endereço e contato</h2><p>A operadora de pagamento exige estes dados para emitir a cobrança da assinatura.</p></div></div>
       <div className="settings-form">
-        <CamposEndereco telefone={telefone} setTelefone={setTelefone} endereco={endereco} setEndereco={setEndereco} desabilitado={somenteLeitura}/>
+        <CamposEndereco telefone={telefone} setTelefone={setTelefone} endereco={endereco} setEndereco={setEndereco} desabilitado={somenteLeitura} cnpj={pagadoraSelecionada?.cnpj}/>
       </div>
     </section>
     {somenteLeitura
