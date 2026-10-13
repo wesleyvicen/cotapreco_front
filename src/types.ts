@@ -17,7 +17,8 @@ export interface ContaStaff {
 /* Uso da conta na tela de staff (ver UsoContaService no backend). Cotações não contam a demo
    do onboarding; ultimoAcessoEm nulo = ninguém entrou desde que o acesso passou a ser guardado. */
 export type SituacaoUso = 'ATIVO' | 'ESFRIANDO' | 'PARADO' | 'NUNCA_COTOU' | 'SEM_REGISTRO'
-export interface UsoResumido { situacao:SituacaoUso; cotacoes:number; cotacoesAbertas:number; ultimaCotacaoEm:string|null; ultimoAcessoEm:string|null }
+/* dispositivosPush: aparelhos dos usuários ativos da conta com notificação ligada. */
+export interface UsoResumido { situacao:SituacaoUso; cotacoes:number; cotacoesAbertas:number; ultimaCotacaoEm:string|null; ultimoAcessoEm:string|null; dispositivosPush:number }
 export interface UsoDetalhadoStaff {
   resumo:UsoResumido; onboardingStatus:StatusOnboarding|null; onboardingEtapa:EtapaOnboarding|null; onboardingErp:SistemaErp|null
   produtosCadastrados:number; respostasRecebidas:number; pedidosGerados:number

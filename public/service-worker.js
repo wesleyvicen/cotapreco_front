@@ -13,7 +13,10 @@ self.addEventListener('push', event => {
     await self.registration.showNotification(dados.titulo, {
       body: dados.mensagem,
       icon: '/cotapreco-icon-192.png',
-      badge: '/cotapreco-icon-192.png',
+      /* Ícone pequeno da barra de status do Android: o sistema só usa a transparência da
+         imagem e pinta tudo de branco, então precisa ser a silhueta em branco sobre fundo
+         transparente. O ícone colorido virava um quadrado branco. */
+      badge: '/cotapreco-badge-96.png',
       tag: dados.link,
       data: { link: dados.link },
     })

@@ -1,10 +1,11 @@
-import { Activity, ChevronLeft, ChevronRight, Gift, HandCoins, MessageCircle, RotateCcw, ScrollText, Search, Ticket, Timer, Users, UserX } from 'lucide-react'
+import { Activity, Bell, BellOff, BellRing, ChevronLeft, ChevronRight, Gift, HandCoins, MessageCircle, RotateCcw, ScrollText, Search, Ticket, Timer, Users, UserX } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, ErroApi, money, date } from '../api'
 import { AvisoErro, Carregando, EstadoVazio } from '../components/ComponentesUI'
 import AbaCupons from '../components/staff/AbaCupons'
 import ModalAplicarCupom from '../components/staff/ModalAplicarCupom'
 import ModalDesativarConta from '../components/staff/ModalDesativarConta'
+import ModalEnviarPush, { type ContaParaPush } from '../components/staff/ModalEnviarPush'
 import ModalReativarConta from '../components/staff/ModalReativarConta'
 import MenuAcoesConta from '../components/staff/MenuAcoesConta'
 import ModalUsoConta from '../components/staff/ModalUsoConta'
@@ -23,7 +24,7 @@ const ROTULO_ACAO_AUDITORIA:Record<string,string> = {
   NEGOCIACAO:'Negociação', BRINDE:'Cortesia', TRIAL:'Trial',
   CUPOM_CRIADO:'Cupom criado', CUPOM_EDITADO:'Cupom editado', CUPOM_ATIVADO:'Cupom reativado',
   CUPOM_DESATIVADO:'Cupom desativado', CUPOM_RESGATE_ENCERRADO:'Cupom encerrado na conta', CUPOM_APLICADO:'Cupom aplicado',
-  CONTA_DESATIVADA:'Conta desativada', CONTA_REATIVADA:'Conta reativada',
+  CONTA_DESATIVADA:'Conta desativada', CONTA_REATIVADA:'Conta reativada', PUSH_ENVIADO:'Notificação enviada',
 }
 
 /* Teste que venceu sem assinatura continua com emTeste verdadeiro no banco, então é
@@ -93,9 +94,13 @@ function ResumoUso({ conta }:{ conta:ContaStaff }) {
     cotacoes > 0 && `${cotacoes} cotaç${cotacoes === 1 ? 'ão' : 'ões'}${cotacoesAbertas > 0 ? ` (${cotacoesAbertas} aberta${cotacoesAbertas !== 1 ? 's' : ''})` : ''}`,
     ultimoAcessoEm && `acesso ${haQuantoTempo(ultimoAcessoEm)}`,
   ].filter(Boolean).join(' · ')
+  const aparelhos = conta.uso.dispositivosPush
   return <>
     <span className={`uso-indicador uso-${selo.tom}`} title={selo.dica}>{selo.texto}</span>
     {detalhes && <small className="staff-sub">{detalhes}</small>}
+    {aparelhos > 0
+      ? <small className="staff-sub staff-push"><Bell size={12} aria-hidden="true"/>notificação em {aparelhos} aparelho{aparelhos !== 1 ? 's' : ''}</small>
+      : <small className="staff-sub staff-push staff-push-off"><BellOff size={12} aria-hidden="true"/>sem notificação</small>}
   </>
 }
 
@@ -135,6 +140,11 @@ export default function PaginaStaff() {
   const [desativando, setDesativando] = useState<ContaStaff|null>(null)
   const [reativando, setReativando] = useState<ContaStaff|null>(null)
   const [vendoUso, setVendoUso] = useState<ContaStaff|null>(null)
+  /* Seleção para push sobrevive à troca de página e à busca: dá pra juntar contas de vários
+     filtros num envio só. Guarda nome e aparelhos porque a linha pode não estar mais na tela. */
+  const [selecaoPush, setSelecaoPush] = useState<Map<number, ContaParaPush>>(new Map())
+  const [enviandoPush, setEnviandoPush] = useState<ContaParaPush[]|null>(null)
+  const [avisoPush, setAvisoPush] = useState('')
   /* Desativar ou reativar tira a conta do recorte atual e muda os cartões de resumo, então
      recarrega a lista inteira em vez de só trocar a linha. */
   const [versaoLista, setVersaoLista] = useState(0)
@@ -171,6 +181,21 @@ export default function PaginaStaff() {
       .catch(() => setAuditoriaErro('Não foi possível carregar a auditoria.'))
       .finally(() => setAuditoriaCarregando(false))
   }, [aba, auditoriaPagina])
+
+  const paraPush = (conta:ContaStaff):ContaParaPush => ({ grupoId:conta.grupoId, nomeFarmacia:conta.nomeFarmacia, dispositivos:conta.uso?.dispositivosPush ?? 0 })
+  const recebePush = (conta:ContaStaff) => conta.contaAtiva && (conta.uso?.dispositivosPush ?? 0) > 0
+  const alternarSelecao = (conta:ContaStaff) => setSelecaoPush(atual => {
+    const proxima = new Map(atual)
+    if (proxima.has(conta.grupoId)) proxima.delete(conta.grupoId); else proxima.set(conta.grupoId, paraPush(conta))
+    return proxima
+  })
+  const comPushNaPagina = resultado?.itens.filter(recebePush) ?? []
+  const paginaToda = comPushNaPagina.length > 0 && comPushNaPagina.every(c => selecaoPush.has(c.grupoId))
+  const alternarPagina = () => setSelecaoPush(atual => {
+    const proxima = new Map(atual)
+    for (const conta of comPushNaPagina) { if (paginaToda) proxima.delete(conta.grupoId); else proxima.set(conta.grupoId, paraPush(conta)) }
+    return proxima
+  })
 
   /* O voltar do navegador fecha o formulário aberto em vez de sair da tela. */
   usarCamadaNoHistorico(negociando !== null || brindando !== null || emTrial !== null,
@@ -310,6 +335,7 @@ export default function PaginaStaff() {
     </div>}
 
     {erro && <div className="alert alert-error">{erro}</div>}
+    {avisoPush && <div className="alert alert-success">{avisoPush}</div>}
 
     <div className="toolbar staff-toolbar">
       <label className="search"><Search/><input placeholder="Buscar farmácia, CNPJ, e-mail ou WhatsApp" value={busca} onChange={e => setBusca(e.target.value)}/></label>
@@ -330,13 +356,27 @@ export default function PaginaStaff() {
                 : buscaAplicada ? 'Tente buscar por outro nome, CNPJ, e-mail ou WhatsApp.'
                 : 'As contas de clientes aparecem aqui assim que alguém se cadastrar.'}/>
           : <>
+              {(comPushNaPagina.length > 0 || selecaoPush.size > 0) && <div className="staff-barra-push">
+                <label><input type="checkbox" checked={paginaToda} disabled={comPushNaPagina.length === 0} onChange={alternarPagina}/>
+                  Selecionar as {comPushNaPagina.length} desta página com notificação</label>
+                {selecaoPush.size > 0 && <div>
+                  <span>{selecaoPush.size} conta{selecaoPush.size !== 1 ? 's' : ''} selecionada{selecaoPush.size !== 1 ? 's' : ''}</span>
+                  <button type="button" className="button button-ghost" onClick={() => setSelecaoPush(new Map())}>Limpar</button>
+                  <button type="button" className="button button-primary" onClick={() => { setAvisoPush(''); setEnviandoPush([...selecaoPush.values()]) }}>
+                    <BellRing size={15} aria-hidden="true"/>Enviar notificação</button>
+                </div>}
+              </div>}
               <div className="table-wrap"><table className="staff-tabela">
                 <thead><tr><th>Farmácia</th><th>Contato</th><th>Assinatura</th><th>Uso</th><th><span className="sr-only">Ações</span></th></tr></thead>
                 <tbody>{resultado.itens.map(c => <tr key={c.grupoId} className={c.contaAtiva ? undefined : 'staff-linha-desativada'}>
                   <td>
                     {/* O nome também abre os detalhes: no celular o botão "Detalhes" some para
                         economizar espaço, e tocar no nome é o gesto natural. */}
-                    <button type="button" className="staff-nome" onClick={() => setVendoUso(c)}>{c.nomeFarmacia}</button>
+                    <div className="staff-nome-linha">
+                      {recebePush(c) && <input type="checkbox" className="staff-selecao" aria-label={`Selecionar ${c.nomeFarmacia} para notificação`}
+                        checked={selecaoPush.has(c.grupoId)} onChange={() => alternarSelecao(c)}/>}
+                      <button type="button" className="staff-nome" onClick={() => setVendoUso(c)}>{c.nomeFarmacia}</button>
+                    </div>
                     <small className="staff-sub">{formatarCnpj(c.cnpj)} · desde {dataCurta(c.criadoEm)}</small>
                     {c.farmaciasContratadas > 1 && <small className="staff-sub">{c.farmaciasAtivas} de {c.farmaciasContratadas} farmácias</small>}
                   </td>
@@ -365,6 +405,7 @@ export default function PaginaStaff() {
                       { rotulo: c.cortesia ? 'Editar cortesia' : 'Dar de cortesia', icone:<Gift size={16}/>, aoEscolher:() => abrirBrinde(c) },
                       { rotulo:'Colocar em trial', icone:<Timer size={16}/>, aoEscolher:() => abrirTrial(c) },
                       ...(!c.cortesia ? [{ rotulo:'Aplicar cupom', icone:<Ticket size={16}/>, aoEscolher:() => setAplicandoCupom(c) }] : []),
+                      ...(recebePush(c) ? [{ rotulo:'Enviar notificação', icone:<BellRing size={16}/>, aoEscolher:() => { setAvisoPush(''); setEnviandoPush([paraPush(c)]) } }] : []),
                     ], [
                       { rotulo:'Desativar conta', icone:<UserX size={16}/>, aoEscolher:() => setDesativando(c), perigo:true },
                     ]] : [[
@@ -392,6 +433,11 @@ export default function PaginaStaff() {
         setAplicandoCupom(null)
       }}/>}
 
+    {enviandoPush && <ModalEnviarPush contas={enviandoPush} aoFechar={() => setEnviandoPush(null)}
+      aoEnviar={mensagem => {
+        setEnviandoPush(null); setAvisoPush(mensagem)
+        if (enviandoPush.length > 1) setSelecaoPush(new Map())
+      }}/>}
     {vendoUso && <ModalUsoConta conta={vendoUso} aoFechar={() => setVendoUso(null)}/>}
     {desativando && <ModalDesativarConta conta={desativando} aoFechar={() => setDesativando(null)}
       aoConcluir={() => { setDesativando(null); setVersaoLista(v => v + 1) }}/>}
