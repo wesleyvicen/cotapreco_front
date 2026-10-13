@@ -240,7 +240,7 @@ export default function ModalEnviarPush({ contas, aoFechar, aoEnviar }:{
 
     <footer className="push-rodape">
       {erro ? <p className="push-aviso push-aviso-erro" role="alert"><AlertCircle size={15}/><span>{erro}</span></p>
-        : <p>Registrado na auditoria com o seu nome.</p>}
+        : <p className="push-rodape-nota">Registrado na auditoria com o seu nome.</p>}
       <div>
         <button type="button" className="button button-ghost" onClick={aoFechar}>Cancelar</button>
         <button className="button button-primary" disabled={enviando || !prontoParaEnviar}>

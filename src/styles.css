@@ -9431,7 +9431,8 @@ label small {
 .push-aviso-erro { background: #fdeceb; color: var(--danger); }
 
 .push-rodape { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--line); background: #fff; }
-.push-rodape > p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.push-rodape > p { margin: 0; }
+.push-rodape-nota { font-size: 12.5px; color: var(--muted); }
 .push-rodape > .push-aviso { flex: 1; }
 .push-rodape > div { display: flex; gap: 8px; flex: none; }
 
@@ -9463,7 +9464,8 @@ label small {
   .push-campo input, .push-campo textarea { font-size: 16px; }
   .push-destino { max-width: none; }
   .push-rodape { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 16px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-  .push-rodape > p { display: none; }
+  /* Só a nota da auditoria some para caber o botão; o erro do envio continua à vista. */
+  .push-rodape-nota { display: none; }
   .push-rodape > div { display: grid; grid-template-columns: auto minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .push-modelo { transition: none; } }
