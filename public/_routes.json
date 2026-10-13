@@ -1,5 +1,8 @@
 {
   "version": 1,
-  "include": ["/api/publico/cotacoes/*"],
+  "include": [
+    "/api/publico/cotacoes/*",
+    "/assets/*"
+  ],
   "exclude": []
 }
