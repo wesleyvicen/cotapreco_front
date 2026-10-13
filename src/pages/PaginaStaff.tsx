@@ -182,7 +182,7 @@ export default function PaginaStaff() {
       .finally(() => setAuditoriaCarregando(false))
   }, [aba, auditoriaPagina])
 
-  const paraPush = (conta:ContaStaff):ContaParaPush => ({ grupoId:conta.grupoId, nomeFarmacia:conta.nomeFarmacia, dispositivos:conta.uso?.dispositivosPush ?? 0 })
+  const paraPush = (conta:ContaStaff):ContaParaPush => ({ grupoId:conta.grupoId, nomeFarmacia:conta.nomeFarmacia, dispositivos:conta.uso?.dispositivosPush ?? 0, conta })
   const recebePush = (conta:ContaStaff) => conta.contaAtiva && (conta.uso?.dispositivosPush ?? 0) > 0
   const alternarSelecao = (conta:ContaStaff) => setSelecaoPush(atual => {
     const proxima = new Map(atual)

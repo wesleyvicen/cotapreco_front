@@ -1,7 +1,9 @@
-import { AlertCircle, BellRing, Plus, X } from 'lucide-react'
+import { AlertCircle, BellRing, ChevronDown, Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ErroApi } from '../../api'
 import { usarCamadaNoHistorico } from '../../hooks/usarCamadaNoHistorico'
+import type { ContaStaff } from '../../types'
+import { sugestoesParaConta } from './sugestoesPush'
 
 /* Só telas do próprio app: a notificação chega com a marca do CotaPreço, então o toque nela
    nunca leva para fora (o backend confere de novo). */
@@ -45,7 +47,8 @@ const MODELOS = [
     mensagem:'{saudacao}, {nome}! Preparamos uma melhoria para a {farmacia}. Toque para ver.', link:'/' },
 ]
 
-export interface ContaParaPush { grupoId:number; nomeFarmacia:string; dispositivos:number }
+/* conta vem junto quando a tela tem a linha da lista: com uma conta só, ela gera as sugestões. */
+export interface ContaParaPush { grupoId:number; nomeFarmacia:string; dispositivos:number; conta?:ContaStaff }
 interface Variavel { chave:string; descricao:string; grupo:string; exemplo:string; podeFaltar:boolean }
 
 /* A prévia não consulta o servidor: monta o texto com uma pessoa inventada que tem todos os
@@ -108,11 +111,21 @@ export default function ModalEnviarPush({ contas, aoFechar, aoEnviar }:{
     requestAnimationFrame(() => { const alvo = campos[campo].current; alvo?.focus(); alvo?.setSelectionRange(depois, depois) })
   }
 
-  const usarModelo = (modelo:typeof MODELOS[number]) => {
+  /* Os dois blocos de modelos abrem e fecham. modelos nulo = ainda não mexeu: fechado quando
+     há sugestões da conta, que são o que interessa primeiro. Escolher um fecha os dois, para
+     sobrar espaço ao texto; o cabeçalho continua dizendo qual está em uso. */
+  const [blocoAberto, setBlocoAberto] = useState<{ sugestoes:boolean; modelos:boolean|null }>({ sugestoes:true, modelos:null })
+  const usarModelo = (modelo:{ titulo:string; mensagem:string; link:string }) => {
+    setBlocoAberto({ sugestoes:false, modelos:false })
     setTitulo(modelo.titulo); setMensagem(modelo.mensagem); setLink(modelo.link); setSeletorAberto(null)
     cursor.current = { titulo:null, mensagem:null }
   }
 
+  /* Push direcionado (uma conta só, com os dados da linha): sugere pelo uso e pela assinatura. */
+  const sugestoes = contas.length === 1 && contas[0].conta ? sugestoesParaConta(contas[0].conta) : []
+  const outrosModelos = MODELOS.filter(modelo => !sugestoes.some(sugestao => sugestao.rotulo === modelo.rotulo))
+  const modelosAberto = blocoAberto.modelos ?? sugestoes.length === 0
+  const emUsoAgora = (modelo:{ titulo:string; mensagem:string }) => modelo.titulo === titulo && modelo.mensagem === mensagem
   const aparelhos = contas.reduce((total, conta) => total + conta.dispositivos, 0)
   const destinatarios = contas.length === 1
     ? `Para ${contas[0].nomeFarmacia} (${plural(aparelhos, 'aparelho', 'aparelhos')})`
@@ -183,20 +196,29 @@ export default function ModalEnviarPush({ contas, aoFechar, aoEnviar }:{
 
     <div className="push-corpo">
       <div className="push-escrita">
-        <section className="push-bloco" aria-labelledby="push-modelos-titulo">
-          <h3 id="push-modelos-titulo">Comece por um modelo</h3>
-          <div className="push-modelos">
-            {MODELOS.map(modelo => {
-              const ativo = modelo.titulo === titulo && modelo.mensagem === mensagem
-              return <button key={modelo.rotulo} type="button" className={ativo ? 'push-modelo ativo' : 'push-modelo'} aria-pressed={ativo} onClick={() => usarModelo(modelo)}>
-                <strong>{modelo.rotulo}</strong><span>{modelo.paraQuem}</span>
-              </button>
-            })}
-          </div>
+        {sugestoes.length > 0 && <section className="push-bloco">
+          <CabecalhoBloco id="push-sugestoes" titulo={`Sugestões para ${contas[0].nomeFarmacia}`} aberto={blocoAberto.sugestoes}
+            emUso={sugestoes.find(emUsoAgora)?.rotulo} aoAlternar={() => setBlocoAberto(atual => ({ ...atual, sugestoes:!atual.sugestoes }))}/>
+          {blocoAberto.sugestoes && <div className="push-modelos" id="push-sugestoes">
+            {sugestoes.map(sugestao => <button key={sugestao.rotulo} type="button" className={emUsoAgora(sugestao) ? 'push-modelo push-sugestao ativo' : 'push-modelo push-sugestao'}
+              aria-pressed={emUsoAgora(sugestao)} onClick={() => usarModelo(sugestao)}>
+              <strong>{sugestao.rotulo}</strong><span>{sugestao.motivo}</span>
+            </button>)}
+          </div>}
+        </section>}
+
+        <section className="push-bloco">
+          <CabecalhoBloco id="push-modelos" titulo={sugestoes.length > 0 ? 'Outros modelos' : 'Modelos'} aberto={modelosAberto}
+            emUso={outrosModelos.find(emUsoAgora)?.rotulo} aoAlternar={() => setBlocoAberto(atual => ({ ...atual, modelos:!modelosAberto }))}/>
+          {modelosAberto && <div className="push-modelos" id="push-modelos">
+            {outrosModelos.map(modelo => <button key={modelo.rotulo} type="button" className={emUsoAgora(modelo) ? 'push-modelo ativo' : 'push-modelo'}
+              aria-pressed={emUsoAgora(modelo)} onClick={() => usarModelo(modelo)}>
+              <strong>{modelo.rotulo}</strong><span>{modelo.paraQuem}</span>
+            </button>)}
+          </div>}
         </section>
 
         <section className="push-bloco">
-          <h3>Texto</h3>
           {campoTexto('titulo')}
           {campoTexto('mensagem')}
           {/* No celular a prévia fica presa no topo e só cabe a notificação: os avisos descem
@@ -264,4 +286,16 @@ function SeletorDados({ variaveis, aoEscolher }:{ variaveis:Variavel[]; aoEscolh
         </button>)}
     </div>)}
   </div>
+}
+
+/* Cabeçalho que abre e fecha um bloco de modelos. Fechado, mostra qual modelo dele está em
+   uso, para a pessoa não perder de vista de onde veio o texto. */
+function CabecalhoBloco({ id, titulo, aberto, emUso, aoAlternar }:{
+  id:string; titulo:string; aberto:boolean; emUso?:string; aoAlternar:() => void
+}) {
+  return <h3 className="push-bloco-titulo"><button type="button" className="push-bloco-cabecalho" aria-expanded={aberto} aria-controls={id} onClick={aoAlternar}>
+    <span>{titulo}</span>
+    {!aberto && emUso && <span className="push-bloco-uso">Em uso: {emUso}</span>}
+    <ChevronDown size={16} className={aberto ? 'push-bloco-seta aberta' : 'push-bloco-seta'} aria-hidden="true"/>
+  </button></h3>
 }
