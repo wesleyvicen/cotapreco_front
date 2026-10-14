@@ -9765,3 +9765,11 @@ label small {
   .arquivar-modal .modal-actions { flex-direction: column-reverse; }
   .arquivar-modal .modal-actions .button { width: 100%; }
 }
+
+/* Importação do Mercado Farma em andamento: ocupa o lugar do botão, com o progresso do catálogo. */
+.mf-progresso { display: grid; align-content: center; align-self: center; gap: 5px; min-width: 170px; padding: 7px 14px; border: 1px solid #cfe3da; border-radius: 12px; background: var(--green-soft); color: var(--green); font-size: 13px; font-weight: 700; white-space: nowrap; cursor: help; }
+.mf-progresso > span:first-child { display: flex; align-items: center; gap: 6px; }
+.mf-progresso > span:first-child svg { width: 15px; height: 15px; flex: none; }
+.mf-progresso-trilho { display: block; height: 4px; border-radius: 999px; background: rgba(18, 99, 74, .15); overflow: hidden; }
+.mf-progresso-trilho > span { display: block; height: 100%; border-radius: inherit; background: var(--green); transition: width .4s ease; }
+@media (prefers-reduced-motion: reduce) { .mf-progresso-trilho > span { transition: none; } }

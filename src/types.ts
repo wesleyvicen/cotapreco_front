@@ -182,6 +182,9 @@ export interface CandidatoCorrespondenciaMercadoFarma { ean:string; nome:string;
 export type TipoSugestaoMercadoFarma = 'SEM_EAN' | 'EAN_NAO_ENCONTRADO' | 'MAIS_BARATO'
 export interface SugestaoCorrespondenciaMercadoFarma { itemCotacaoId:number; produtoId:number; produto:string; laboratorio:string|null; quantidade:number; tipo:TipoSugestaoMercadoFarma; eanSugerido:string|null; produtoPortalAtual:string|null; precoAtual:number|null; candidatos:CandidatoCorrespondenciaMercadoFarma[] }
 export interface ResultadoImportacaoMercadoFarma { distribuidoras:number; itensEncontrados:number; itensNaoEncontrados:number; itensSemEan:number; totalItens:number; itensSubstituidos:number; sugestoes:SugestaoCorrespondenciaMercadoFarma[] }
+/* Importação do Mercado Farma de uma cotação, igual para qualquer aparelho (GET/POST /quotations/{id}/mercado-farma/import). */
+export interface SituacaoImportacaoMercadoFarma { estado:'NENHUMA'|'BAIXANDO_CATALOGO'|'IMPORTANDO'|'CONCLUIDA'|'FALHOU'; progresso:number
+  resultado:ResultadoImportacaoMercadoFarma|null; erro:string|null; atualizadoEm:string|null }
 export interface ResultadoVinculosMercadoFarma { vinculados:number; recusados:string[]; importacao:ResultadoImportacaoMercadoFarma }
 /* Busca geral nos portais de pedido eletrônico conectados (GET /integracoes/busca). */
 export interface OfertaPortalEncontrada { portal:string; distribuidora:string; preco:number; estoque:number; pedidoMinimo:number|null; semImposto:boolean }
